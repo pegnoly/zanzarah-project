@@ -2,6 +2,10 @@
 name = "zz-data"
 version = "0.1.0"
 edition = "2021"
+description = "Data structures for Zanzarah apis"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 serde = { version = "1.0.209", features = ["derive"] }
+sqlx = { version = "=0.7.4", features = ["macros"] }
+strum = { version = "0.26.3", features = ["derive"] }
