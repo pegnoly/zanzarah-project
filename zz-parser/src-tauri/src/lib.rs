@@ -1,21 +1,21 @@
-use core::num;
-use std::{io::{Read, Write}, ptr::read};
+use parser::source::ParseController;
+use tokio::sync::{Mutex, RwLock};
 
-use binary_reader::BinaryReader;
-use byteorder::{BigEndian, ByteOrder, LittleEndian};
-use serde::{Deserialize, Serialize};
-
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+pub mod parser;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(ParseController {
+            texts: RwLock::default(),
+            wizforms: Mutex::default()
+        })
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            parser::commands::try_create_book,
+            parser::commands::try_parse_texts,
+            parser::commands::try_parse_wizforms
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
