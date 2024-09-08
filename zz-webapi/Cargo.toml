@@ -12,6 +12,6 @@ sqlx = {version = "0.7.4", features = ["runtime-tokio-rustls", "postgres"]}
 tokio = "1.28.2"
 serde = { version = "1.0.209", features = ["derive"] }
 uuid = { version = "1.10.0", features = ["v4"] }
-zz-data = "0.1.12"
+zz-data = "0.1.13"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

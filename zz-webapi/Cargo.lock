@@ -3087,9 +3087,9 @@ checksum = "ced3678a2879b30306d323f4542626697a464a97c0a07c9aebf7ebca65cd4dde"
 
 [[package]]
 name = "zz-data"
-version = "0.1.12"
+version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6112c0d870abcacb1c29c24cbf213c6ca8732211ac4d5259885838d612f4bdf"
+checksum = "fca6f0228bbd30522dabe1efeaac69c5659376485f7bba4bdfebf09da7ff6753"
 dependencies = [
  "serde",
  "sqlx",

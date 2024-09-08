@@ -13,7 +13,7 @@ use super::{source::{parse_texts, parse_wizforms}, utils::AppManager};
 pub struct ElementFrontendModel {
     pub id: String,
     pub name: String,
-    pub element: WizformElementType,
+    pub element: i32,
     pub enabled: bool
 }
 
@@ -189,7 +189,7 @@ pub async fn try_parse_wizforms(
                         WizformFrontendModel {
                             id: w.id,
                             name: w.name,
-                            element: w.element
+                            element: w.element as i32
                         }}).collect())                
                 },
                 Err(e) => {
@@ -246,7 +246,7 @@ pub async fn load_wizforms(
                         WizformFrontendModel {
                             id: w.id,
                             name: w.name,
-                            element: w.element
+                            element: w.element as i32
                         }}).collect())
                 },
                 Err(e) => {
@@ -280,7 +280,7 @@ pub async fn load_elements(
                         ElementFrontendModel {
                             id: e.id,
                             name: e.name,
-                            element: e.element,
+                            element: e.element as i32,
                             enabled: e.enabled
                         }}).collect())
                 },

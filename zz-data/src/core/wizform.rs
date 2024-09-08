@@ -94,7 +94,7 @@ pub struct WizformDBModel {
 pub struct WizformFrontendModel {
     pub id: String,
     pub name: String,
-    pub element: WizformElementType
+    pub element: i32
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
