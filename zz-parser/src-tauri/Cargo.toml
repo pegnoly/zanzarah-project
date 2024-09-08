@@ -15,7 +15,7 @@ crate-type = ["lib", "cdylib", "staticlib"]
 tauri-build = { version = "2.0.0-rc", features = [] }
 
 [dependencies]
-zz-data = "0.1.2"
+zz-data = "0.1.12"
 tauri = { version = "2.0.0-rc", features = [] }
 tauri-plugin-shell = "2.0.0-rc"
 serde = { version = "1", features = ["derive"] }
@@ -25,4 +25,6 @@ encoding_rs = "0.8.34"
 uuid = { version = "1.10.0", features = ["v4"] }
 tokio = { version = "1.40.0", features = ["macros"] }
 reqwest = "0.12.7"
+strum = { version = "0.26.3", features = ["derive"] }
+tauri-plugin-dialog = "2.0.0-rc.5"
 

@@ -3087,9 +3087,9 @@ checksum = "ced3678a2879b30306d323f4542626697a464a97c0a07c9aebf7ebca65cd4dde"
 
 [[package]]
 name = "zz-data"
-version = "0.1.1"
+version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9d3e71cbe52dad6eb92a99e5e30048119e5b2e4eabb1b77746cd7b50e51c2c8"
+checksum = "d6112c0d870abcacb1c29c24cbf213c6ca8732211ac4d5259885838d612f4bdf"
 dependencies = [
  "serde",
  "sqlx",
@@ -3107,6 +3107,8 @@ dependencies = [
  "shuttle-shared-db",
  "sqlx",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "uuid",
  "zz-data",
 ]

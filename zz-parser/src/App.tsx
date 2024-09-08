@@ -1,26 +1,24 @@
 import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { Input, Button } from "antd";
-import "./App.css";
-import { WizformRenderer } from "./components/WizformRenderer";
+import { BooksFacade } from "./components/BooksFacade";
+
+export enum AppState {
+    NotReady,
+    Ready
+}
 
 function App() {
 
-  const [name, setName] = useState<string>("");
-  const [wizforms, setWizforms] = useState<string[]>([]);
+    const [state, setState] = useState<AppState>(AppState.NotReady);
 
-  return (
-    <div className="container">
-      <Input onChange={(e) => setName(e.target.value)}></Input>
-      <Button onClick={() => {
-        invoke("try_create_book", {name: name});
-      }}>Попробовать создать книгу</Button>
-      <Button 
-        onClick={() => invoke("try_parse_texts").then(() => invoke("try_parse_wizforms").then((v) => setWizforms(v as string[])))}
-      >Сканировать файлы игры</Button>
-      <WizformRenderer wizforms={wizforms}/>
-    </div>
-  );
+    if (state == AppState.NotReady) {
+        setState(AppState.Ready);
+    }
+
+    return (
+        <>
+            <BooksFacade/>
+        </>
+    );
 }
 
 export default App;

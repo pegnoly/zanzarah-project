@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use strum::FromRepr;
 
+// region: data
+
 /// Possible magic elements. 
 #[derive(Debug, Serialize, Deserialize, FromRepr)]
 #[repr(u8)]
@@ -42,6 +44,10 @@ pub struct Magic {
     pub third_element: MagicElementType
 }
 
+// endregion: data
+
+// region: impls
+
 impl Magic {
     /// Creates new instance of Magic from parsed number in wizform file. Alghoritm by RustlessWarrior.
     pub fn new(_m: i32, n: i32) -> Magic {
@@ -74,3 +80,5 @@ impl Magic {
         }
     }
 }
+
+// endregion: impls

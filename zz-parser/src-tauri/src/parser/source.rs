@@ -1,7 +1,9 @@
+use std::path::PathBuf;
+
 use binary_reader::BinaryReader;
 use encoding_rs::WINDOWS_1251;
 use tokio::sync::{Mutex, RwLock};
-use zz_data::core::{magic::Magic, text::Text, wizform::Wizform};
+use zz_data::core::{magic::Magic, text::Text, wizform::{Wizform, WizformDBModel, WizformElementType}};
 
 use super::utils::to_le_hex_string;
 
@@ -10,8 +12,9 @@ pub struct ParseController {
     pub wizforms: Mutex<Vec<Wizform>>
 }
 
-pub async fn parse_texts(texts: &mut Vec<Text>) {
-    let path = std::env::current_dir().unwrap().join("_fb0x02.fbs");
+pub async fn parse_texts(directory: String, texts: &mut Vec<Text>) {
+    let path = PathBuf::from(directory).join("Data\\_fb0x02.fbs");
+    println!("Texts path: {:?}", &path);
     let mut file = std::fs::File::open(path).unwrap();
     let mut reader = BinaryReader::from_file(&mut file);
     reader.set_endian(binary_reader::Endian::Little);
@@ -38,8 +41,15 @@ pub async fn parse_texts(texts: &mut Vec<Text>) {
     }
 }
 
-pub async fn parse_wizforms(wizforms: &mut Vec<Wizform>, texts: &Vec<Text>) {
-    let path = std::env::current_dir().unwrap().join("_fb0x01.fbs");
+pub async fn parse_wizforms(
+    book_id: String,
+    directory: String, 
+    texts: &Vec<Text>, 
+    wizforms: &mut Vec<WizformDBModel>, 
+    existing_wizforms: &Vec<WizformDBModel>
+) {
+    let path = PathBuf::from(directory).join("Data\\_fb0x01.fbs");
+    println!("Wizforms path: {:?}", &path);
     let mut file = std::fs::File::open(path).unwrap();
     let mut reader = BinaryReader::from_file(&mut file);
     // bytes are represented in little endian order
@@ -51,7 +61,7 @@ pub async fn parse_wizforms(wizforms: &mut Vec<Wizform>, texts: &Vec<Text>) {
         let id = reader.read_i32().unwrap();
         reader.read_bytes(16).unwrap();
         // model name + 12 bytes skip
-        let model = reader.read_cstr().unwrap();
+        let _model = reader.read_cstr().unwrap();
         reader.read_bytes(12).unwrap();
         // name + 8 bytes skip
         let name_id = reader.read_i32().unwrap();
@@ -88,7 +98,7 @@ pub async fn parse_wizforms(wizforms: &mut Vec<Wizform>, texts: &Vec<Text>) {
         reader.read_bytes(4).unwrap();
         // description + 8 bytes skip.
         let desc_id = reader.read_i32().unwrap();
-        let desc = texts.iter()
+        let _desc = texts.iter()
             .find(|t| {
                 t.id == to_le_hex_string(desc_id)
             })
@@ -135,7 +145,7 @@ pub async fn parse_wizforms(wizforms: &mut Vec<Wizform>, texts: &Vec<Text>) {
         let _litter_9 = reader.read_i32().unwrap();
         reader.read_bytes(4).unwrap();
         // voice + 4 bytes skip
-        let voice = reader.read_i32().unwrap();
+        let _voice = reader.read_i32().unwrap();
         reader.read_bytes(4).unwrap();
         // litter 10
         let _litter_10 = reader.read_i32().unwrap();
@@ -155,23 +165,49 @@ pub async fn parse_wizforms(wizforms: &mut Vec<Wizform>, texts: &Vec<Text>) {
         reader.read_bytes(12).unwrap();
         // litter 13
         let _litter_13 = reader.read_i32().unwrap();
-
-        let wizform = Wizform::new()
-            .id(to_le_hex_string(id))
-            .model(model)
-            .name(name)
-            .element(element as u8)
-            .number(number)
-            .magics(magics)
-            .desc(desc)
-            .evolution_form(evolution_form_number)
-            .evolution_level(evolution_level)
-            .agility(agility + 1)
-            .hitpoints(hit_points)
-            .jump_ability(jump_ability + 1)
-            .precision(precision + 1)
-            .voice(voice)
-            .exp_modifier(exp_modifier);
-        wizforms.push(wizform);
+        //
+        let hex_id = to_le_hex_string(id);
+        let existing_wizform = existing_wizforms.iter()
+            .find(|w| {
+                w.game_id == hex_id
+            });
+        match existing_wizform {
+            Some(wizform) => {
+                wizforms.push(WizformDBModel { 
+                    id: wizform.id.clone(), 
+                    book_id: book_id.clone(), 
+                    game_id: wizform.game_id.clone(), 
+                    name: name, 
+                    element: WizformElementType::from_repr(element).unwrap(), 
+                    magics: serde_json::to_string(&magics).unwrap(), 
+                    number: number as i16, 
+                    hitpoints: hit_points, 
+                    agility: agility, 
+                    jump_ability: jump_ability, 
+                    precision: precision, 
+                    evolution_form: evolution_form_number, 
+                    evolution_level: evolution_level, 
+                    exp_modifier: exp_modifier 
+                });
+            },
+            None => {
+                wizforms.push(WizformDBModel { 
+                    id: uuid::Uuid::new_v4().to_string().replace("-", ""), 
+                    book_id: book_id.clone(), 
+                    game_id: hex_id, 
+                    name: name, 
+                    element: WizformElementType::from_repr(element).unwrap(), 
+                    magics: serde_json::to_string(&magics).unwrap(), 
+                    number: number as i16, 
+                    hitpoints: hit_points, 
+                    agility: agility, 
+                    jump_ability: jump_ability, 
+                    precision: precision, 
+                    evolution_form: evolution_form_number, 
+                    evolution_level: evolution_level, 
+                    exp_modifier: exp_modifier 
+                });
+            }
+        }
     }
 }

@@ -1,5 +1,5 @@
-use axum::{routing::get, Router};
-use book::book_creation_handler;
+use axum::{routing::{get, patch, post, put}, Router};
+use book::{create_book, get_book, get_existing_elements, get_existing_wizforms, initialize_book, load_all_wizforms};
 
 pub mod book;
 
@@ -16,13 +16,18 @@ pub struct ApiManager {
 async fn main(
     #[shuttle_shared_db::Postgres] db: sqlx::PgPool
 ) -> shuttle_axum::ShuttleAxum {
-    //sqlx::migrate!().run(&db).await.unwrap();
     let manager = ApiManager {
         pool: db
     };
+    tracing::info!("Tracing ok?");
     let router = Router::new()
         .route("/", get(hello_world))
-        .route("/books/create", get(book_creation_handler))
+        .route("/book", post(create_book))
+        .route("/book", get(get_book))
+        .route("/book/initialize", patch(initialize_book))
+        .route("/wizforms", get(get_existing_wizforms))
+        .route("/wizforms", post(load_all_wizforms))
+        .route("/elements", get(get_existing_elements))
         .with_state(manager);
     Ok(router.into())
 }
