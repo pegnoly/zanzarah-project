@@ -2,33 +2,10 @@ import { useEffect, useState } from "react"
 import { Button, Space, Typography } from "antd";
 import { invoke } from "@tauri-apps/api/core";
 import { BookCreator } from "./BookCreator";
-import { WizformRenderer } from "./WizformRenderer";
-import { ElementRenderer, MagicElement } from "./ElementsRenderer";
-import { AppState } from "../App";
+import { Book } from "../types";
+import { AppState, useAppStateContext } from "../../contexts/AppState";
+import { BookDataRenderer } from "./BookRenderer";
 
-/**
- * Represents a book instance modder can edit.
- * @param id - id of a book in the database
- * @param name - displayable book name
- * @param directory - directory of game this book build upon
- * @param initialized - book becomes initialized only after correct parsing of game files
- * @param downloadadble - indicates that book can or can't be downloaded with mobile app                                                                                                                        
- */
-export type Book = {
-    id: string,
-    name: string,
-    directory: string,
-    initialized: boolean,
-    downloadadble: boolean
-}      
-
-export type Wizform = {
-    id: string,
-    name: string,
-    element: number
-}
-
-const {Text, Title} = Typography;
 
 /**
  * Renders current book's technical information  
@@ -36,13 +13,8 @@ const {Text, Title} = Typography;
  * Provides params for book's content render
  * @returns TSX element 
  */
-export function BooksFacade(
-    // {state}: 
-    // {state: AppState}
-) {
+export function BooksFacade() {
     
-    const [state, setState] = useState<AppState>(AppState.NotReady);
-
     const [loaded, setLoaded] = useState<boolean>(false);
     const [bookId, setBookId] = useState<string>("");
     const [bookName, setBookName] = useState<string>("");
@@ -50,24 +22,19 @@ export function BooksFacade(
     const [bookInitializalized, setBookInitializalized] = useState<boolean>(false);
     const [bookDownloadable, setBookDownloadadble] = useState<boolean>(false);
 
-    const [wizforms, setWizforms] = useState<Wizform[]>([]);
-    const [elements, setElements] = useState<MagicElement[]>([]);
+    const appStateContext = useAppStateContext();
 
     useEffect(() => {
-        console.log("Well, app state is ", state);
-        if (state == AppState.NotReady) {
-            setState(AppState.Ready);
-            console.log("App is not ready...")
+        if (appStateContext?.state == AppState.Ready) {
             invoke("load_current_book_info")
                 .then((v1) => {
-                    console.log("What we got from config: ", v1);
                     if (v1 as string != "") {
                         invoke("try_load_book", {id: v1 as string})
                             .then((v2) => onBookLoaded(v2 as Book))   
                     }
                 })
         }
-    }, [state])
+    }, [appStateContext?.state])
 
     /**
      * Response for book creation interaction  
@@ -86,31 +53,30 @@ export function BooksFacade(
      */
     async function onBookLoaded(book: Book) {
         setLoaded(true);
+        setBookId(book.id);
         setBookName(book.name);
         setBookDirectory(book.directory);
         setBookInitializalized(book.initialized);
         setBookDownloadadble(book.downloadadble);
-
-        if (book.initialized) {
-            await invoke("load_wizforms", {bookId: book.id})
-                .then((v) => setWizforms(v as Wizform[]));
-            await invoke("load_elements", {bookId: book.id})
-                .then((v) => setElements(v as MagicElement[]))
-        }
     }
 
+    /**
+     * Scans files for current book
+     */
     function performScan() {
         invoke("try_parse_texts", {directory: bookDirectory})
             .then(() => 
                 invoke("try_parse_wizforms", {bookId: bookId, directory: bookDirectory})
-                    .then((v) => {
-                        setWizforms(v as Wizform[]);
+                    .then(() => {
                         if (bookInitializalized == false) {
                             initializeBook();
                         }
                     }))
     }
 
+    /**
+     * 
+     */
     function initializeBook() {
         setBookInitializalized(true);
         invoke("initialize_book", {bookId: bookId});
@@ -120,23 +86,22 @@ export function BooksFacade(
         <>
             <Space direction="vertical">
                 <Space direction="horizontal">
-                    <Text style={{fontFamily: "fantasy"}}>Текущая книга</Text>
-                    <Text>{loaded ? bookName : "Не загружено"}</Text>
+                    <Typography.Text style={{fontFamily: "fantasy"}}>Текущая книга</Typography.Text>
+                    <Typography.Text>{loaded ? bookName : "Не загружено"}</Typography.Text>
                     <BookCreator callback={onBookCreated}/>
                     <Button>Загрузить книгу</Button>
                 </Space>
                 <Space direction="horizontal">
-                    <Text style={{fontFamily: "fantasy"}}>Состояние файлов</Text>
-                    <Text>{bookInitializalized ? "Файлы готовы" : "Файлы не готовы"}</Text>
+                    <Typography.Text style={{fontFamily: "fantasy"}}>Состояние файлов</Typography.Text>
+                    <Typography.Text>{bookInitializalized ? "Файлы готовы" : "Файлы не готовы"}</Typography.Text>
                     <Button onClick={performScan}>Сканировать файлы игры</Button>
                 </Space>
                 <Space direction="horizontal">
-                    <Text style={{fontFamily: "fantasy"}}>Доступность книги</Text>
-                    <Text>{bookDownloadable ? "Книга доступна для загрузки" : "Книга недоступна для загрузки"}</Text>
+                    <Typography.Text style={{fontFamily: "fantasy"}}>Доступность книги</Typography.Text>
+                    <Typography.Text>{bookDownloadable ? "Книга доступна для загрузки" : "Книга недоступна для загрузки"}</Typography.Text>
                     <Button>Установить доступность загрузки</Button>
                 </Space>
-                {bookInitializalized && <WizformRenderer wizforms={wizforms}/>}
-                {bookInitializalized && <ElementRenderer elements={elements}/>}
+                <BookDataRenderer id={bookId} initialized={bookInitializalized}/>
             </Space>
         </>
     )

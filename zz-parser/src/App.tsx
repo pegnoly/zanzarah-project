@@ -1,22 +1,13 @@
-import { useState } from "react";
-import { BooksFacade } from "./components/BooksFacade";
-
-export enum AppState {
-    NotReady,
-    Ready
-}
+import { BooksFacade } from "./components/Book/BooksFacade";
+import AppStateProvider from "./contexts/AppState";
 
 function App() {
 
-    const [state, setState] = useState<AppState>(AppState.NotReady);
-
-    if (state == AppState.NotReady) {
-        setState(AppState.Ready);
-    }
-
     return (
         <>
-            <BooksFacade/>
+            <AppStateProvider>
+                <BooksFacade/>
+            </AppStateProvider>
         </>
     );
 }
