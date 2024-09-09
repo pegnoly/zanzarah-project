@@ -24,7 +24,8 @@ export enum WizformElementType {
 export type Wizform = {
     id: string,
     name: string,
-    element: number
+    element: number,
+    enabled: boolean
 }
 
 export type MagicElement = {

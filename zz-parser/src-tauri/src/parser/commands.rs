@@ -4,10 +4,22 @@ use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_dialog::DialogExt;
-use tokio::io::AsyncWriteExt;
-use zz_data::{book::base::{Book, BookCreationParams}, core::wizform::{WizformDBModel, WizformElementModel, WizformElementType, WizformFrontendModel}};
+use zz_data::{
+    book::base::{
+        Book, BookCreationParams
+    }, 
+    core::wizform::{
+        WizformDBModel, WizformElementFrontendModel, WizformElementModel, WizformElementType, WizformFrontendModel
+    }
+};
 
-use super::{source::{parse_texts, parse_wizforms}, utils::AppManager};
+use super::{
+    source::{
+        parse_texts, 
+        parse_wizforms
+    }, 
+    utils::AppManager
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ElementFrontendModel {
@@ -118,7 +130,7 @@ pub async fn try_load_book(
                     println!("Got book from api: {:?}", &book);
                     let mut config = app_manager.config.lock().await;
                     config.current_book = id.clone();
-                    let mut config_file = std::fs::File::create(std::env::current_dir().unwrap().parent().unwrap().join("zz_cfg.json")).unwrap();
+                    let mut config_file = std::fs::File::create(std::env::current_exe().unwrap().parent().unwrap().join("zz_cfg.json")).unwrap();
                     let s = serde_json::to_string_pretty(&*config).unwrap();
                     config_file.write_all(&mut s.as_bytes()).unwrap();
                     Ok(book)
@@ -157,7 +169,7 @@ pub async fn try_parse_wizforms(
     book_id: String,
     directory: String,
     app_manager: State<'_, AppManager>
-) -> Result<Vec<WizformFrontendModel>, ()> {
+) -> Result<(), ()> {
     println!("Trying to parse wizforms");
     let texts = app_manager.texts.lock().await;
     let client = reqwest::Client::new();
@@ -180,17 +192,13 @@ pub async fn try_parse_wizforms(
                     match wizform_load_response {
                         Ok(response_ok) => {
                             println!("Uploading wizforms response: {}", &response_ok.text().await.unwrap());
+                            Ok(())
                         },
                         Err(response_err) => {
                             println!("Uploading wizforms response error: {}", &response_err.to_string());
+                            Err(())
                         }
-                    }
-                    Ok(wizforms.into_iter().map(|w| {
-                        WizformFrontendModel {
-                            id: w.id,
-                            name: w.name,
-                            element: w.element as i32
-                        }}).collect())                
+                    }               
                 },
                 Err(e) => {
                     println!("Error converting exisiting wizforms from json: {}", e.to_string());
@@ -246,7 +254,8 @@ pub async fn load_wizforms(
                         WizformFrontendModel {
                             id: w.id,
                             name: w.name,
-                            element: w.element as i32
+                            element: w.element as i32,
+                            enabled: w.enabled
                         }}).collect())
                 },
                 Err(e) => {
@@ -292,6 +301,50 @@ pub async fn load_elements(
         },
         Err(response_fail) => {
             println!("Error fetching existing elements: {}", response_fail.to_string());
+            Err(())
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn update_wizform(
+    wizform: WizformFrontendModel,
+    app_manager: State<'_, AppManager>
+) -> Result<(), ()> {
+    let client = app_manager.client.read().await;
+    let response = client.patch("https://zz-webapi.shuttleapp.rs/wizform")
+        .json(&wizform)
+        .send()
+        .await;
+    match response {
+        Ok(_) => {
+            println!("Wizform {} updated successfully", wizform.name);
+            Ok(())
+        },
+        Err(response_fail) => {
+            println!("Failed to update wizform {}: {}", wizform.name, response_fail.to_string());
+            Err(())
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn update_element(
+    element: WizformElementFrontendModel,
+    app_manager: State<'_, AppManager>
+) -> Result<(), ()> {
+    let client = app_manager.client.read().await;
+    let response = client.patch("https://zz-webapi.shuttleapp.rs/element")
+        .json(&element)
+        .send()
+        .await;
+    match response {
+        Ok(_) => {
+            println!("Element {} updated successfully", element.name);
+            Ok(())
+        },
+        Err(response_fail) => {
+            println!("Failed to update element {}: {}", element.name, response_fail.to_string());
             Err(())
         }
     }

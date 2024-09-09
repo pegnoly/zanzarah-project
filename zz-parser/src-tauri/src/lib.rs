@@ -18,7 +18,9 @@ pub fn run() {
             parser::commands::load_elements,
             parser::commands::load_existing_books_info,
             parser::commands::load_current_book_info,
-            parser::commands::initialize_book
+            parser::commands::initialize_book,
+            parser::commands::update_wizform,
+            parser::commands::update_element
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

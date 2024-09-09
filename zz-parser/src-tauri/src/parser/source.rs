@@ -187,7 +187,8 @@ pub async fn parse_wizforms(
                     precision: precision, 
                     evolution_form: evolution_form_number, 
                     evolution_level: evolution_level, 
-                    exp_modifier: exp_modifier 
+                    exp_modifier: exp_modifier,
+                    enabled: wizform.enabled
                 });
             },
             None => {
@@ -205,7 +206,8 @@ pub async fn parse_wizforms(
                     precision: precision, 
                     evolution_form: evolution_form_number, 
                     evolution_level: evolution_level, 
-                    exp_modifier: exp_modifier 
+                    exp_modifier: exp_modifier,
+                    enabled: true 
                 });
             }
         }

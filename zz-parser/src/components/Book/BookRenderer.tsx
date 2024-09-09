@@ -78,6 +78,7 @@ export function BookDataRenderer(schema: BookRendererSchema) {
             }
         });
         setElements(updatedElements);
+        invoke("update_element", {element: element})
     }
 
     /**
@@ -93,11 +94,13 @@ export function BookDataRenderer(schema: BookRendererSchema) {
                 return {
                     ...w,
                     name: wizform.name,
-                    element: wizform.element
+                    element: wizform.element,
+                    enabled: wizform.enabled
                 }
             }
         });
         setWizforms(updatedWizforms);
+        invoke("update_wizform", {wizform: wizform});
     }
 
     return (

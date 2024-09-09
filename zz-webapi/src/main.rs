@@ -1,5 +1,21 @@
-use axum::{routing::{get, patch, post, put}, Router};
-use book::{create_book, get_book, get_existing_elements, get_existing_wizforms, initialize_book, load_all_wizforms};
+use axum::{
+    routing::{
+        get, 
+        patch, 
+        post
+    }, 
+    Router
+};
+use book::{
+    create_book, 
+    get_book, 
+    get_existing_elements, 
+    get_existing_wizforms, 
+    initialize_book, 
+    load_all_wizforms, 
+    update_element, 
+    update_wizform
+};
 
 pub mod book;
 
@@ -28,6 +44,8 @@ async fn main(
         .route("/wizforms", get(get_existing_wizforms))
         .route("/wizforms", post(load_all_wizforms))
         .route("/elements", get(get_existing_elements))
+        .route("/wizform", patch(update_wizform))
+        .route("/element", patch(update_element))
         .with_state(manager);
     Ok(router.into())
 }

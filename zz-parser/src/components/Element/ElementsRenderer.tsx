@@ -38,7 +38,7 @@ export function ElementRenderer(schema: ElementRendererSchema) {
                     loader={null}
                     height={400}
                 >
-                    {schema.elements.map((element, index) => (
+                    {schema.elements.sort((e1, e2) => (e1.element < e2.element ? -1 : 1)).map((element, index) => (
                         <Space style={{paddingTop : 5, paddingBottom : 5}} key={index} size={80}>
                         <div 
                             style={{width : 200, paddingLeft : 10 }}>

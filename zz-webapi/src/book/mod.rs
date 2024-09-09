@@ -7,13 +7,12 @@ use axum::{
 
 use serde::{Deserialize, Serialize};
 use zz_data::{
-    book::{self, base::{
+    book::base::{
         Book,
         BookCreationParams
-    }}, 
+    }, 
     core::wizform::{
-        WizformDBModel, 
-        WizformElementModel
+        WizformDBModel, WizformElementFrontendModel, WizformElementModel, WizformFrontendModel
     }
 };
 
@@ -138,8 +137,8 @@ pub async fn load_all_wizforms(
     for wizform in wizforms {
         let res = sqlx::query(r#"
             INSERT INTO wizforms 
-            (id, book_id, game_id, name, element, magics, number, hitpoints, agility, jump_ability, precision, evolution_form, evolution_level, exp_modifier)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);
+            (id, book_id, game_id, name, element, magics, number, hitpoints, agility, jump_ability, precision, evolution_form, evolution_level, exp_modifier, enabled)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);
             "#)
             .bind(wizform.id)
             .bind(wizform.book_id)
@@ -155,10 +154,11 @@ pub async fn load_all_wizforms(
             .bind(wizform.evolution_form)
             .bind(wizform.evolution_level)
             .bind(wizform.exp_modifier)
+            .bind(wizform.enabled)
             .execute(&mut *tx)
             .await;
         match res {
-            Ok(r) => {},
+            Ok(_r) => {},
             Err(e) => {
                 return Err(format!("Smth happen while inserting wizform {}: {}", &wizform.name, e.to_string()));
             }
@@ -166,7 +166,7 @@ pub async fn load_all_wizforms(
     }
     let commit_res = tx.commit().await;
     match commit_res {
-        Ok(r) => {
+        Ok(_r) => {
             Ok(())
         },
         Err(e) => {
@@ -194,6 +194,62 @@ pub async fn get_existing_elements(
         Err(query_failure) => {
             tracing::info!("Error fetching elements of book {}: {}", &book_id.value, query_failure.to_string());
             Err(format!("Error fetching elements of book {}: {}", &book_id.value, query_failure.to_string()))
+        }
+    }
+}
+
+pub async fn update_wizform(
+    State(api_manager) : State<ApiManager>,
+    Json(wizform) : Json<WizformFrontendModel> 
+) -> Result<String, String> {
+    let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(r#"
+            UPDATE wizforms 
+            SET name=$1, element=$2, enabled=$3
+            WHERE id=$4
+            RETURNING *;
+        "#)
+        .bind(&wizform.name)
+        .bind(&wizform.element)
+        .bind(&wizform.enabled)
+        .bind(&wizform.id)
+        .fetch_one(&api_manager.pool)
+        .await;
+    match res {
+        Ok(_) => {
+            tracing::info!("Wizform {} updated successfully", &wizform.name);
+            Ok(format!("Wizform {} updated successfully", wizform.name))
+        },
+        Err(e) => {
+            tracing::info!("Failed updating wizform {}", &wizform.name);
+            Err(format!("Failed updating wizform {}: {}", wizform.name, e.to_string()))
+        }
+    }
+}
+
+pub async fn update_element(
+    State(api_manager) : State<ApiManager>,
+    Json(element) : Json<WizformElementFrontendModel> 
+) -> Result<String, String> {
+    tracing::info!("Got json for updating element {:?}", &element);
+    let res: Result<WizformElementModel, sqlx::Error> = sqlx::query_as(r#"
+            UPDATE elements 
+            SET name=$1, enabled=$2
+            WHERE id=$3
+            RETURNING *;
+        "#)
+        .bind(&element.name)
+        .bind(&element.enabled)
+        .bind(&element.id)
+        .fetch_one(&api_manager.pool)
+        .await;
+    match res {
+        Ok(r) => {
+            tracing::info!("Element {:?} updated successfully", &r);
+            Ok(format!("Element {} updated successfully", element.name))
+        },
+        Err(e) => {
+            tracing::info!("Failed updating element {}", &element.name);
+            Err(format!("Failed updating element {}: {}", element.name, e.to_string()))
         }
     }
 }

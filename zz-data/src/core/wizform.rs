@@ -87,14 +87,16 @@ pub struct WizformDBModel {
     pub precision: i32,
     pub evolution_form: i32,
     pub evolution_level: i32,
-    pub exp_modifier: i32
+    pub exp_modifier: i32,
+    pub enabled: bool
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct WizformFrontendModel {
     pub id: String,
     pub name: String,
-    pub element: i32
+    pub element: i32,
+    pub enabled: bool
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
@@ -109,7 +111,7 @@ pub struct WizformElementModel {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WizformElementFrontendModel {
     pub id: String,
-    pub element: WizformElementType,
+    pub element: i32,
     pub name: String,
     pub enabled: bool
 }
