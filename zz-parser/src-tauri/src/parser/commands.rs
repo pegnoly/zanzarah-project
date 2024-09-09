@@ -1,6 +1,5 @@
 use std::{collections::HashMap, io::Write};
 
-use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_dialog::DialogExt;
@@ -21,14 +20,8 @@ use super::{
     utils::AppManager
 };
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ElementFrontendModel {
-    pub id: String,
-    pub name: String,
-    pub element: i32,
-    pub enabled: bool
-}
-
+/// Executed on frontend startup, on success returns ids of locally stored books.
+/// #
 #[tauri::command]
 pub async fn load_existing_books_info(
     app_manager: State<'_, AppManager>
@@ -37,6 +30,8 @@ pub async fn load_existing_books_info(
     Ok(config_locked.existing_books.clone())
 }
 
+/// Executed on frontend startup, on success returns id of last edited book.
+/// #
 #[tauri::command]
 pub async fn load_current_book_info(
     app_manager: State<'_, AppManager>
@@ -45,6 +40,8 @@ pub async fn load_current_book_info(
     Ok(config_locked.current_book.clone())
 }
 
+/// Executed when user tries to pick up directory in a process of new book creation.
+/// #
 #[tauri::command]
 pub async fn try_pick_directory(
     app: AppHandle
@@ -63,13 +60,25 @@ pub async fn try_pick_directory(
     Ok(())
 }
 
+/// Executed when user tries to create new book.  
+/// 
+/// # Arguments
+/// 
+/// * `name` - name of book  
+/// * `directory` - directory of game files for this book 
+/// 
+/// # Additional
+/// 
+/// Creates both book and default elements for it.  
+/// Adds id of created book into local config
+/// #
 #[tauri::command]
 pub async fn try_create_book(
     name: String,
     directory: String,
     app_manager: State<'_, AppManager>
 ) -> Result<String, ()> {
-    let client = reqwest::Client::new();
+    let client = app_manager.client.read().await;
     let book_id = uuid::Uuid::new_v4().to_string().replace("-", "");
     let book_to_create = BookCreationParams {
         id: book_id.clone(),
@@ -112,12 +121,17 @@ pub async fn try_create_book(
     }
 }
 
+/// Executed when frontend tries to load existing book.  
+/// 
+/// # Arguments
+/// 
+/// * `id` - id of book  
 #[tauri::command]
 pub async fn try_load_book(
     id: String,
     app_manager: State<'_, AppManager>
 ) -> Result<Book, String> {
-    let client = reqwest::Client::new();
+    let client = app_manager.client.read().await;
     let response = client.get("https://zz-webapi.shuttleapp.rs/book")
         .json(&HashMap::from([("value", &id)]))
         .send()
@@ -148,6 +162,11 @@ pub async fn try_load_book(
     }
 }
 
+/// Executed when user starts files parsing. Texts must be parsed first cause wizforms parser depends on them 
+/// 
+/// # Arguments
+/// 
+/// * `directory` - directory of game files to parse
 #[tauri::command]
 pub async fn try_parse_texts(
     directory: String,
@@ -158,12 +177,17 @@ pub async fn try_parse_texts(
     Ok(())
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct WizformApiPayload {
-    pub id: String,
-    pub game_id: String
-}
-
+/// Executed after successful texts parsing.  
+/// 
+/// # Arguments
+/// 
+/// * `book_id` - id of book to parse wizforms  
+/// * `directory` - directory of game files for this book
+/// 
+/// # Additional
+/// 
+/// Fetch existing wizforms of this book to compare them with parsed ones. Needed for repeated parsings.
+/// # 
 #[tauri::command]
 pub async fn try_parse_wizforms(
     book_id: String,
@@ -172,7 +196,7 @@ pub async fn try_parse_wizforms(
 ) -> Result<(), ()> {
     println!("Trying to parse wizforms");
     let texts = app_manager.texts.lock().await;
-    let client = reqwest::Client::new();
+    let client = app_manager.client.read().await;
     let response = client.get("https://zz-webapi.shuttleapp.rs/wizforms")
         .json(&HashMap::from([("value", &book_id)]))
         .send()
@@ -213,11 +237,17 @@ pub async fn try_parse_wizforms(
     }
 }
 
+/// Executed when first parsing of book is completed correctly and book must go into initualized state.  
+/// 
+/// # Arguments
+/// 
+/// * `book_id` - id of book  
 #[tauri::command]
 pub async fn initialize_book(
-    book_id: String
+    book_id: String,
+    app_manager: State<'_, AppManager>
 ) -> Result<(), ()> {
-    let client = reqwest::Client::new();
+    let client = app_manager.client.read().await;
     let response = client.patch("https://zz-webapi.shuttleapp.rs/book/initialize")
         .json(&HashMap::from([("value", Some(book_id))]))
         .send()
@@ -234,11 +264,17 @@ pub async fn initialize_book(
     }
 }
 
+/// Executed when frontend tries to load all wizforms for book.  
+/// 
+/// # Arguments
+/// 
+/// * `book_id` - id of book  
 #[tauri::command]
 pub async fn load_wizforms(
-    book_id: String
+    book_id: String,
+    app_manager: State<'_, AppManager>
 ) -> Result<Vec<WizformFrontendModel>, ()> {
-    let client = reqwest::Client::new();
+    let client = app_manager.client.read().await;
     let response = client.get("https://zz-webapi.shuttleapp.rs/wizforms")
         .json(&HashMap::from([("value", &book_id)]))
         .send()
@@ -271,11 +307,17 @@ pub async fn load_wizforms(
     }
 }
 
+/// Executed when frontend tries to load all elements for book.  
+/// 
+/// # Arguments
+/// 
+/// * `book_id` - id of book 
 #[tauri::command]
 pub async fn load_elements(
-    book_id: String
-) -> Result<Vec<ElementFrontendModel>, ()> {
-    let client = reqwest::Client::new();
+    book_id: String,
+    app_manager: State<'_, AppManager>
+) -> Result<Vec<WizformElementFrontendModel>, ()> {
+    let client = app_manager.client.read().await;
     let response = client.get("https://zz-webapi.shuttleapp.rs/elements")
         .json(&HashMap::from([("value", &book_id)]))
         .send()
@@ -286,7 +328,7 @@ pub async fn load_elements(
             match elements_json {
                 Ok(elements) => {
                     Ok(elements.into_iter().map(|e| {
-                        ElementFrontendModel {
+                        WizformElementFrontendModel {
                             id: e.id,
                             name: e.name,
                             element: e.element as i32,
@@ -306,6 +348,11 @@ pub async fn load_elements(
     }
 }
 
+/// Executed when user updates wizform on frontend
+/// 
+/// # Arguments
+/// 
+/// * `wizform` - wizform to update 
 #[tauri::command]
 pub async fn update_wizform(
     wizform: WizformFrontendModel,
@@ -328,6 +375,11 @@ pub async fn update_wizform(
     }
 }
 
+/// Executed when user updates element on frontend
+/// 
+/// # Arguments
+///
+/// * `element` - element to update 
 #[tauri::command]
 pub async fn update_element(
     element: WizformElementFrontendModel,
