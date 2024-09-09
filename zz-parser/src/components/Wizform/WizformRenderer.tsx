@@ -1,13 +1,14 @@
-import {Button, Checkbox, Space, Typography} from "antd";
+import {Button, Checkbox, Select, Space, Typography} from "antd";
 import { useEffect, useState } from 'react';
 import { MagicElement, Wizform } from './../types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useWizformFilterContext } from '../../contexts/WizformFilter';
-import { WizformEditor } from "./WizformEditor";
+import { EditOutlined } from "@ant-design/icons";
 
 export interface WizformsRendererSchema {
     wizforms: Wizform[],
-    elements: MagicElement[]
+    elements: MagicElement[],
+    onUpdate: (w: Wizform) => void
 }
 
 /**
@@ -18,7 +19,6 @@ export interface WizformsRendererSchema {
 export function WizformRenderer(schema: WizformsRendererSchema) {
 
     const [wizformsToRender, setWizformsToRender] = useState<Wizform[]>([]);
-    const [wizformToEdit, setWizformToEdit] = useState<Wizform | null>(null);
 
     const wizformFilterContext = useWizformFilterContext();
 
@@ -38,19 +38,14 @@ export function WizformRenderer(schema: WizformsRendererSchema) {
         );
     }, [wizformFilterContext?.state.name, wizformFilterContext?.state.element])
 
-
-    function wizformToEditSelected(w: Wizform) {
-        console.log("Wizform selected: ", w);
-        setWizformToEdit(w);
+    function onWizformEnabledUpdated(wizform: Wizform, enabled: boolean) {
     }
 
-    function onWizformEditionFinished() {
-        // invoke("update_wizform", {model: wizformToEdit})
-        setWizformToEdit(null);
-    }
-
-    function onWizformEditionCancelled() {
-        setWizformToEdit(null);
+    function onWizformElementUpdated(wizform: Wizform, element: number) {
+        schema.onUpdate({
+            ...wizform,
+            element: element
+        });
     }
 
     return (
@@ -63,25 +58,73 @@ export function WizformRenderer(schema: WizformsRendererSchema) {
                 height={400}
             >
                 {wizformsToRender.map((w, index) => (
-                     <Space style={{paddingTop : 5, paddingBottom : 5}} key={index} size={45}>
-                     <div 
-                         style={{width : 230, paddingLeft : 10 }}>
-                         <Typography.Text>{w.name}</Typography.Text>
-                     </div>
-                     <div 
-                         style={{width : 100}}>
-                         <Typography.Text>{schema.elements.find((e) => e.element == w.element)?.name}</Typography.Text>
-                     </div>
-                     <Checkbox>Отображать в книге</Checkbox>
-                     <Button size='small' onClick={() => wizformToEditSelected(w)}>Редактировать</Button>
-                 </Space>
+                    <WizformElement
+                        key={index}
+                        wizform={w}
+                        elements={schema.elements}
+                        elementUpdateCallback={onWizformElementUpdated}
+                        enabledUpdateCallback={onWizformEnabledUpdated}
+                    />
                 ))}
             </InfiniteScroll>
-            <WizformEditor 
-                wizform={wizformToEdit} 
-                elements={schema.elements} 
-                callbackOk={onWizformEditionFinished}
-                callbackCancel={onWizformEditionCancelled}/>
         </div>
+    )
+}
+
+interface WizformElementSchema {
+    wizform: Wizform,
+    elements: MagicElement[],
+    elementUpdateCallback: (w: Wizform, element: number) => void,
+    enabledUpdateCallback: (w: Wizform, enabled: boolean) => void
+}
+
+function WizformElement(schema: WizformElementSchema) {
+
+    const [elementSelectionEnabled, setElementSelectionEnabled] = useState<boolean>(false);
+    const [currentElement, setCurrentElement] = useState<number>(schema.wizform.element);
+
+    function handleEnableUpdate(enabled: boolean) {
+        schema.enabledUpdateCallback(schema.wizform, enabled); 
+    }
+
+    function handleElementUpdate(element: number) {
+        schema.elementUpdateCallback(schema.wizform, element); 
+    }
+
+    return (
+        <>
+            <Space style={{paddingTop : 5, paddingBottom : 5}} size={45}>
+                <div 
+                    style={{width : 230, paddingLeft : 10 }}>
+                    <Typography.Text>{schema.wizform.name}</Typography.Text>
+                </div>
+                <div 
+                    style={{width : 250}}
+                >
+                    <Space direction="horizontal">
+                        <Select 
+                            style={{width: 200}}
+                            disabled={!elementSelectionEnabled} 
+                            defaultValue={schema.wizform.element}
+                            value={currentElement}
+                            onChange={(e) => setCurrentElement(e)}
+                        >
+                        {schema.elements.map((e, index) => (
+                            <Select.Option key={index} value={e.element}>{e.name}</Select.Option>
+                        ))}</Select>
+                    </Space>
+                    <Button
+                        //type="dashed"
+                        style={{
+                            color: elementSelectionEnabled ? "red" : "black"
+                        }}
+                        shape="circle"
+                        icon={<EditOutlined/>}
+                        onClick={() => setElementSelectionEnabled(!elementSelectionEnabled)}
+                    />
+                </div>
+                <Checkbox>Отображать в книге</Checkbox>
+            </Space>
+        </>
     )
 }

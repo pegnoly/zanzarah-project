@@ -60,6 +60,46 @@ export function BookDataRenderer(schema: BookRendererSchema) {
         setContentType(ct);
     }
 
+    /**
+     * Callback called when ElementRenderer updates some MagicElement
+     * @param element - updated element
+     */
+    function onElementUpdated(element: MagicElement) {
+        const updatedElements = elements.map((e) => {
+            if (e.id != element.id) {
+                return e;
+            }
+            else {
+                return {
+                    ...e,
+                    name: element.name,
+                    enabled: element.enabled
+                }
+            }
+        });
+        setElements(updatedElements);
+    }
+
+    /**
+     * Callback called when WizformRender updates some Wizform
+     * @param wizform - updated wizform
+     */
+    function onWizformUpdated(wizform: Wizform) {
+        const updatedWizforms = wizforms.map((w) => {
+            if (w.id != wizform.id) {
+                return w;
+            }
+            else {
+                return {
+                    ...w,
+                    name: wizform.name,
+                    element: wizform.element
+                }
+            }
+        });
+        setWizforms(updatedWizforms);
+    }
+
     return (
         <>
             <WizformFilterProvider>
@@ -78,8 +118,8 @@ export function BookDataRenderer(schema: BookRendererSchema) {
                 </Space>
                 {
                     contentType == ContentType.Wizform ? 
-                    <WizformRenderer wizforms={wizforms} elements={elements}/> :
-                    <ElementRenderer elements={elements}/>
+                    <WizformRenderer wizforms={wizforms} elements={elements} onUpdate={onWizformUpdated}/> :
+                    <ElementRenderer elements={elements} updateCallback={onElementUpdated}/>
                 }
             </WizformFilterProvider>
         </>
