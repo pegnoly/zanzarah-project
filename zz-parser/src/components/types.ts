@@ -25,13 +25,20 @@ export type Wizform = {
     id: string,
     name: string,
     element: number,
-    enabled: boolean
+    enabled: boolean,
+    filters: number[]
 }
 
 export type MagicElement = {
     id: string,
     name: string,
     element: number,
+    enabled: boolean
+}
+
+export type Filter = {
+    name: string,
+    filter_type: number,
     enabled: boolean
 }
 

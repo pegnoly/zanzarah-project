@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { MagicElement, Wizform } from "../types";
+import { Filter, MagicElement, Wizform } from "../types";
 import { Button, Checkbox, Select, Space, Typography } from "antd";
 import { EditOutlined } from "@ant-design/icons";
+import { useWizformFilterContext } from "../../contexts/WizformFilter";
 
 /**
  * Props of wizform render
@@ -48,7 +49,10 @@ export function WizformItem(schema: WizformElementSchema) {
     const [elementSelectionEnabled, setElementSelectionEnabled] = useState<boolean>(false);
     const [currentElement, setCurrentElement] = useState<number>(schema.wizform.element);
     const [enabledForBook, setEnabledForBook] = useState<boolean>(schema.wizform.enabled);
+    //const [filters, setFilters] = useState<number[]>(schema.wizform.filters);
     //const [name, setName] = useState<string>(schema.wizform.name);
+
+    const wizformFilterContext = useWizformFilterContext();
 
     function handleEnableUpdate(enabled: boolean) {
         setEnabledForBook(enabled);
@@ -66,21 +70,25 @@ export function WizformItem(schema: WizformElementSchema) {
         schema.elementUpdateCallback(schema.wizform, element); 
     }
 
+    function handleFiltersUpdate(filters: number | number[]) {
+        console.log("Filters: ", filters)
+    }
+
     return (
         <>
             <Space style={{paddingTop : 5, paddingBottom : 5}} size={45}>
                 <div 
-                    style={{width : 230, paddingLeft : 10 }}>
+                    style={{width : "15vw", paddingLeft : 10 }}>
                     <Typography.Text editable={{
                         onChange: (newText) => {handleNameUpdate(newText)}
                     }}>{schema.wizform.name}</Typography.Text>
                 </div>
                 <div 
-                    style={{width : 250}}
+                    style={{width : "25vw"}}
                 >
                     <Space direction="horizontal">
                         <Select 
-                            style={{width: 200}}
+                            style={{width: 150}}
                             disabled={!elementSelectionEnabled} 
                             defaultValue={currentElement}
                             value={schema.wizform.element}
@@ -100,10 +108,22 @@ export function WizformItem(schema: WizformElementSchema) {
                         onClick={() => setElementSelectionEnabled(!elementSelectionEnabled)}
                     />
                 </div>
-                <Checkbox 
-                    checked={enabledForBook}
-                    onChange={(event) => handleEnableUpdate(event.target.checked)}
-                >Отображать в книге</Checkbox>
+                <div id="customfilters" style={{width: "vw30"}}>
+                    <Select 
+                        onChange={(e) => handleFiltersUpdate(e)}
+                        style={{width: 150}} 
+                        mode="multiple" 
+                        size="small"
+                    >{wizformFilterContext?.state.custom.filter((f) => f.enabled).map((f, index) => (
+                        <Select.Option key={index} value={f.filter_type}>{f.name}</Select.Option>
+                    ))}</Select>
+                </div>
+                <div style={{width: "vw15"}}> 
+                    <Checkbox 
+                        checked={enabledForBook}
+                        onChange={(event) => handleEnableUpdate(event.target.checked)}
+                    >Активно</Checkbox>
+                </div>
             </Space>
         </>
     )

@@ -1,8 +1,10 @@
 import { createContext, PropsWithChildren, useContext, useState } from "react"
+import { Filter } from "../components/types"
 
 export type WizformFilter = {
     name: string,
-    element: number
+    element: number,
+    custom: Filter[]
 }
 
 export type WizformFilterType = {
@@ -13,7 +15,7 @@ export type WizformFilterType = {
 export const WizformFilterContext = createContext<WizformFilterType | undefined>(undefined);
 
 const WizformFilterProvider = ({children} : PropsWithChildren<{}>) => {
-    const [state, setState] = useState<WizformFilterType['state']>({name: "", element: -1});
+    const [state, setState] = useState<WizformFilterType['state']>({name: "", element: -1, custom: []});
 
     return (
         <WizformFilterContext.Provider value={{state, setState}}>

@@ -99,7 +99,7 @@ export function BooksFacade() {
                 <Space direction="horizontal">
                     <Typography.Text style={{fontFamily: "fantasy"}}>Доступность книги</Typography.Text>
                     <Typography.Text>{bookDownloadable ? "Книга доступна для загрузки" : "Книга недоступна для загрузки"}</Typography.Text>
-                    <Button>Установить доступность загрузки</Button>
+                    <Button onClick={() => invoke("upload_book", {bookId: "1"})}>Установить доступность загрузки</Button>
                 </Space>
                 <BookDataRenderer id={bookId} initialized={bookInitializalized}/>
             </Space>

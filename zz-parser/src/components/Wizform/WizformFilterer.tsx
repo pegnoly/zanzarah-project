@@ -1,6 +1,7 @@
-import { Input, Select, Space } from "antd";
+import { Button, Input, Select, Space } from "antd";
 import { useWizformFilterContext } from "../../contexts/WizformFilter";
 import { MagicElement } from "./../types";
+import { useState } from "react";
 
 interface WizformFiltererSchema {
     elements: MagicElement[]
@@ -13,6 +14,8 @@ interface WizformFiltererSchema {
  * @returns 
  */
 export function WizformFilterer(schema: WizformFiltererSchema) {
+
+    const [filter, setFilter] = useState<string>("");
 
     const wizformFilterContext = useWizformFilterContext();
 
@@ -28,6 +31,23 @@ export function WizformFilterer(schema: WizformFiltererSchema) {
             ...wizformFilterContext.state,
             element: filter
         })
+    }
+
+    function handleCustomFilterNameChange(s: string) {
+        setFilter(s);
+    }
+
+    function handleCustomFilterAdd() {
+        let currentFilters = wizformFilterContext?.state.custom;
+        currentFilters?.push({
+            name: filter,
+            filter_type: currentFilters.length,
+            enabled: true
+        })
+        wizformFilterContext?.setState({
+            ...wizformFilterContext.state,
+            custom: currentFilters?.length != undefined ? currentFilters : []
+        });
     }
 
     return (
@@ -47,6 +67,8 @@ export function WizformFilterer(schema: WizformFiltererSchema) {
                         <Select.Option key={index} value={e.element}>{e.name}</Select.Option>
                     ))}
                 </Select>
+                <Input style={{width: 100}} onChange={(e) => handleCustomFilterNameChange(e.currentTarget.value)}></Input>
+                <Button onClick={handleCustomFilterAdd}>+</Button>
             </Space>
         </>
     )

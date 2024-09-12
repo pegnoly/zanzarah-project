@@ -1,8 +1,8 @@
-import { Segmented, Space } from "antd";
+import { Button, Input, Segmented, Space } from "antd";
 import { WizformRenderer } from "../Wizform/WizformRenderer";
-import WizformFilterProvider from "../../contexts/WizformFilter";
+import WizformFilterProvider, { useWizformFilterContext } from "../../contexts/WizformFilter";
 import { useEffect, useState } from "react";
-import { MagicElement, Wizform } from "../types";
+import { Filter, MagicElement, Wizform } from "../types";
 import { invoke } from "@tauri-apps/api/core";
 import { ElementRenderer } from "../Element/ElementsRenderer";
 import { WizformFilterer } from "../Wizform/WizformFilterer";
@@ -33,6 +33,8 @@ export function BookDataRenderer(schema: BookRendererSchema) {
     const [wizforms, setWizforms] = useState<Wizform[]>([]);
     const [elements, setElements] = useState<MagicElement[]>([]);
 
+    const wizformFilterContext = useWizformFilterContext();
+
     // component reacts to change of book id & initialization state and tries to load data
     useEffect(() => {
         tryLoadData(schema.initialized, schema.id);
@@ -43,6 +45,7 @@ export function BookDataRenderer(schema: BookRendererSchema) {
         if (initialized && id != "") {
             await loadWizforms(id);
             await loadElements(id);
+            await loadFilters(id);
         }
     }
 
@@ -53,7 +56,15 @@ export function BookDataRenderer(schema: BookRendererSchema) {
 
     async function loadElements(bookId: string) {
         await invoke("load_elements", {bookId: bookId})
-            .then((v) => setElements(v as MagicElement[]))
+            .then((v) => setElements(v as MagicElement[]));
+    }
+
+    async function loadFilters(boolId: string) {
+        await invoke("load_filters", {bookId: boolId})
+            .then((v) => wizformFilterContext?.setState({
+                ...wizformFilterContext.state,
+                custom: v as Filter[]
+            }));
     }
 
     function handleContentTypeChange(ct: ContentType) {
@@ -107,7 +118,7 @@ export function BookDataRenderer(schema: BookRendererSchema) {
         <>
             <WizformFilterProvider>
                 <Space>
-                    <div style={{width : 400}}>
+                    <div style={{width: 200}}>
                         {contentType == ContentType.Wizform && <WizformFilterer elements={elements}/>}
                     </div>
                     <div style={{position : "relative", left: 200}}>
