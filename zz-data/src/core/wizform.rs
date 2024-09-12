@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumIter, FromRepr};
 
+use crate::book::base::WizformFilterType;
+
 use super::magic::Magic;
 
 #[derive(Debug, Serialize, Default, Deserialize, FromRepr, Display, EnumIter, Clone, sqlx::Type)]
@@ -88,7 +90,8 @@ pub struct WizformDBModel {
     pub evolution_form: i32,
     pub evolution_level: i32,
     pub exp_modifier: i32,
-    pub enabled: bool
+    pub enabled: bool,
+    pub filters: Vec<i32>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -96,7 +99,8 @@ pub struct WizformFrontendModel {
     pub id: String,
     pub name: String,
     pub element: i32,
-    pub enabled: bool
+    pub enabled: bool,
+    pub filters: Vec<i32>
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
