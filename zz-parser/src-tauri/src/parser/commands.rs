@@ -7,7 +7,7 @@ use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_dialog::DialogExt;
 use zz_data::{
     book::base::{
-        Book, BookCreationParams
+        Book, BookCreationParams, WizformFilterDBModel, WizformFilterType
     }, 
     core::wizform::{
         WizformDBModel, WizformElementFrontendModel, WizformElementModel, WizformElementType, WizformFrontendModel
@@ -103,7 +103,18 @@ pub async fn try_create_book(
                     }
                 }
             }
-        ).collect()
+        ).collect(),
+        filters: WizformFilterType::iter().map(
+            |f| {
+                WizformFilterDBModel {
+                    id: uuid::Uuid::new_v4().to_string(),
+                    book_id: book_id.clone(),
+                    filter_type: f as i32,
+                    name: "".to_string(),
+                    enabled: false
+                }
+            }
+        ).collect() 
     };
     let mut config = app_manager.config.lock().await;
     config.existing_books.push(book_id.clone());
@@ -293,7 +304,8 @@ pub async fn load_wizforms(
                             id: w.id,
                             name: w.name,
                             element: w.element as i32,
-                            enabled: w.enabled
+                            enabled: w.enabled,
+                            filters: w.filters.clone()
                         }}).collect())
                 },
                 Err(e) => {
@@ -345,6 +357,36 @@ pub async fn load_elements(
         },
         Err(response_fail) => {
             println!("Error fetching existing elements: {}", response_fail.to_string());
+            Err(())
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn load_filters(
+    app_manager: State<'_, AppManager>,
+    book_id: String
+) -> Result<Vec<WizformFilterDBModel>, ()> {
+    let client = app_manager.client.read().await;
+    let response = client.get("https://zz-webapi.shuttleapp.rs/book/filters")
+        .json(&HashMap::from([("value", &book_id)]))
+        .send()
+        .await;
+    match response {
+        Ok(success) => {
+            let json = success.json().await;
+            match json {
+                Ok(filters) => {
+                    Ok(filters)
+                },
+                Err(e) => {
+                    println!("Error converting filters json: {}", e.to_string());
+                    Err(())
+                }
+            }
+        },
+        Err(failure) => {
+            println!("Error fetching existing filters: {}", failure.to_string());
             Err(())
         }
     }
@@ -403,6 +445,29 @@ pub async fn update_element(
         }
     }
 }
+
+#[tauri::command]
+pub async fn update_filter(
+    filter: WizformFilterDBModel,
+    app_manager: State<'_, AppManager>
+) -> Result<(), ()> {
+    let client = app_manager.client.read().await;
+    let response = client.patch("https://zz-webapi.shuttleapp.rs/book/filters")
+        .json(&filter)
+        .send()
+        .await;
+    match response {
+        Ok(_success) => {
+            println!("Filter updated successfully");
+            Ok(())
+        },
+        Err(failure) => {
+            println!("Error updating filter: {}", failure.to_string());
+            Err(())
+        }
+    }
+}
+
 
 #[tauri::command]
 pub async fn upload_book(

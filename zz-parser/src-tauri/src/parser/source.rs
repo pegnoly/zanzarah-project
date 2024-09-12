@@ -202,7 +202,8 @@ pub async fn parse_wizforms(
                     evolution_form: evolution_form_number, 
                     evolution_level: evolution_level, 
                     exp_modifier: exp_modifier,
-                    enabled: wizform.enabled
+                    enabled: wizform.enabled,
+                    filters: wizform.filters.clone()
                 });
             },
             None => {
@@ -221,7 +222,8 @@ pub async fn parse_wizforms(
                     evolution_form: evolution_form_number, 
                     evolution_level: evolution_level, 
                     exp_modifier: exp_modifier,
-                    enabled: true 
+                    enabled: true,
+                    filters: vec![]
                 });
             }
         }

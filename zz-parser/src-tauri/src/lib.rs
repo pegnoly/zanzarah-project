@@ -22,7 +22,9 @@ pub async fn run() {
             parser::commands::initialize_book,
             parser::commands::update_wizform,
             parser::commands::update_element,
-            parser::commands::upload_book
+            parser::commands::upload_book,
+            parser::commands::load_filters,
+            parser::commands::update_filter
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

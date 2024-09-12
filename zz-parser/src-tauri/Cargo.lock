@@ -3945,9 +3945,9 @@ dependencies = [
 
 [[package]]
 name = "sqlformat"
-version = "0.2.4"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f895e3734318cc55f1fe66258926c9b910c124d47520339efecbb6c59cec7c1f"
+checksum = "7bba3a93db0cc4f7bdece8bb09e77e2e785c20bfebf79eb8340ed80708048790"
 dependencies = [
  "nom",
  "unicode_categories",
@@ -6015,9 +6015,9 @@ dependencies = [
 
 [[package]]
 name = "zz-data"
-version = "0.1.15"
+version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "057b6337acc6fa6e4482d8353d2506d33680d909b846c52d48b15609456c45fa"
+checksum = "4bb255d147240eb278920ae0612d9b556e2014a2cf600ff6d89ad13b78975ebc"
 dependencies = [
  "serde",
  "sqlx",

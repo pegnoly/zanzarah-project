@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 use zz_data::core::text::Text;
 
+use super::consts;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub existing_books: Vec<String>,
@@ -85,7 +87,7 @@ pub struct DropboxConnector {
 impl DropboxConnector {
     pub fn new() -> Self {
         DropboxConnector {
-            client: DBXClient::new("sl.B8yGESI-exB9lFapveMbiv_g4eIDRN-Zd3r-g8kEaDt2dwt24pMNBsLkTvl0PffVk9Yke77hduKWY2UEaQBrw4f9VfBukIhOALfEOfN2iSCtkUCx3Dgz_BecOCAHspdU3a3gCB9xNVCNA2OhD3m4DlQ")
+            client: DBXClient::new(consts::DROPBOX_TOKEN)
         }
     }
 }
