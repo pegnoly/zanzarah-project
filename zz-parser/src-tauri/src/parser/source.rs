@@ -48,12 +48,14 @@ pub async fn parse_wizforms(
     wizforms: &mut Vec<WizformDBModel>, 
     existing_wizforms: &Vec<WizformDBModel>
 ) {
-    let path = PathBuf::from(directory).join("Data\\_fb0x01.fbs");
+    let path = PathBuf::from(&directory).join("Data\\_fb0x01.fbs");
     println!("Wizforms path: {:?}", &path);
     let mut file = std::fs::File::open(path).unwrap();
     let mut reader = BinaryReader::from_file(&mut file);
     // bytes are represented in little endian order
     reader.set_endian(binary_reader::Endian::Little);
+    let icons_path = PathBuf::from(&directory).join("Resources\\Bitmaps\\WIZ000T.BMP");
+    let wizforms_icon = bmp::open(icons_path).unwrap();
     // first 4 bytes is wizforms count
     let count = reader.read_u32().unwrap();
     for _ in 0..count {
@@ -165,7 +167,19 @@ pub async fn parse_wizforms(
         reader.read_bytes(12).unwrap();
         // litter 13
         let _litter_13 = reader.read_i32().unwrap();
-        //
+        // ICON
+
+        let mut new_test_img = bmp::Image::new(40, 40);
+        for (x, y) in new_test_img.coordinates() {
+            let offset = x + 40 * (number as u32);
+            let pixel = wizforms_icon.get_pixel(offset, y);
+            new_test_img.set_pixel(x, y, pixel);
+        }
+        let new_img_path = PathBuf::from(&directory).join(format!("IconsTest\\{}.bmp", number));
+        new_test_img.save(new_img_path).unwrap();
+
+        // ICON
+        
         let hex_id = to_le_hex_string(id);
         let existing_wizform = existing_wizforms.iter()
             .find(|w| {
