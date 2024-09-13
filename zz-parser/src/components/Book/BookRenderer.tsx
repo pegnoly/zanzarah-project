@@ -61,10 +61,12 @@ export function BookDataRenderer(schema: BookRendererSchema) {
 
     async function loadFilters(boolId: string) {
         await invoke("load_filters", {bookId: boolId})
-            .then((v) => wizformFilterContext?.setState({
+            .then((v) => {
+                console.log("Got filters: {}", v);
+                wizformFilterContext?.setState({
                 ...wizformFilterContext.state,
                 custom: v as Filter[]
-            }));
+            })});
     }
 
     function handleContentTypeChange(ct: ContentType) {
@@ -106,7 +108,8 @@ export function BookDataRenderer(schema: BookRendererSchema) {
                     ...w,
                     name: wizform.name,
                     element: wizform.element,
-                    enabled: wizform.enabled
+                    enabled: wizform.enabled,
+                    filters: wizform.filters
                 }
             }
         });
@@ -114,28 +117,30 @@ export function BookDataRenderer(schema: BookRendererSchema) {
         invoke("update_wizform", {wizform: wizform});
     }
 
+    function onFilterUpdated(filter: Filter) {
+
+    }
+
     return (
         <>
-            <WizformFilterProvider>
-                <Space>
-                    <div style={{width: 200}}>
-                        {contentType == ContentType.Wizform && <WizformFilterer elements={elements}/>}
-                    </div>
-                    <div style={{position : "relative", left: 200}}>
-                        <Segmented 
-                            onChange={handleContentTypeChange} 
-                            options={[
-                                {label: "Феи", value: ContentType.Wizform}, 
-                                {label: "Стихии", value: ContentType.Element}
-                            ]}></Segmented>
-                    </div>
-                </Space>
-                {
-                    contentType == ContentType.Wizform ? 
-                    <WizformRenderer wizforms={wizforms} elements={elements} onUpdate={onWizformUpdated}/> :
-                    <ElementRenderer elements={elements} updateCallback={onElementUpdated}/>
-                }
-            </WizformFilterProvider>
+            <Space>
+                <div style={{width: 200}}>
+                    {contentType == ContentType.Wizform && <WizformFilterer elements={elements}/>}
+                </div>
+                <div style={{position : "relative", left: 450}}>
+                    <Segmented 
+                        onChange={handleContentTypeChange} 
+                        options={[
+                            {label: "Феи", value: ContentType.Wizform}, 
+                            {label: "Стихии", value: ContentType.Element}
+                        ]}></Segmented>
+                </div>
+            </Space>
+            {
+                contentType == ContentType.Wizform ? 
+                <WizformRenderer wizforms={wizforms} elements={elements} onUpdate={onWizformUpdated}/> :
+                <ElementRenderer elements={elements} updateCallback={onElementUpdated}/>
+            }
         </>
     )
 }

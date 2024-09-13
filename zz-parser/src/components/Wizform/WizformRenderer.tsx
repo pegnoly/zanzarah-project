@@ -52,13 +52,20 @@ export function WizformRenderer(schema: WizformsRendererSchema) {
         });
     }
 
+    function onWizformFiltersUpdated(wizform: Wizform, filters: number[]) {
+        schema.onUpdate({
+            ...wizform,
+            filters: filters
+        })
+    }
+
      return (
         <div style={{paddingTop : 10, paddingBottom : 10}}>
             <InfiniteScroll
                 dataLength={wizformsToRender.length}
                 hasMore={false}
                 next={() => {}}     
-                loader={null}
+                loader={<h4>Загружается...</h4>}
                 height={400}
             >
                 {wizformsToRender.map((w, index) => (
@@ -69,6 +76,7 @@ export function WizformRenderer(schema: WizformsRendererSchema) {
                         elementUpdateCallback={onWizformElementUpdated}
                         enabledUpdateCallback={onWizformEnabledUpdated}
                         nameUpdateCallback={onWizformNameUpdated}
+                        filtersUpdateCallback={onWizformFiltersUpdated}
                     />
                 ))}
             </InfiniteScroll>

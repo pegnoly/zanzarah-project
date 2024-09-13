@@ -5,6 +5,7 @@ import { BookCreator } from "./BookCreator";
 import { Book } from "../types";
 import { AppState, useAppStateContext } from "../../contexts/AppState";
 import { BookDataRenderer } from "./BookRenderer";
+import WizformFilterProvider from "../../contexts/WizformFilter";
 
 
 /**
@@ -101,7 +102,9 @@ export function BooksFacade() {
                     <Typography.Text>{bookDownloadable ? "Книга доступна для загрузки" : "Книга недоступна для загрузки"}</Typography.Text>
                     <Button onClick={() => invoke("upload_book", {bookId: "1"})}>Установить доступность загрузки</Button>
                 </Space>
-                <BookDataRenderer id={bookId} initialized={bookInitializalized}/>
+                <WizformFilterProvider>
+                    <BookDataRenderer id={bookId} initialized={bookInitializalized}/>
+                </WizformFilterProvider>
             </Space>
         </>
     )

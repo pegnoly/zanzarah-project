@@ -1,7 +1,8 @@
-import { Button, Input, Select, Space } from "antd";
+import { Button, Input, List, Modal, Select, Space, Typography } from "antd";
 import { useWizformFilterContext } from "../../contexts/WizformFilter";
 import { MagicElement } from "./../types";
 import { useState } from "react";
+import { DeleteFilled } from "@ant-design/icons";
 
 interface WizformFiltererSchema {
     elements: MagicElement[]
@@ -33,32 +34,15 @@ export function WizformFilterer(schema: WizformFiltererSchema) {
         })
     }
 
-    function handleCustomFilterNameChange(s: string) {
-        setFilter(s);
-    }
-
-    function handleCustomFilterAdd() {
-        let currentFilters = wizformFilterContext?.state.custom;
-        currentFilters?.push({
-            name: filter,
-            filter_type: currentFilters.length,
-            enabled: true
-        })
-        wizformFilterContext?.setState({
-            ...wizformFilterContext.state,
-            custom: currentFilters?.length != undefined ? currentFilters : []
-        });
-    }
-
     return (
         <>
             <Space>
-                <Input 
+                <Input style={{width: 150}}
                     onChange={(e) => handleNameFilterChange(e.currentTarget.value)}
                 ></Input>
                 <Select 
                     onChange={(e) => handleElementFilterChange(e)}
-                    style={{width: 250}} 
+                    style={{width: 200}} 
                     listItemHeight={10} 
                     listHeight={250}
                 >
@@ -67,9 +51,71 @@ export function WizformFilterer(schema: WizformFiltererSchema) {
                         <Select.Option key={index} value={e.element}>{e.name}</Select.Option>
                     ))}
                 </Select>
-                <Input style={{width: 100}} onChange={(e) => handleCustomFilterNameChange(e.currentTarget.value)}></Input>
-                <Button onClick={handleCustomFilterAdd}>+</Button>
+                <CustomFilterHolder/>
             </Space>
+        </>
+    )
+}
+
+function CustomFilterHolder() {
+
+    const [open, setOpen] = useState<boolean>(false);
+    const [newFilter, setNewFilter] = useState<string>("");
+
+    const wizformFilterContext = useWizformFilterContext();
+    
+    function handleClose() {
+        setOpen(false);
+    }
+
+    function handleNewFilterChange(s: string) {
+        setNewFilter(s);
+    }
+
+    function handleNewFilterAdd() {
+        const firstDisabledFilter = wizformFilterContext?.state.custom.filter(f => f.enabled == false)[0];
+        const newFilters = wizformFilterContext?.state.custom.map((f, i) => {
+            if(f.filter_type == firstDisabledFilter?.filter_type) {
+                return {
+                    ...f,
+                    enabled: true,
+                    name: newFilter
+                }
+            }
+            else {
+                return f
+            }
+        })
+
+        wizformFilterContext?.setState({
+            ...wizformFilterContext.state,
+            custom: newFilters != undefined ? newFilters : wizformFilterContext.state.custom
+        });
+    }
+
+    return (
+        <>
+            <Button onClick={() => setOpen(true)}>Настроить фильтры</Button>
+            <Modal 
+                open={open}
+                onCancel={handleClose}
+                onClose={handleClose}
+            >
+                <Space direction="horizontal">
+                    <List header="Имеющиеся фильтры">{
+                        wizformFilterContext?.state.custom.filter(f => f.enabled).map((f, index) => (
+                            <List.Item>
+                                <Space direction="horizontal">
+                                    <Typography.Text key={index}>{f.name}</Typography.Text>
+                                    <Button icon={<DeleteFilled/>}></Button>
+                                </Space>
+                            </List.Item>
+                        ))
+                    }</List>
+                    <Input defaultValue={newFilter} onChange={(e) => handleNewFilterChange(e.currentTarget.value)}/>
+                    <Button onClick={handleNewFilterAdd}>Добавить фильтр</Button>
+                </Space>
+            </Modal>
         </>
     )
 }

@@ -36,7 +36,9 @@ interface WizformElementSchema {
      * @param name - new name of this wizform
      * @returns 
      */
-    nameUpdateCallback: (w: Wizform, name: string) => void
+    nameUpdateCallback: (w: Wizform, name: string) => void,
+
+    filtersUpdateCallback: (w: Wizform, filters: number[]) => void
 }
 
 /**
@@ -70,8 +72,9 @@ export function WizformItem(schema: WizformElementSchema) {
         schema.elementUpdateCallback(schema.wizform, element); 
     }
 
-    function handleFiltersUpdate(filters: number | number[]) {
-        console.log("Filters: ", filters)
+    function handleFiltersUpdate(filters: number[]) {
+        console.log("Filters: ", filters);
+        schema.filtersUpdateCallback(schema.wizform, filters);
     }
 
     return (
@@ -112,6 +115,7 @@ export function WizformItem(schema: WizformElementSchema) {
                     <Select 
                         onChange={(e) => handleFiltersUpdate(e)}
                         style={{width: 150}} 
+                        defaultValue={schema.wizform.filters}
                         mode="multiple" 
                         size="small"
                     >{wizformFilterContext?.state.custom.filter((f) => f.enabled).map((f, index) => (
