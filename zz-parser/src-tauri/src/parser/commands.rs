@@ -419,6 +419,27 @@ pub async fn update_wizform(
     }
 }
 
+#[tauri::command]
+pub async fn update_wizforms(
+    wizforms: Vec<WizformFrontendModel>,
+    app_manager: State<'_, AppManager>
+) -> Result<(), ()> {
+    let client = app_manager.client.read().await;
+    let response = client.patch("https://zz-webapi.shuttleapp.rs/wizforms")
+        .json(&wizforms)
+        .send()
+        .await;
+    match response {
+        Ok(success) => {
+            println!("Wizforms updated successfully");
+            Ok(())
+        },
+        Err(failure) => {
+            println!("Error updating wizforms: {}", failure.to_string());
+            Err(())
+        }
+    }
+}
 /// Executed when user updates element on frontend
 /// 
 /// # Arguments

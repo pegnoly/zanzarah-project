@@ -21,6 +21,7 @@ pub async fn run() {
             parser::commands::load_current_book_info,
             parser::commands::initialize_book,
             parser::commands::update_wizform,
+            parser::commands::update_wizforms,
             parser::commands::update_element,
             parser::commands::upload_book,
             parser::commands::load_filters,
