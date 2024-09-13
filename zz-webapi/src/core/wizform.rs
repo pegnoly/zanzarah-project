@@ -7,6 +7,7 @@ pub(crate) fn wizform_routes() -> Router<ApiManager> {
     Router::new()
         .route("/wizforms", get(get_existing_wizforms))
         .route("/wizforms", post(save_wizforms))
+        .route("/wizforms", patch(update_wizforms))
         .route("/wizforms/enabled/:book_id", get(get_enabled_wizforms))
         .route("/wizform", patch(update_wizform))
 }
@@ -105,6 +106,38 @@ async fn update_wizform(
             Err(format!("Failed updating wizform {}: {}", wizform.name, e.to_string()))
         }
     }
+}
+
+async fn update_wizforms(
+    State(api_manager) : State<ApiManager>,
+    Json(wizforms): Json<Vec<WizformFrontendModel>>
+) -> Result<(), ()> {
+    let mut tx = api_manager.pool.begin().await.unwrap();
+    for wizform in wizforms {
+        let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(r#"
+                UPDATE wizforms
+                SET name=$1, element=$2, enabled=$3, filters=$4
+                WHERE id=$5
+                RETURNING *;
+            "#)
+            .bind(&wizform.name)
+            .bind(&wizform.element)
+            .bind(&wizform.enabled)
+            .bind(&wizform.filters)
+            .bind(&wizform.id)
+            .fetch_one(&mut *tx)
+            .await;
+        match res {
+            Ok(success) => {
+                tracing::info!("Wizform was updated in transaction");
+            },
+            Err(failure) => {
+                tracing::info!("Wizform update in transaction failed: {}", failure.to_string());
+            }
+        }
+    }
+    tx.commit().await.unwrap();
+    Ok(())
 }
 
 async fn get_enabled_wizforms(
