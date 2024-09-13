@@ -37,6 +37,8 @@ export type MagicElement = {
 }
 
 export type Filter = {
+    id: string,
+    book_id: string,
     name: string,
     filter_type: number,
     enabled: boolean

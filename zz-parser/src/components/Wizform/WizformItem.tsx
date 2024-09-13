@@ -116,6 +116,7 @@ export function WizformItem(schema: WizformElementSchema) {
                         onChange={(e) => handleFiltersUpdate(e)}
                         style={{width: 150}} 
                         defaultValue={schema.wizform.filters}
+                        value={schema.wizform.filters}
                         mode="multiple" 
                         size="small"
                     >{wizformFilterContext?.state.custom.filter((f) => f.enabled).map((f, index) => (

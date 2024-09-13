@@ -117,15 +117,41 @@ export function BookDataRenderer(schema: BookRendererSchema) {
         invoke("update_wizform", {wizform: wizform});
     }
 
-    function onFilterUpdated(filter: Filter) {
+    async function onFilterDisabled(type: number) {
+        const wizformsWithDisabledFilter = wizforms.filter(w => w.filters.includes(type))
+            .map((w, i) => {
+                return {
+                    ...w,
+                    filters: w.filters.filter(f => f != type)
+                }
+            });
+        console.log("Wizforms that have disabled filters: ", wizformsWithDisabledFilter);
+        if (wizformsWithDisabledFilter.length == 0) {
+            return
+        }
+        await invoke("update_wizforms", {wizforms: wizformsWithDisabledFilter});
+        const updatedWizforms = wizforms.map((w, i) => {
+            const checkWizform = wizformsWithDisabledFilter.find(wf => wf.id == w.id);
+            console.log("Check wizform: ", checkWizform);
+            if (checkWizform == undefined) {
+                return w;
+            }
+            else {
+                return {
+                    ...w,
+                    filters: checkWizform.filters
+                }
+            }
+        });
 
+        setWizforms(updatedWizforms);
     }
 
     return (
         <>
             <Space>
                 <div style={{width: 200}}>
-                    {contentType == ContentType.Wizform && <WizformFilterer elements={elements}/>}
+                    {contentType == ContentType.Wizform && <WizformFilterer filterDisabledCallback={onFilterDisabled} elements={elements}/>}
                 </div>
                 <div style={{position : "relative", left: 450}}>
                     <Segmented 
