@@ -4,6 +4,7 @@ import { Link, Route, Routes } from "react-router-dom";
 import { AppState, useAppStateContext } from "../contexts/AppState";
 import { invoke } from "@tauri-apps/api/core";
 import { WizformMain } from "./WizformMain";
+import { Book } from "./types";
 
 export function BooksSelector() {
 
@@ -25,9 +26,11 @@ export function BooksSelector() {
     return (
         <>
             <List>{books.map((b, index) => (
-                <Link key={index} to={`/wizforms/${b.id}`}>
-                    <Typography.Text>{b.name}</Typography.Text>
-                </Link>
+                <List.Item key={index}>
+                    <Link to={`/wizforms/${b.id}`}>
+                        <Typography.Text>{b.name}</Typography.Text>
+                    </Link>
+                </List.Item>
             ))}</List>
         </>
     )

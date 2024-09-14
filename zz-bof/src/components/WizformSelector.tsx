@@ -1,23 +1,52 @@
-import { List, Space, Typography } from "antd";
-import { Link, useNavigate } from "react-router-dom";
+import { Col, Grid, Input, Layout, List, Menu, Row, Select, Space, Typography } from "antd";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Filter, MagicElement, Wizform, WizformElementType } from "./types";
+import { Header } from "antd/es/layout/layout";
+import { WizformFilterMenu } from "./WizformFilterMenu";
+import { useWizformFilterContext } from "../contexts/WizformFilter";
 
-export function WizformSelector({wizforms} : {wizforms: Wizform[]}) {
+interface WizformSelectorSchema {
+    wizforms: Wizform[],
+    elements: MagicElement[],
+    filters: Filter[]
+}
 
-    const nav = useNavigate();
+export function WizformSelector(schema: WizformSelectorSchema) {
+
+    const [wizformsToRender, setWizformsToRender] = useState<Wizform[]>([]);
+
+    const wizformFilterContext = useWizformFilterContext();
+
+    useEffect(() => {
+        console.log(schema.wizforms[0]);
+        if (schema.wizforms.length > 0) {
+            setWizformsToRender(schema.wizforms
+                .filter((w) => w.enabled == true)
+                .filter((w) => 
+                    wizformFilterContext?.state.name == "" ? w : w.name.includes(wizformFilterContext?.state.name as string))
+                .filter((w) => 
+                    wizformFilterContext?.state.element == WizformElementType.None ? w : w.element == wizformFilterContext?.state.element)
+                .filter((w) => 
+                    wizformFilterContext?.state.custom == -1 ? w : w.filters.includes(wizformFilterContext?.state.custom as number))
+            );
+        }
+    }, [schema.wizforms, wizformFilterContext?.state])
 
     return (
         <>
-            <Space direction="vertical">
+            <div>
+                <WizformFilterMenu elements={schema.elements} filters={schema.filters}/>
                 <List>
-                    {wizforms?.filter((w) => w.hitpoints == 500).map((w, index) => (
-                        <div key={index}>
+                    {wizformsToRender.map((w, index) => (
+                        <List.Item key={index}>
                             <Link style={{width: "100%"}} to={`focus/${w.id}`}>
                                 <Typography.Text>{w.name}</Typography.Text>
                             </Link>
-                        </div>
+                        </List.Item>
                     ))}
                 </List> 
-            </Space>
+            </div>
         </>
     )
 }
