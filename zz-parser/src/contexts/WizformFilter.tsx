@@ -16,7 +16,7 @@ export const WizformFilterContext = createContext<WizformFilterType | undefined>
 
 const WizformFilterProvider = ({children} : PropsWithChildren<{}>) => {
     
-    const [state, setState] = useState<WizformFilterType['state']>({name: "", element: 0, custom: []});
+    const [state, setState] = useState<WizformFilterType['state']>({name: "", element: 1, custom: []});
 
     return (
         <WizformFilterContext.Provider value={{state, setState}}>

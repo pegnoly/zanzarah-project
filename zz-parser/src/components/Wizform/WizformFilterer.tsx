@@ -18,8 +18,6 @@ interface WizformFiltererSchema {
  */
 export function WizformFilterer(schema: WizformFiltererSchema) {
 
-    const [filter, setFilter] = useState<string>("");
-
     const wizformFilterContext = useWizformFilterContext();
 
     function handleNameFilterChange(filter: string) {
@@ -88,15 +86,10 @@ function CustomFilterHolder(schema: CustomFilterHolderSchema) {
     }
 
     function handleNewFilterAdd() {
-        //console.log("From context: ", wizformFilterContext?.state.custom);
-        const disabledSorted = wizformFilterContext?.state.custom
-            .filter(f => f.enabled == false)
-            .sort((f1, f2) => f1.filter_type < f2.filter_type ? -1 : 1);
-        //console.log("Sorted: ", disabledSorted)
         const firstDisabledFilter = wizformFilterContext?.state.custom
             .filter(f => f.enabled == false)
             .sort((f1, f2) => f1.filter_type < f2.filter_type ? -1 : 1)[0];
-        const newFilters = wizformFilterContext?.state.custom.map((f, i) => {
+        const newFilters = wizformFilterContext?.state.custom.map(f => {
             if(f.filter_type == firstDisabledFilter?.filter_type) {
                 return {
                     ...f,
@@ -125,7 +118,7 @@ function CustomFilterHolder(schema: CustomFilterHolderSchema) {
 
     function handleFilterRemove(filterType: number) {
         const filterToRemove = wizformFilterContext?.state.custom.find(f => f.filter_type == filterType);
-        const newFilters = wizformFilterContext?.state.custom.map((f, i) => {
+        const newFilters = wizformFilterContext?.state.custom.map(f => {
             if(f.filter_type == filterType) {
                 return {
                     ...f,

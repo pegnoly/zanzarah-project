@@ -3,7 +3,7 @@ use std::{collections::HashMap, io::Write};
 use tauri::{AppHandle, Manager, State};
 use zz_data::{book::base::{Book, WizformFilterDBModel}, core::wizform::{WizformDBModel, WizformElementFrontendModel, WizformElementModel}};
 
-use super::utils::{LocalAppManager, WizformMobileFrontendModel};
+use super::utils::{LocalAppManager, WizformMobileFrontendModel, test_convert};
 
 #[tauri::command]
 pub async fn load_books(
@@ -44,8 +44,11 @@ pub async fn load_wizforms(
     let wizforms_data_path = book_data_path.join("wizforms.json");
     if wizforms_data_path.exists() {
         println!("Reading wizforms from json file");
-        let wizforms: Result<Vec<WizformMobileFrontendModel>, serde_json::Error> = serde_json::from_str(&std::fs::read_to_string(&wizforms_data_path).unwrap());
-        Ok(wizforms.unwrap())
+        let wizforms: Result<Vec<WizformDBModel>, serde_json::Error> = serde_json::from_str(&std::fs::read_to_string(&wizforms_data_path).unwrap());
+        test_convert(serde_json::from_str(&wizforms.as_ref().unwrap()[0].magics).unwrap());
+        Ok(wizforms.unwrap().iter().map(|w| {
+            WizformMobileFrontendModel::from(w)
+        }).collect())
     }
     else {
         let client = app_manager.client.read().await;
@@ -87,13 +90,23 @@ pub async fn load_elements(
     book_id: String,
     app: AppHandle,
     app_manager: State<'_, LocalAppManager>
-) -> Result<Vec<WizformElementModel>, ()> {
+) -> Result<Vec<WizformElementFrontendModel>, ()> {
     let book_data_path = app.path().data_dir().unwrap().join(format!("{}\\", &book_id));
     let elements_data_path = book_data_path.join("elements.json");
     if elements_data_path.exists() {
         println!("Reading elements from json file");
         let elements: Result<Vec<WizformElementModel>, serde_json::Error> = serde_json::from_str(&std::fs::read_to_string(&elements_data_path).unwrap());
-        Ok(elements.unwrap())
+        Ok(elements.unwrap().iter()
+            .filter(|e| {e.enabled})
+            .map(|e| {
+                WizformElementFrontendModel {
+                    id: e.id.clone(),
+                    element: e.element.clone() as i32,
+                    name: e.name.clone(),
+                    enabled: e.enabled
+                }
+            })
+            .collect())
     }
     else {
         let client = app_manager.client.read().await;
@@ -112,7 +125,17 @@ pub async fn load_elements(
                         let mut file = std::fs::File::create(&elements_data_path).unwrap();
                         let s = serde_json::to_string_pretty(&elements).unwrap();
                         file.write_all(&mut s.as_bytes()).unwrap();
-                        Ok(elements)
+                        Ok(elements.iter()
+                                .filter(|e| {e.enabled})
+                                .map(|e| {
+                                    WizformElementFrontendModel {
+                                        id: e.id.clone(),
+                                        element: e.element.clone() as i32,
+                                        name: e.name.clone(),
+                                        enabled: e.enabled
+                                    }
+                                })
+                                .collect())
                     },
                     Err(e) => {
                         println!("Failed to parse elements json: {}", e.to_string());

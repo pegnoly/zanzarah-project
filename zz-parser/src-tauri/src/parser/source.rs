@@ -55,6 +55,7 @@ pub async fn parse_wizforms(
     // bytes are represented in little endian order
     reader.set_endian(binary_reader::Endian::Little);
     let icons_path = PathBuf::from(&directory).join("Resources\\Bitmaps\\WIZ000T.BMP");
+    let icons_save_path = std::env::current_exe().unwrap().parent().unwrap().join(format!("{}\\", &book_id));
     let wizforms_icon = bmp::open(icons_path).unwrap();
     // first 4 bytes is wizforms count
     let count = reader.read_u32().unwrap();
@@ -175,7 +176,7 @@ pub async fn parse_wizforms(
             let pixel = wizforms_icon.get_pixel(offset, y);
             new_test_img.set_pixel(x, y, pixel);
         }
-        let new_img_path = PathBuf::from(&directory).join(format!("IconsTest\\{}.bmp", number));
+        let new_img_path = icons_save_path.join(format!("{}.bmp", number));
         new_test_img.save(new_img_path).unwrap();
 
         // ICON

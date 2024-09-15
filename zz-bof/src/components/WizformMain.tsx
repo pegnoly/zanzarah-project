@@ -43,14 +43,12 @@ export function WizformMain() {
         await invoke("load_filters", {bookId: id}).then((v) => setFilters(v as Filter[]));  
     }
 
-    console.log("test: ", wizforms[0]);
-
     return (
         <>
             <WizformFilterProvider>
                 <Routes>
                     <Route path="/*" element={<WizformSelector wizforms={wizforms} elements={elements} filters={filters}/>}/>
-                    <Route path="focus/:id/" element={<WizformFocused wizforms={wizforms}/>}/>
+                    <Route path="focus/:id/" element={<WizformFocused wizforms={wizforms} elements={elements}/>}/>
                 </Routes>
             </WizformFilterProvider>
         </>

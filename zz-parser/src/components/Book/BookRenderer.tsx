@@ -1,6 +1,6 @@
-import { Button, Input, Segmented, Space } from "antd";
+import { Segmented, Space } from "antd";
 import { WizformRenderer } from "../Wizform/WizformRenderer";
-import WizformFilterProvider, { useWizformFilterContext } from "../../contexts/WizformFilter";
+import { useWizformFilterContext } from "../../contexts/WizformFilter";
 import { useEffect, useState } from "react";
 import { Filter, MagicElement, Wizform } from "../types";
 import { invoke } from "@tauri-apps/api/core";
@@ -119,7 +119,7 @@ export function BookDataRenderer(schema: BookRendererSchema) {
 
     async function onFilterDisabled(type: number) {
         const wizformsWithDisabledFilter = wizforms.filter(w => w.filters.includes(type))
-            .map((w, i) => {
+            .map(w => {
                 return {
                     ...w,
                     filters: w.filters.filter(f => f != type)
@@ -130,7 +130,7 @@ export function BookDataRenderer(schema: BookRendererSchema) {
             return
         }
         await invoke("update_wizforms", {wizforms: wizformsWithDisabledFilter});
-        const updatedWizforms = wizforms.map((w, i) => {
+        const updatedWizforms = wizforms.map(w => {
             const checkWizform = wizformsWithDisabledFilter.find(wf => wf.id == w.id);
             console.log("Check wizform: ", checkWizform);
             if (checkWizform == undefined) {

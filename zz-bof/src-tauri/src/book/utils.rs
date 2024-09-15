@@ -89,21 +89,21 @@ pub fn convert_magics(db_magics: Vec<Magic>) -> Vec<LevelOfMagicFrontendModel> {
                     third_element: magic.third_element as i32
                 }
             },
-            (MagicSlotType::Active, 2) => {
+            (MagicSlotType::Active, 3) => {
                 converted_magic.second_active_slot = MagicFrontendModel {
                     first_element: magic.first_element as i32,
                     second_element: magic.second_element as i32,
                     third_element: magic.third_element as i32
                 }
             },
-            (MagicSlotType::Passive, 1) => {
+            (MagicSlotType::Passive, 2) => {
                 converted_magic.first_passive_slot = MagicFrontendModel {
                     first_element: magic.first_element as i32,
                     second_element: magic.second_element as i32,
                     third_element: magic.third_element as i32
                 }
             },
-            (MagicSlotType::Passive, 2) => {
+            (MagicSlotType::Passive, 4) => {
                 converted_magic.second_passive_slot = MagicFrontendModel {
                     first_element: magic.first_element as i32,
                     second_element: magic.second_element as i32,

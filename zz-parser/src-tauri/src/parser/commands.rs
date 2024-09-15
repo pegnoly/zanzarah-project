@@ -116,6 +116,9 @@ pub async fn try_create_book(
             }
         ).collect() 
     };
+    std::fs::create_dir_all(
+        std::env::current_exe().unwrap().parent().unwrap().join(format!("{}\\", &book_id))
+    ).unwrap();
     let mut config = app_manager.config.lock().await;
     config.existing_books.push(book_id.clone());
     let book_creation_response = client.post("https://zz-webapi.shuttleapp.rs/book")

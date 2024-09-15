@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Filter, MagicElement, Wizform } from "../types";
+import { MagicElement, Wizform } from "../types";
 import { Button, Checkbox, Select, Space, Typography } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 import { useWizformFilterContext } from "../../contexts/WizformFilter";

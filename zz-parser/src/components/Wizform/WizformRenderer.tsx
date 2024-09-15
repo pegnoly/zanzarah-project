@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Filter, MagicElement, Wizform } from './../types';
+import { MagicElement, Wizform } from './../types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useWizformFilterContext } from '../../contexts/WizformFilter';
 import { WizformItem } from './WizformItem';
