@@ -1,6 +1,8 @@
 use std::{collections::HashMap, io::Write};
 
+use base64::Engine;
 use reqwest::multipart;
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_dialog::DialogExt;
@@ -9,14 +11,15 @@ use zz_data::{
         Book, BookCreationParams, WizformFilterDBModel, WizformFilterType
     }, 
     core::wizform::{
-        WizformDBModel, WizformElementFrontendModel, WizformElementModel, WizformElementType, WizformFrontendModel
+        self, WizformDBModel, WizformElementFrontendModel, WizformElementModel, WizformElementType, WizformFrontendModel
     }
 };
 
 use super::{
     source::{
         parse_texts, 
-        parse_wizforms
+        parse_wizforms,
+        upload_wizform_chunk
     }, 
     utils::AppManager
 };
@@ -212,8 +215,7 @@ pub async fn try_parse_wizforms(
     println!("Trying to parse wizforms");
     let texts = app_manager.texts.lock().await;
     let client = app_manager.client.read().await;
-    let response = client.get("https://zz-webapi.shuttleapp.rs/wizforms")
-        .json(&HashMap::from([("value", &book_id)]))
+    let response = client.get(format!("https://zz-webapi.shuttleapp.rs/wizforms/{}", &book_id))
         .send()
         .await;
     match response {
@@ -224,20 +226,16 @@ pub async fn try_parse_wizforms(
                     println!("Existing wizforms: {:?}", &existing_wizforms);
                     let mut wizforms = vec![];
                     parse_wizforms(book_id, directory, &texts, &mut wizforms, &existing_wizforms).await;
-                    let wizform_load_response = client.post("https://zz-webapi.shuttleapp.rs/wizforms")
-                        .json(&wizforms)
-                        .send()
-                        .await;
-                    match wizform_load_response {
-                        Ok(response_ok) => {
-                            println!("Uploading wizforms response: {}", &response_ok.text().await.unwrap());
-                            Ok(())
-                        },
-                        Err(response_err) => {
-                            println!("Uploading wizforms response error: {}", &response_err.to_string());
-                            Err(())
-                        }
-                    }               
+                    if wizforms.len() > 500 {
+                        let second_chunk = wizforms.split_off(500);
+                        upload_wizform_chunk(&wizforms, &client).await.unwrap();
+                        upload_wizform_chunk(&second_chunk, &client).await.unwrap();
+                        Ok(())
+                    }
+                    else {
+                        upload_wizform_chunk(&wizforms, &client).await.unwrap();
+                        Ok(())
+                    }            
                 },
                 Err(e) => {
                     println!("Error converting exisiting wizforms from json: {}", e.to_string());
@@ -279,6 +277,19 @@ pub async fn initialize_book(
     }
 }
 
+#[derive(Deserialize, Clone, Serialize)]
+pub struct WizformTestModel {
+    pub id: String,
+    pub name: String,
+    pub desc: String,
+    pub element: i32,
+    pub enabled: bool,
+    pub filters: Vec<i32>,
+    pub spawn_points: Vec<i32>,
+    pub icon: String,
+    pub number: i16
+}
+
 /// Executed when frontend tries to load all wizforms for book.  
 /// 
 /// # Arguments
@@ -288,10 +299,9 @@ pub async fn initialize_book(
 pub async fn load_wizforms(
     book_id: String,
     app_manager: State<'_, AppManager>
-) -> Result<Vec<WizformFrontendModel>, ()> {
+) -> Result<Vec<WizformTestModel>, ()> {
     let client = app_manager.client.read().await;
-    let response = client.get("https://zz-webapi.shuttleapp.rs/wizforms")
-        .json(&HashMap::from([("value", &book_id)]))
+    let response = client.get(format!("https://zz-webapi.shuttleapp.rs/wizforms/{}", &book_id))
         .send()
         .await;
     match response {
@@ -302,13 +312,30 @@ pub async fn load_wizforms(
             match wizforms_json {
                 Ok(wizforms) => {
                     Ok(wizforms.into_iter().map(|w| {
-                        WizformFrontendModel {
+                        WizformTestModel {
                             id: w.id,
                             name: w.name,
+                            desc: w.description,
                             element: w.element as i32,
                             enabled: w.enabled,
-                            filters: w.filters.clone()
-                        }}).collect())
+                            filters: w.filters.clone(),
+                            spawn_points: w.spawn_points.clone(),
+                            number: w.number,
+                            icon: base64::prelude::BASE64_STANDARD.encode(
+                                    std::fs::read(std::env::current_exe().unwrap().parent().unwrap().join(format!("{}/{}", &book_id, &w.icon64)))
+                                    .unwrap())
+                        }
+                        // WizformFrontendModel {
+                        //     id: w.id,
+                        //     name: w.name,
+                        //     desc: w.description,
+                        //     element: w.element as i32,
+                        //     enabled: w.enabled,
+                        //     filters: w.filters.clone(),
+                        //     spawn_points: w.spawn_points.clone(),
+                        //     icon: w.icon64
+                        // }
+                    }).collect())
                 },
                 Err(e) => {
                     println!("Error converting wizforms json: {}", e.to_string());

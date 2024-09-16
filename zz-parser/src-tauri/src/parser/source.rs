@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use base64::Engine;
 use binary_reader::BinaryReader;
 use encoding_rs::WINDOWS_1251;
 use tokio::sync::{Mutex, RwLock};
@@ -101,7 +102,7 @@ pub async fn parse_wizforms(
         reader.read_bytes(4).unwrap();
         // description + 8 bytes skip.
         let desc_id = reader.read_i32().unwrap();
-        let _desc = texts.iter()
+        let desc = texts.iter()
             .find(|t| {
                 t.id == to_le_hex_string(desc_id)
             })
@@ -170,14 +171,23 @@ pub async fn parse_wizforms(
         let _litter_13 = reader.read_i32().unwrap();
         // ICON
 
-        let mut new_test_img = bmp::Image::new(40, 40);
-        for (x, y) in new_test_img.coordinates() {
+        let mut image = bmp::Image::new(40, 40);
+        for (x, y) in image.coordinates() {
             let offset = x + 40 * (number as u32);
-            let pixel = wizforms_icon.get_pixel(offset, y);
-            new_test_img.set_pixel(x, y, pixel);
+            let pixel = wizforms_icon.get_pixel(offset, y + 1);
+            image.set_pixel(x, y, pixel);
         }
-        let new_img_path = icons_save_path.join(format!("{}.bmp", number));
-        new_test_img.save(new_img_path).unwrap();
+        let image_path = icons_save_path.join(format!("{}.bmp", number));
+        let mut image64_repr = String::new();
+
+        match image.save(&image_path) {
+            Ok(saved) => {
+                //image64_repr = base64::prelude::BASE64_STANDARD.encode(&std::fs::read(image_path).unwrap());
+            },
+            Err(save_error) => {
+
+            }
+        }
 
         // ICON
         
@@ -193,6 +203,7 @@ pub async fn parse_wizforms(
                     book_id: book_id.clone(), 
                     game_id: wizform.game_id.clone(), 
                     name: name, 
+                    description: desc,
                     element: WizformElementType::from_repr(element).unwrap(), 
                     magics: serde_json::to_string(&magics).unwrap(), 
                     number: number as i16, 
@@ -204,7 +215,9 @@ pub async fn parse_wizforms(
                     evolution_level: evolution_level, 
                     exp_modifier: exp_modifier,
                     enabled: wizform.enabled,
-                    filters: wizform.filters.clone()
+                    filters: wizform.filters.clone(),
+                    spawn_points: wizform.spawn_points.clone(),
+                    icon64: format!("{}.bmp", number)
                 });
             },
             None => {
@@ -213,6 +226,7 @@ pub async fn parse_wizforms(
                     book_id: book_id.clone(), 
                     game_id: hex_id, 
                     name: name, 
+                    description: desc,
                     element: WizformElementType::from_repr(element).unwrap(), 
                     magics: serde_json::to_string(&magics).unwrap(), 
                     number: number as i16, 
@@ -224,9 +238,31 @@ pub async fn parse_wizforms(
                     evolution_level: evolution_level, 
                     exp_modifier: exp_modifier,
                     enabled: true,
-                    filters: vec![]
+                    filters: vec![],
+                    spawn_points: vec![],
+                    icon64: format!("{}.bmp", number)
                 });
             }
         }
     }
+}
+
+pub async fn upload_wizform_chunk(
+    chunk: &Vec<WizformDBModel>, 
+    client: &tokio::sync::RwLockReadGuard<'_, reqwest::Client>
+) -> Result<(), ()> {
+    let wizform_load_response = client.post("https://zz-webapi.shuttleapp.rs/wizforms")
+        .json(chunk)
+        .send()
+        .await;
+    match wizform_load_response {
+        Ok(response_ok) => {
+            println!("Uploading wizforms response: {}", &response_ok.text().await.unwrap());
+            Ok(())
+        },
+        Err(response_err) => {
+            println!("Uploading wizforms response error: {}", &response_err.to_string());
+            Err(())
+        }
+    }   
 }
