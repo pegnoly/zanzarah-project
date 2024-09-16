@@ -5,7 +5,7 @@ use super::utils::{StringPayload, ApiManager};
 
 pub(crate) fn wizform_routes() -> Router<ApiManager> {
     Router::new()
-        .route("/wizforms", get(get_existing_wizforms))
+        .route("/wizforms/:book_id", get(get_existing_wizforms))
         .route("/wizforms", post(save_wizforms))
         .route("/wizforms", patch(update_wizforms))
         .route("/wizforms/enabled/:book_id", get(get_enabled_wizforms))
@@ -20,13 +20,20 @@ async fn save_wizforms(
     for wizform in wizforms {
         let res = sqlx::query(r#"
             INSERT INTO wizforms 
-            (id, book_id, game_id, name, element, magics, number, hitpoints, agility, jump_ability, precision, evolution_form, evolution_level, exp_modifier, enabled, filters)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);
+            (id, book_id, game_id, name, description, icon64,
+            element, magics, number, 
+            hitpoints, agility, jump_ability, precision, 
+            evolution_form, evolution_level, exp_modifier, 
+            enabled, 
+            filters, spawn_points)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19);
             "#)
             .bind(wizform.id)
             .bind(wizform.book_id)
             .bind(wizform.game_id)
             .bind(&wizform.name)
+            .bind(&wizform.description)
+            .bind(&wizform.icon64)
             .bind(wizform.element)
             .bind(wizform.magics)
             .bind(wizform.number)
@@ -39,6 +46,7 @@ async fn save_wizforms(
             .bind(wizform.exp_modifier)
             .bind(wizform.enabled)
             .bind(wizform.filters)
+            .bind(wizform.spawn_points)
             .execute(&mut *tx)
             .await;
         match res {
@@ -61,12 +69,12 @@ async fn save_wizforms(
 
 async fn get_existing_wizforms(
     State(api_manager) : State<ApiManager>,
-    Json(book_id): Json<StringPayload>
+    Path(book_id): Path<String> 
 ) -> Result<Json<Vec<WizformDBModel>>, String> {
     let wizforms_res: Result<Vec<WizformDBModel>, sqlx::Error> = sqlx::query_as(r#"
             SELECT * FROM wizforms WHERE book_id=$1;
         "#)
-        .bind(&book_id.value)
+        .bind(&book_id)
         .fetch_all(&api_manager.pool)
         .await;
     match wizforms_res {
@@ -74,7 +82,7 @@ async fn get_existing_wizforms(
             Ok(Json(wizforms))
         },
         Err(e) => {
-            Err(format!("Error fetching wizforms from book with id {}: {}", &book_id.value, &e.to_string()))
+            Err(format!("Error fetching wizforms from book with id {}: {}", &book_id, &e.to_string()))
         }
     }
 }
@@ -85,14 +93,16 @@ async fn update_wizform(
 ) -> Result<String, String> {
     let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(r#"
             UPDATE wizforms 
-            SET name=$1, element=$2, enabled=$3, filters=$4
-            WHERE id=$5
+            SET name=$1, description=$2, element=$3, enabled=$4, filters=$5, spawn_points=$6
+            WHERE id=$7
             RETURNING *;
         "#)
         .bind(&wizform.name)
+        .bind(&wizform.desc)
         .bind(&wizform.element)
         .bind(&wizform.enabled)
         .bind(&wizform.filters)
+        .bind(&wizform.spawn_points)
         .bind(&wizform.id)
         .fetch_one(&api_manager.pool)
         .await;
@@ -115,15 +125,17 @@ async fn update_wizforms(
     let mut tx = api_manager.pool.begin().await.unwrap();
     for wizform in wizforms {
         let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(r#"
-                UPDATE wizforms
-                SET name=$1, element=$2, enabled=$3, filters=$4
-                WHERE id=$5
+                UPDATE wizforms 
+                SET name=$1, description=$2, element=$3, enabled=$4, filters=$5, spawn_points=$6
+                WHERE id=$7
                 RETURNING *;
             "#)
             .bind(&wizform.name)
+            .bind(&wizform.desc)
             .bind(&wizform.element)
             .bind(&wizform.enabled)
             .bind(&wizform.filters)
+            .bind(&wizform.spawn_points)
             .bind(&wizform.id)
             .fetch_one(&mut *tx)
             .await;

@@ -2,8 +2,6 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::drive::DropboxConnector;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StringPayload {
     pub value: String
@@ -16,6 +14,5 @@ pub struct StringOptionPayload {
 
 #[derive(Clone)]
 pub struct ApiManager {
-    pub pool: sqlx::PgPool,
-    pub drive: Arc<DropboxConnector>
+    pub pool: sqlx::PgPool
 }
