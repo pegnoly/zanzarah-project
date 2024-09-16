@@ -3,7 +3,7 @@ use std::{collections::HashMap, io::Write};
 use tauri::{AppHandle, Manager, State};
 use zz_data::{book::base::{Book, WizformFilterDBModel}, core::wizform::{WizformDBModel, WizformElementFrontendModel, WizformElementModel}};
 
-use super::utils::{LocalAppManager, WizformMobileFrontendModel, test_convert};
+use super::utils::{LocalAppManager, WizformMobileFrontendModel};
 
 #[tauri::command]
 pub async fn load_books(
@@ -45,7 +45,6 @@ pub async fn load_wizforms(
     if wizforms_data_path.exists() {
         println!("Reading wizforms from json file");
         let wizforms: Result<Vec<WizformDBModel>, serde_json::Error> = serde_json::from_str(&std::fs::read_to_string(&wizforms_data_path).unwrap());
-        test_convert(serde_json::from_str(&wizforms.as_ref().unwrap()[0].magics).unwrap());
         Ok(wizforms.unwrap().iter().map(|w| {
             WizformMobileFrontendModel::from(w)
         }).collect())

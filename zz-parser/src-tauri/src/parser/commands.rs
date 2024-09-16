@@ -1,7 +1,6 @@
 use std::{collections::HashMap, io::Write};
 
 use reqwest::multipart;
-use rust_dropbox::{UploadOption, UploadOptionBuilder};
 use strum::IntoEnumIterator;
 use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_dialog::DialogExt;
@@ -498,19 +497,6 @@ pub async fn upload_book(
     book_id: String,
     app_manager: State<'_, AppManager>
 ) -> Result<(), ()> {
-    let dropbox = app_manager.dropbox.clone();
-    let upload_option = UploadOptionBuilder::new()
-        .set_upload_mode(rust_dropbox::UploadMode::Add)
-        .build();
-    let result = dropbox.client.upload(std::fs::read("D:\\Program Files (x86)\\Zanzarah The Hidden Portal\\IconsTest\\1.bmp").unwrap(), "/1.bmp", upload_option);
-    match result {
-        Ok(_) => {
-            println!("File uploaded correctly");
-        },
-        Err(e) => {
-            println!("File upload error: {:?}", e);
-        }
-    }
     Ok(())
     // let client = app_manager.client.read().await;
     // let response = client.post("https://zz-webapi.shuttleapp.rs/upload")
