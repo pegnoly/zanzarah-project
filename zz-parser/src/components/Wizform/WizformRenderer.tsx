@@ -1,13 +1,11 @@
-import { useEffect, useState } from 'react';
-import { MagicElement, Wizform } from './../types';
+import { Wizform } from './../types';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { useWizformFilterContext } from '../../contexts/WizformFilter';
-import { WizformItem } from './WizformItem';
+import { WizformListItem } from './WizformListItem';
+import { Link } from 'react-router-dom';
+import { List } from 'antd';
 
-export interface WizformsRendererSchema {
+interface WizformsRendererSchema {
     wizforms: Wizform[],
-    elements: MagicElement[],
-    onUpdate: (w: Wizform) => void
 }
 
 /**
@@ -17,68 +15,24 @@ export interface WizformsRendererSchema {
  */
 export function WizformRenderer(schema: WizformsRendererSchema) {
 
-    const [wizformsToRender, setWizformsToRender] = useState<Wizform[]>([]);
-
-    const wizformFilterContext = useWizformFilterContext();
-
-    // initially all wizforms must be rendered(until i implement storing of filters)
-    useEffect(() => {
-        if (schema.wizforms.length > 0) {
-            setWizformsToRender(schema.wizforms
-                .filter((w) => wizformFilterContext?.state.name == "" ? w : w.name.includes(wizformFilterContext?.state.name as string))
-                .filter((w) => wizformFilterContext?.state.element == -1 ? w : w.element == wizformFilterContext?.state.element)
-            );
-        }
-    }, [schema.wizforms, wizformFilterContext?.state.name, wizformFilterContext?.state.element]);
-
-    function onWizformEnabledUpdated(wizform: Wizform, enabled: boolean) {
-        schema.onUpdate({
-            ...wizform,
-            enabled: enabled
-        });
-    }
-
-    function onWizformElementUpdated(wizform: Wizform, element: number) {
-        schema.onUpdate({
-            ...wizform,
-            element: element
-        });
-    }
-
-    function onWizformNameUpdated(wizform: Wizform, name: string) {
-        schema.onUpdate({
-            ...wizform,
-            name: name
-        });
-    }
-
-    function onWizformFiltersUpdated(wizform: Wizform, filters: number[]) {
-        schema.onUpdate({
-            ...wizform,
-            filters: filters
-        })
-    }
-
      return (
-        <div style={{paddingTop : 10, paddingBottom : 10}}>
+        <div style={{width: '100%', height: 500, overflowY: 'scroll'}}>
             <InfiniteScroll
-                dataLength={wizformsToRender.length}
+                dataLength={schema.wizforms.length}
                 hasMore={false}
                 next={() => {}}     
                 loader={<h4>Загружается...</h4>}
-                height={400}
+                // height={500}
             >
-                {wizformsToRender.map((w, index) => (
-                    <WizformItem
-                        key={index}
-                        wizform={w}
-                        elements={schema.elements}
-                        elementUpdateCallback={onWizformElementUpdated}
-                        enabledUpdateCallback={onWizformEnabledUpdated}
-                        nameUpdateCallback={onWizformNameUpdated}
-                        filtersUpdateCallback={onWizformFiltersUpdated}
-                    />
-                ))}
+                <List>
+                    {schema.wizforms.map((w, index) => (
+                        <List.Item>
+                            <Link to={`focus/${w.id}`}>
+                                <WizformListItem key={index} name={w.name} icon64={w.icon}/>
+                            </Link>   
+                        </List.Item>
+                    ))}
+                </List>
             </InfiniteScroll>
         </div>
     )

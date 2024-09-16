@@ -25,8 +25,12 @@ export type Wizform = {
     id: string,
     name: string,
     element: number,
+    desc: string,
     enabled: boolean,
-    filters: number[]
+    filters: number[],
+    spawn_points: number[],
+    icon: string,
+    number: number
 }
 
 export type MagicElement = {

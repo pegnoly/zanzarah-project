@@ -1,4 +1,4 @@
-import { Segmented, Space } from "antd";
+import { Button, Segmented, Space } from "antd";
 import { WizformRenderer } from "../Wizform/WizformRenderer";
 import { useWizformFilterContext } from "../../contexts/WizformFilter";
 import { useEffect, useState } from "react";
@@ -6,6 +6,24 @@ import { Filter, MagicElement, Wizform } from "../types";
 import { invoke } from "@tauri-apps/api/core";
 import { ElementRenderer } from "../Element/ElementsRenderer";
 import { WizformFilterer } from "../Wizform/WizformFilterer";
+import { createStyles } from "antd-style";
+import { WizformMain } from "../Wizform/WizformMain";
+
+
+const bookRendererStyles = createStyles(({}) => ({
+    main: {
+        width: 'vw99',
+        height: 'vh84'
+    },
+    content: {
+        width: '40%',
+        height: '100%'
+    },
+    focus: {
+        width: '60%',
+        height: '100%'
+    }
+}))
 
 /**
  * Type of book content that can be rendered
@@ -34,6 +52,8 @@ export function BookDataRenderer(schema: BookRendererSchema) {
     const [elements, setElements] = useState<MagicElement[]>([]);
 
     const wizformFilterContext = useWizformFilterContext();
+
+    const styles = bookRendererStyles();
 
     // component reacts to change of book id & initialization state and tries to load data
     useEffect(() => {
@@ -98,7 +118,7 @@ export function BookDataRenderer(schema: BookRendererSchema) {
      * Callback called when WizformRender updates some Wizform
      * @param wizform - updated wizform
      */
-    function onWizformUpdated(wizform: Wizform) {
+    function singleWizformUpdated(wizform: Wizform) {
         const updatedWizforms = wizforms.map((w) => {
             if (w.id != wizform.id) {
                 return w;
@@ -107,6 +127,7 @@ export function BookDataRenderer(schema: BookRendererSchema) {
                 return {
                     ...w,
                     name: wizform.name,
+                    desc: wizform.desc,
                     element: wizform.element,
                     enabled: wizform.enabled,
                     filters: wizform.filters
@@ -117,56 +138,30 @@ export function BookDataRenderer(schema: BookRendererSchema) {
         invoke("update_wizform", {wizform: wizform});
     }
 
-    async function onFilterDisabled(type: number) {
-        const wizformsWithDisabledFilter = wizforms.filter(w => w.filters.includes(type))
-            .map(w => {
-                return {
-                    ...w,
-                    filters: w.filters.filter(f => f != type)
-                }
-            });
-        console.log("Wizforms that have disabled filters: ", wizformsWithDisabledFilter);
-        if (wizformsWithDisabledFilter.length == 0) {
-            return
-        }
-        await invoke("update_wizforms", {wizforms: wizformsWithDisabledFilter});
-        const updatedWizforms = wizforms.map(w => {
-            const checkWizform = wizformsWithDisabledFilter.find(wf => wf.id == w.id);
-            console.log("Check wizform: ", checkWizform);
-            if (checkWizform == undefined) {
-                return w;
-            }
-            else {
-                return {
-                    ...w,
-                    filters: checkWizform.filters
-                }
-            }
-        });
-
-        setWizforms(updatedWizforms);
+    function multipleWizformsUpdated(wizforms: Wizform[]) {
+        setWizforms(wizforms);
     }
 
     return (
         <>
-            <Space>
-                <div style={{width: 200}}>
-                    {contentType == ContentType.Wizform && <WizformFilterer filterDisabledCallback={onFilterDisabled} elements={elements}/>}
-                </div>
-                <div style={{position : "relative", left: 450}}>
-                    <Segmented 
+            <div className={styles.styles.main}>
+                <Segmented 
                         onChange={handleContentTypeChange} 
                         options={[
                             {label: "Феи", value: ContentType.Wizform}, 
                             {label: "Стихии", value: ContentType.Element}
-                        ]}></Segmented>
-                </div>
-            </Space>
-            {
-                contentType == ContentType.Wizform ? 
-                <WizformRenderer wizforms={wizforms} elements={elements} onUpdate={onWizformUpdated}/> :
-                <ElementRenderer elements={elements} updateCallback={onElementUpdated}/>
-            }
+                        ]}/>
+                {contentType == ContentType.Wizform ?
+                    <WizformMain 
+                        wizforms={wizforms} 
+                        elements={elements} 
+                        onSingleWizformUpdate={singleWizformUpdated}
+                        onMultipleWizformsUpdate={multipleWizformsUpdated}
+                    /> : 
+                    <ElementRenderer elements={elements} updateCallback={onElementUpdated}/>
+                }
+
+            </div>
         </>
     )
 }
