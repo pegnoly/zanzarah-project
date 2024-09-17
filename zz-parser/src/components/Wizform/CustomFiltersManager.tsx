@@ -3,7 +3,6 @@ import { Button, Col, Input, List, Modal, Row, Space, Typography } from "antd";
 import { useState } from "react";
 import { useWizformFilterContext } from "../../contexts/WizformFilter";
 import { Filter } from "../types";
-import { ScrollArea, ScrollAreaScrollbar, ScrollAreaThumb, ScrollAreaViewport } from "@radix-ui/react-scroll-area";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 

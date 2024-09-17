@@ -28,7 +28,7 @@ export type Wizform = {
     desc: string,
     enabled: boolean,
     filters: number[],
-    spawn_points: number[],
+    spawn_points: string[],
     icon: string,
     number: number
 }
@@ -63,3 +63,9 @@ export type Book = {
     initialized: boolean,
     downloadadble: boolean
 }    
+
+export type SpawnPoint = {
+    id: string,
+    book_id: string,
+    name: string
+}

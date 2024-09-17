@@ -2,12 +2,21 @@ import { DeleteFilled } from "@ant-design/icons";
 import { Button, Col, Input, List, Modal, Row, Space, Typography } from "antd";
 import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { useSpawnPointsContext } from "../../contexts/SpawnPoints";
+import { invoke } from "@tauri-apps/api/core";
+import { SpawnPoint } from "../types";
 
-export function SpawnPointsManager() {
+
+interface SpawnPointsManagerSchema {
+    pointUpdateCallback: (filter: string | null) => void
+}
+
+export function SpawnPointsManager(schema: SpawnPointsManagerSchema) {
 
     const [open, setOpen] = useState<boolean>(false);
-    const [spawns, setSpawns] = useState<string[]>([]);
     const [spawn, setSpawn] = useState<string>("");
+
+    const spawnPointsContext = useSpawnPointsContext();
 
     function handleClose() {
         setOpen(false);
@@ -18,13 +27,22 @@ export function SpawnPointsManager() {
     }
 
     function handleNewSpawnAdd() {
-        setSpawns([
-            ...spawns,
-            spawn
-        ]);
+
+        invoke("create_spawn_point", {bookId: spawnPointsContext?.state.book_id, name: spawn})
+            .then((v) => spawnPointsContext?.setState({
+                ...spawnPointsContext.state,
+                points: [...spawnPointsContext.state.points, v as SpawnPoint]
+            }));
+        
+        setSpawn("");
     }
 
-    function handleSpawnRemove(filterType: number) {
+    function handleSpawnRemove(spawnId: string) {
+        spawnPointsContext?.setState({
+            ...spawnPointsContext.state,
+            points: spawnPointsContext.state.points.filter(p => p.id != spawnId)
+        })
+        schema.pointUpdateCallback(spawnId);
     }
 
     return (
@@ -44,14 +62,14 @@ export function SpawnPointsManager() {
                                 next={() => {}}
                                 hasMore={false}
                                 loader={null}
-                                dataLength={spawns.length}>
+                                dataLength={spawnPointsContext?.state.points.length as number}>
                                     <List>{
-                                        spawns.map((s, index) => (
+                                        spawnPointsContext?.state.points.map((s, index) => (
                                         <List.Item key={index}>
                                             <Space direction="horizontal">
-                                                <Typography.Text>{s}</Typography.Text>
+                                                <Typography.Text>{s.name}</Typography.Text>
                                                 <Button
-                                                    // onClick={() => handleFilterRemove(f.filter_type)} 
+                                                    onClick={() => handleSpawnRemove(s.id)} 
                                                     icon={<DeleteFilled/>}></Button>
                                             </Space>
                                         </List.Item>

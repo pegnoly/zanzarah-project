@@ -89,7 +89,7 @@ export function WizformMain(schema: WizformsMainSchema) {
         })
     }
 
-    function onWizformSpawnsUpdated(wizform: Wizform, spawns: number[]) {
+    function onWizformSpawnsUpdated(wizform: Wizform, spawns: string[]) {
         schema.onSingleWizformUpdate({
             ...wizform,
             spawn_points: spawns
@@ -124,16 +124,51 @@ export function WizformMain(schema: WizformsMainSchema) {
         schema.onMultipleWizformsUpdate(updatedWizforms);
     }
 
+    async function onSpawnPointRemoved(pointId: string) {
+        const wizformsWithRemovedPoint = schema.wizforms
+            .filter(w => w.spawn_points.includes(pointId))
+            .map(w => {
+                return {
+                    ...w,
+                    spawn_points: w.spawn_points.filter(s => s != pointId)
+                }
+            })
+        if (wizformsWithRemovedPoint.length == 0) {
+            return
+        }
+        await invoke("update_wizforms", {wizforms: wizformsWithRemovedPoint});
+        const updatedWizforms = schema.wizforms.map(w => {
+            const checkWizform = wizformsWithRemovedPoint.find(wf => wf.id == w.id);
+            if (checkWizform == undefined) {
+                return w;
+            }
+            else {
+                return {
+                    ...w,
+                    spawn_points: checkWizform.spawn_points
+                }
+            }
+        });
+
+        schema.onMultipleWizformsUpdate(updatedWizforms);
+    }
+
     return (
         <>
             <div className={styles.styles.main}>
-                <WizformSelector elements={schema.elements} wizforms={wizformsToRender} filterDisabledCallback={onFilterDisabled}/>
+                <WizformSelector 
+                    elements={schema.elements} 
+                    wizforms={wizformsToRender} 
+                    filterDisabledCallback={onFilterDisabled}
+                    spawnPointRemovedCallback={onSpawnPointRemoved}
+                />
                 <Routes>
                     <Route 
                         path="focus/:id" 
                         element={
                             <WizformFocused 
-                                elements={schema.elements} wizforms={wizformsToRender}
+                                elements={schema.elements} 
+                                wizforms={wizformsToRender}
                                 elementUpdateCallback={onWizformElementUpdated}
                                 enabledUpdateCallback={onWizformEnabledUpdated}
                                 nameUpdateCallback={onWizformNameUpdated}

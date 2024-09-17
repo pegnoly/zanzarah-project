@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Button, Col, Row, Space, Typography } from "antd";
+import { Button, Col, Row, Typography } from "antd";
 import { invoke } from "@tauri-apps/api/core";
 import { BookCreator } from "./BookCreator";
 import { Book } from "../types";
@@ -7,6 +7,7 @@ import { AppState, useAppStateContext } from "../../contexts/AppState";
 import { BookDataRenderer } from "./BookRenderer";
 import WizformFilterProvider from "../../contexts/WizformFilter";
 import { createStyles } from "antd-style";
+import SpawnPointsProvider from "../../contexts/SpawnPoints";
 
 const booksFacadeStyles = createStyles(({}) => ({
     header: {
@@ -114,7 +115,9 @@ export function BooksFacade() {
                 </Row>
             </div>
             <WizformFilterProvider>
-                <BookDataRenderer id={bookId} initialized={bookInitializalized}/>
+                <SpawnPointsProvider>
+                    <BookDataRenderer id={bookId} initialized={bookInitializalized}/>
+                </SpawnPointsProvider> 
             </WizformFilterProvider>
         </>
     )

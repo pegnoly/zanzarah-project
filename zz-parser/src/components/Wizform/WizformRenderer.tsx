@@ -3,10 +3,19 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import { WizformListItem } from './WizformListItem';
 import { Link } from 'react-router-dom';
 import { List } from 'antd';
+import { createStyles } from 'antd-style';
 
 interface WizformsRendererSchema {
     wizforms: Wizform[],
 }
+
+const wizformRendererStyles = createStyles(({}) => ({
+    container: {
+        width: '100%',
+        height: '59dvh',
+        overflowY: 'scroll'
+    }
+}))
 
 /**
  * Renders a list of wizforms with current filters  
@@ -15,20 +24,22 @@ interface WizformsRendererSchema {
  */
 export function WizformRenderer(schema: WizformsRendererSchema) {
 
+    const styles = wizformRendererStyles();
+
      return (
-        <div style={{width: '100%', height: 500, overflowY: 'scroll'}}>
+        <div id="scrollcontainer" className={styles.styles.container}>
             <InfiniteScroll
                 dataLength={schema.wizforms.length}
                 hasMore={false}
                 next={() => {}}     
                 loader={<h4>Загружается...</h4>}
-                // height={500}
+                scrollableTarget="scrollcontainer"
             >
                 <List>
                     {schema.wizforms.map((w, index) => (
-                        <List.Item>
+                        <List.Item key={index}>
                             <Link to={`focus/${w.id}`}>
-                                <WizformListItem key={index} name={w.name} icon64={w.icon}/>
+                                <WizformListItem name={w.name} icon64={w.icon}/>
                             </Link>   
                         </List.Item>
                     ))}

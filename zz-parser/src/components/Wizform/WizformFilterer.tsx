@@ -1,8 +1,6 @@
-import { Button, Col, Input, List, Modal, Row, Select, Space, Typography } from "antd";
+import { Col, Input, Row, Select } from "antd";
 import { useWizformFilterContext } from "../../contexts/WizformFilter";
-import { Filter, MagicElement } from "./../types";
-import { useState } from "react";
-import { DeleteFilled } from "@ant-design/icons";
+import { MagicElement } from "./../types";
 
 interface WizformFiltererSchema {
     elements: MagicElement[],

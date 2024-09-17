@@ -1,13 +1,12 @@
-import { Button, Segmented, Space } from "antd";
-import { WizformRenderer } from "../Wizform/WizformRenderer";
+import { Segmented } from "antd";
 import { useWizformFilterContext } from "../../contexts/WizformFilter";
 import { useEffect, useState } from "react";
-import { Filter, MagicElement, Wizform } from "../types";
+import { Filter, MagicElement, SpawnPoint, Wizform } from "../types";
 import { invoke } from "@tauri-apps/api/core";
 import { ElementRenderer } from "../Element/ElementsRenderer";
-import { WizformFilterer } from "../Wizform/WizformFilterer";
 import { createStyles } from "antd-style";
 import { WizformMain } from "../Wizform/WizformMain";
+import { useSpawnPointsContext } from "../../contexts/SpawnPoints";
 
 
 const bookRendererStyles = createStyles(({}) => ({
@@ -52,6 +51,7 @@ export function BookDataRenderer(schema: BookRendererSchema) {
     const [elements, setElements] = useState<MagicElement[]>([]);
 
     const wizformFilterContext = useWizformFilterContext();
+    const spawnPointsContext = useSpawnPointsContext();
 
     const styles = bookRendererStyles();
 
@@ -66,6 +66,7 @@ export function BookDataRenderer(schema: BookRendererSchema) {
             await loadWizforms(id);
             await loadElements(id);
             await loadFilters(id);
+            await loadPoints(id);
         }
     }
 
@@ -79,14 +80,24 @@ export function BookDataRenderer(schema: BookRendererSchema) {
             .then((v) => setElements(v as MagicElement[]));
     }
 
-    async function loadFilters(boolId: string) {
-        await invoke("load_filters", {bookId: boolId})
+    async function loadFilters(bookId: string) {
+        await invoke("load_filters", {bookId: bookId})
             .then((v) => {
                 console.log("Got filters: {}", v);
                 wizformFilterContext?.setState({
                 ...wizformFilterContext.state,
                 custom: v as Filter[]
             })});
+    }
+
+    async function loadPoints(bookId: string) {
+        await invoke("get_spawn_points", {bookId: bookId})
+            .then((v) => {
+                spawnPointsContext?.setState({
+                    points: v as SpawnPoint[],
+                    book_id: bookId
+                })
+            })
     }
 
     function handleContentTypeChange(ct: ContentType) {
@@ -130,7 +141,8 @@ export function BookDataRenderer(schema: BookRendererSchema) {
                     desc: wizform.desc,
                     element: wizform.element,
                     enabled: wizform.enabled,
-                    filters: wizform.filters
+                    filters: wizform.filters,
+                    spawn_points: wizform.spawn_points
                 }
             }
         });

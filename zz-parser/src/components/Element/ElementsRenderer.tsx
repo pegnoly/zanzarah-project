@@ -1,6 +1,20 @@
-import { Checkbox, Space, Typography } from "antd";
+import { Checkbox, List, Typography } from "antd";
 import { MagicElement } from "../types";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { createStyles } from "antd-style";
+
+const elementRendererStyles = createStyles(({}) => ({
+    container: {
+        width: '35%',
+        height: '59dvh',
+        overflowY: 'scroll',
+        display: 'flex',
+        flexDirection: 'column',
+        alignContent: 'center',
+        paddingLeft: '5%'
+    }
+}))
+
 
 export interface ElementRendererSchema {
     elements: MagicElement[],
@@ -13,6 +27,8 @@ export interface ElementRendererSchema {
  * @returns 
  */
 export function ElementRenderer(schema: ElementRendererSchema) {
+
+    const styles = elementRendererStyles();
 
     function hangleElementNameUpdate(element: MagicElement, newName: string) {
         schema.updateCallback({
@@ -30,28 +46,33 @@ export function ElementRenderer(schema: ElementRendererSchema) {
 
     return (
         <>
-            <div style={{paddingTop : 10, paddingBottom : 10, paddingLeft : 50, paddingRight : 50, width: 500}}>
+            <div className={styles.styles.container} 
+            // style={{paddingTop : 10, paddingBottom : 10, paddingLeft : 50, paddingRight : 50, width: 500}}
+            >
                 <InfiniteScroll
                     dataLength={schema.elements.length}
                     hasMore={false}
                     next={() => {}}     
                     loader={null}
-                    height={400}
+                    // height={400}
                 >
+                    <List>
                     {schema.elements.sort((e1, e2) => (e1.element < e2.element ? -1 : 1)).map((element, index) => (
-                        <Space style={{paddingTop : 5, paddingBottom : 5}} key={index} size={80}>
-                        <div 
-                            style={{width : 200, paddingLeft : 10 }}>
-                            <Typography.Text editable={{
-                                onChange: (newText) => {hangleElementNameUpdate(element, newText)}
-                            }}>{element.name}</Typography.Text>
-                        </div>
-                        <Checkbox 
-                            checked={element.enabled} 
-                            onChange={(event) => handleElementChecked(element, event.target.checked)}
-                        >Использовать</Checkbox>
-                    </Space>
+                        <List.Item key={index}>
+                            <div style={{width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+                                <div style={{width: '50%'}}>
+                                    <Typography.Text editable={{
+                                        onChange: (newText) => {hangleElementNameUpdate(element, newText)}
+                                    }}>{element.name}</Typography.Text>
+                                </div>
+                                <Checkbox 
+                                    checked={element.enabled} 
+                                    onChange={(event) => handleElementChecked(element, event.target.checked)}
+                                >Использовать</Checkbox>
+                            </div>
+                        </List.Item>
                     ))}
+                    </List>
                 </InfiniteScroll>
             </div>
         </>

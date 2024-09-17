@@ -3,11 +3,30 @@ import { MagicElement, Wizform } from "../types";
 import { useEffect, useState } from "react";
 import { Button, Checkbox, Col, Row, Select, Typography } from "antd";
 import { EditOutlined } from "@ant-design/icons";
+// import { createStyles } from "antd-style";
+import { useWizformFilterContext } from "../../contexts/WizformFilter";
+import { useSpawnPointsContext } from "../../contexts/SpawnPoints";
 
+// const wizformFocusedStyles = createStyles(({}) => ({
+//     container: {
+//         width: '60%', 
+//         flexDirection: 'column', 
+//         paddingLeft: 20
+//     },
+//     main_data: {
+//         width: '100%',
+//         height: 'vh20'
+//     },
+//     inf_scroller: {
+//         width: '100%',
+//         height: 'vh30',
+//         overflowY: 'scroll'
+//     }
+// }))
 
 interface WizformFocusedSchema {
     wizforms: Wizform[],
-    elements: MagicElement[],
+    elements: MagicElement[]
     /**
      * Callback called when user changes wizform element
      * @param w - wizform that was updated
@@ -34,7 +53,7 @@ interface WizformFocusedSchema {
 
     filtersUpdateCallback: (w: Wizform, filters: number[]) => void,
 
-    spawnsUpdateCallback: (w: Wizform, spawns: number[]) => void
+    spawnsUpdateCallback: (w: Wizform, spawns: string[]) => void
 }
 
 export function WizformFocused(schema: WizformFocusedSchema) {
@@ -46,8 +65,16 @@ export function WizformFocused(schema: WizformFocusedSchema) {
     const [enabledForBook, setEnabledForBook] = useState<boolean | undefined>(undefined);
     const [name, setName] = useState<string | undefined>(undefined);
     const [desc, setDesc] = useState<string | undefined>(undefined);
+    const [filters, setFilters] = useState<number[]>([]);
+    const [spawns, setSpawns] = useState<string[]>([]);
+
+    const wizformFilterContext = useWizformFilterContext();
 
     const {id} = useParams();
+
+    // const styles = wizformFocusedStyles();
+
+    const spawnPointsContext = useSpawnPointsContext();
 
     useEffect(() => {
         if (id != undefined) {
@@ -57,6 +84,8 @@ export function WizformFocused(schema: WizformFocusedSchema) {
             setEnabledForBook(focusedWizform?.enabled);
             setName(focusedWizform?.name);
             setDesc(focusedWizform?.desc);
+            setFilters(focusedWizform?.filters as number[])
+            setSpawns(focusedWizform?.spawn_points as string[]);
         }
     }, [id])
 
@@ -81,20 +110,25 @@ export function WizformFocused(schema: WizformFocusedSchema) {
         schema.elementUpdateCallback(wizform!, element); 
     }
 
-    function handleFiltersUpdate(filters: number[]) {
-        // console.log("Filters: ", filters);
-        // schema.filtersUpdateCallback(schema.wizform, filters);
+    function handleCustomFilterSelection(newFilters: number[]) {
+        setFilters(newFilters);
+        schema.filtersUpdateCallback(wizform!, newFilters);
+    }
+
+    function handleSpawnPointSelection(newPoints: string[]) {
+        setSpawns(newPoints);
+        schema.spawnsUpdateCallback(wizform!, newPoints);
     }
 
     return (
-        <>
+        <> { id != undefined &&
             <div style={{width: '60%', display: 'flex', flexDirection: 'column', paddingLeft: 20}}>
 
                 <Checkbox 
                     checked={enabledForBook}
                     onChange={(e) => handleEnableUpdate(e.target.checked)}
                 >Отображать в мобильном приложении</Checkbox>
-
+                
                 <Typography.Text 
                     style={{fontFamily: 'monospace', fontSize: 17, textAlign: 'center', paddingBottom: 5}}
                 >Основные параметры</Typography.Text>
@@ -140,7 +174,59 @@ export function WizformFocused(schema: WizformFocusedSchema) {
                 <Typography.Text 
                     style={{fontFamily: 'monospace', fontSize: 17, textAlign: 'center', paddingBottom: 5, paddingTop: 5}}
                 >Дополнительные параметры</Typography.Text>
+
+                <Row>
+                    <Col style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}} span={12}>
+                    <Typography.Text 
+                        style={{
+                            fontFamily: 'cursive', 
+                            fontSize: 16, 
+                            textAlign: 'center', paddingBottom: 5
+                        }}>Места обитания феи</Typography.Text>
+                        <div style={{width: '100%', flexDirection: 'row', alignItems: 'center'}}>
+                            <Select
+                                value={spawns}
+                                mode="multiple"
+                                onChange={handleSpawnPointSelection}
+                                style={{
+                                    width: '90%',
+                                    paddingLeft: 30,
+                                    paddingRight: 5
+                                }}
+                            >{
+                                spawnPointsContext?.state.points.map((p, i) => (
+                                    <Select.Option key={i} value={p.id}>{p.name}</Select.Option>
+                                ))
+                            }</Select>
+                        </div>
+                    </Col>
+                    <Col style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}} span={12}>
+                    <Typography.Text 
+                        style={{
+                            fontFamily: 'cursive', 
+                            fontSize: 16, 
+                            textAlign: 'center', paddingBottom: 5
+                        }}>Особые фильтры фей</Typography.Text>
+                        <div style={{width: '100%', flexDirection: 'row', alignItems: 'center'}}>
+                            <Select
+                                value={filters}
+                                mode="multiple"
+                                onChange={handleCustomFilterSelection}
+                                style={{
+                                    width: '90%',
+                                    paddingLeft: 30,
+                                    paddingRight: 5
+                                }}
+                            >{
+                                wizformFilterContext?.state.custom.filter(f => f.enabled).map((f, i) => (
+                                    <Select.Option key={i} value={f.filter_type}>{f.name}</Select.Option>
+                                ))
+                            }</Select>
+                        </div>
+                    </Col>
+                </Row>
             </div>
+            }
         </>
     )
 }

@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { Filter, MagicElement, Wizform } from "../types";
 import { CustomFiltersManager } from "./CustomFiltersManager";
 import { SpawnPointsManager } from "./SpawnPointsManager";
@@ -9,16 +8,11 @@ import { invoke } from "@tauri-apps/api/core";
 interface WizformSelectorSchema {
     elements: MagicElement[],
     wizforms: Wizform[],
-    filterDisabledCallback: (type: number) => void
+    filterDisabledCallback: (type: number) => void,
+    spawnPointRemovedCallback: (spawnId: string) => void
 }
 
 export function WizformSelector(schema: WizformSelectorSchema) {
-
-    const selectorRef = useRef<HTMLDivElement | null>(null);
-
-    useEffect(() => {
-        console.log("Ref: ", selectorRef.current?.offsetHeight);
-    }, [selectorRef.current?.offsetHeight])
 
     function handleCustomFilterUpdate(filter: Filter | null) {
         if (filter != null) {
@@ -29,12 +23,18 @@ export function WizformSelector(schema: WizformSelectorSchema) {
         }
     }
 
+    async function handleSpawnPointRemove(spawn: string | null) {
+        if (spawn != null) {
+            await invoke("remove_spawn_point", {pointId: spawn});
+            schema.spawnPointRemovedCallback(spawn);
+        }
+    }
+
     return (
         <div 
             style={{width: '40%', height: '100%', display: 'flex', flexDirection: 'column', alignContent: 'center'}}
-            ref={selectorRef}
         >
-            <SpawnPointsManager/>
+            <SpawnPointsManager pointUpdateCallback={handleSpawnPointRemove}/>
             <CustomFiltersManager filterUpdateCallback={handleCustomFilterUpdate}/>
             <WizformFilterer elements={schema.elements}/>
             <WizformRenderer wizforms={schema.wizforms}/>
