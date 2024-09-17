@@ -15,7 +15,7 @@ pub(crate) fn wizform_routes() -> Router<ApiManager> {
 async fn save_wizforms(
     State(api_manager) : State<ApiManager>,
     Json(wizforms): Json<Vec<WizformDBModel>>
-) -> Result<(), String> {
+) -> Result<(), ()> {
     let mut tx = api_manager.pool.begin().await.unwrap();
     for wizform in wizforms {
         let res = sqlx::query(r#"
@@ -52,7 +52,7 @@ async fn save_wizforms(
         match res {
             Ok(_r) => {},
             Err(e) => {
-                return Err(format!("Smth happen while inserting wizform {}: {}", &wizform.name, e.to_string()));
+                tracing::info!("Smth happen while inserting wizform {}: {}", &wizform.name, e.to_string());
             }
         }
     }
@@ -62,7 +62,8 @@ async fn save_wizforms(
             Ok(())
         },
         Err(e) => {
-            Err(format!("Smth happen while inserting wizforms: {}", e.to_string()))
+            tracing::info!("Smth happen while inserting wizforms: {}", e.to_string());
+            Err(())
         }
     }
 }
@@ -70,7 +71,7 @@ async fn save_wizforms(
 async fn get_existing_wizforms(
     State(api_manager) : State<ApiManager>,
     Path(book_id): Path<String> 
-) -> Result<Json<Vec<WizformDBModel>>, String> {
+) -> Result<Json<Vec<WizformDBModel>>, ()> {
     let wizforms_res: Result<Vec<WizformDBModel>, sqlx::Error> = sqlx::query_as(r#"
             SELECT * FROM wizforms WHERE book_id=$1;
         "#)
@@ -82,7 +83,8 @@ async fn get_existing_wizforms(
             Ok(Json(wizforms))
         },
         Err(e) => {
-            Err(format!("Error fetching wizforms from book with id {}: {}", &book_id, &e.to_string()))
+            tracing::info!("Error fetching wizforms from book with id {}: {}", &book_id, &e.to_string());
+            Err(())
         }
     }
 }

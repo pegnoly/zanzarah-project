@@ -15,7 +15,7 @@ pub struct ParseController {
 
 pub async fn parse_texts(directory: String, texts: &mut Vec<Text>) {
     let path = PathBuf::from(directory).join("Data\\_fb0x02.fbs");
-    println!("Texts path: {:?}", &path);
+    log::info!("Texts path: {:?}", &path);
     let mut file = std::fs::File::open(path).unwrap();
     let mut reader = BinaryReader::from_file(&mut file);
     reader.set_endian(binary_reader::Endian::Little);
@@ -50,7 +50,7 @@ pub async fn parse_wizforms(
     existing_wizforms: &Vec<WizformDBModel>
 ) {
     let path = PathBuf::from(&directory).join("Data\\_fb0x01.fbs");
-    println!("Wizforms path: {:?}", &path);
+    log::info!("Wizforms path: {:?}", &path);
     let mut file = std::fs::File::open(path).unwrap();
     let mut reader = BinaryReader::from_file(&mut file);
     // bytes are represented in little endian order
@@ -191,6 +191,8 @@ pub async fn parse_wizforms(
 
         // ICON
         
+        log::info!("Wizform {} parsed successfully", &name);
+
         let hex_id = to_le_hex_string(id);
         let existing_wizform = existing_wizforms.iter()
             .find(|w| {

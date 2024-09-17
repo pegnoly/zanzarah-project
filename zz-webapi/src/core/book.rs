@@ -1,5 +1,5 @@
-use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::{get, patch, post}, Json, Router};
-use zz_data::book::base::{Book, BookCreationParams, WizformFilterDBModel};
+use axum::{extract::{Path, State}, http::StatusCode, response::IntoResponse, routing::{delete, get, patch, post}, Json, Router};
+use zz_data::{book::base::{Book, BookCreationParams, WizformFilterDBModel}, core::wizform::WizformSpawnPoint};
 
 use super::utils::{ApiManager, StringOptionPayload, StringPayload};
 
@@ -11,6 +11,9 @@ pub(crate) fn book_routes() -> Router<ApiManager> {
         .route("/book/initialize", patch(initialize_book))
         .route("/book/filters", get(get_filters))
         .route("/book/filters", patch(update_filter))
+        .route("/book/points/:book_id", get(get_spawn_points))
+        .route("/book/point", post(create_spawn_point))
+        .route("/book/point/remove/:point_id", delete(remove_spawn_point))
 }
 
 async fn create_book(
@@ -173,6 +176,68 @@ async fn update_filter(
         Err(failure) => {
             tracing::info!("error updating filter: {}", failure.to_string());
             Err(())
+        }
+    }
+}
+
+async fn create_spawn_point(
+    State(api_manager): State<ApiManager>,
+    Json(spawn_point): Json<WizformSpawnPoint>
+) -> Result<(), ()> {
+    let res = sqlx::query("INSERT INTO spawn_points (id, book_id, name) VALUES($1, $2, $3)")
+        .bind(spawn_point.id)
+        .bind(spawn_point.book_id)
+        .bind(spawn_point.name)
+        .execute(&api_manager.pool)
+        .await;
+    match res {
+        Ok(_success) => {
+            tracing::info!("Spawn point inserted correctly");
+            Ok(())
+        },
+        Err(failure) => {
+            tracing::info!("Failed to insert spawn point: {}", failure.to_string());
+            Err(()) 
+        }
+    }
+}
+
+async fn remove_spawn_point(
+    State(api_manager) : State<ApiManager>,
+    Path(point_id): Path<String>
+) -> impl IntoResponse {
+    let res = sqlx::query("DELETE FROM spawn_points WHERE id=$1;")
+        .bind(point_id)
+        .execute(&api_manager.pool)
+        .await;
+    match res {
+        Ok(_success) => {
+            tracing::info!("Spawn point deleted correctly");
+            Ok(())
+        },
+        Err(failure) => {
+            tracing::info!("Failed to delete spawn point: {}", failure.to_string());
+            Err(()) 
+        }
+    }
+}
+
+async fn get_spawn_points(
+    State(api_manager) : State<ApiManager>,
+    Path(book_id): Path<String>
+) -> Result<Json<Vec<WizformSpawnPoint>>, ()> {
+    let res: Result<Vec<WizformSpawnPoint>, sqlx::Error> = sqlx::query_as("SELECT * FROM spawn_points WHERE book_id=$1;")
+        .bind(book_id)
+        .fetch_all(&api_manager.pool)
+        .await;
+    match res {
+        Ok(success) => {
+            tracing::info!("Spawn points selected correctly");
+            Ok(Json(success))
+        },
+        Err(failure) => {
+            tracing::info!("Failed to fetch spawn points: {}", failure.to_string());
+            Err(()) 
         }
     }
 }

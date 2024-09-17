@@ -80,6 +80,8 @@ pub struct WizformDBModel {
     pub book_id: String,
     pub game_id: String,
     pub name: String,
+    pub description: String,
+    pub icon64: String,
     pub element: WizformElementType,
     pub magics: String,
     pub number: i16,
@@ -91,16 +93,28 @@ pub struct WizformDBModel {
     pub evolution_level: i32,
     pub exp_modifier: i32,
     pub enabled: bool,
-    pub filters: Vec<i32>
+    pub filters: Vec<i32>,
+    pub spawn_points: Vec<String>
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct WizformSpawnPoint {
+    pub id: String,
+    pub book_id: String,
+    pub name: String
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct WizformFrontendModel {
     pub id: String,
     pub name: String,
+    pub desc: String,
     pub element: i32,
     pub enabled: bool,
-    pub filters: Vec<i32>
+    pub filters: Vec<i32>,
+    pub spawn_points: Vec<String>,
+    pub icon: String,
+    pub number: i16
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]

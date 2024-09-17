@@ -51,3 +51,11 @@ pub struct WizformFilterDBModel {
     pub filter_type: i32,
     pub enabled: bool 
 }
+
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+pub struct WizformSpawnPointDBModel {
+    pub id: String,
+    pub book_id: String,
+    pub name: String,
+    pub point_type: i32
+}

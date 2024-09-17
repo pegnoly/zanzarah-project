@@ -11,7 +11,7 @@ use zz_data::{
         Book, BookCreationParams, WizformFilterDBModel, WizformFilterType
     }, 
     core::wizform::{
-        self, WizformDBModel, WizformElementFrontendModel, WizformElementModel, WizformElementType, WizformFrontendModel
+        self, WizformDBModel, WizformElementFrontendModel, WizformElementModel, WizformElementType, WizformFrontendModel, WizformSpawnPoint
     }
 };
 
@@ -133,7 +133,7 @@ pub async fn try_create_book(
             Ok(book_id)
         }
         Err(e) => {
-            println!("Error creating book {}: {}", &book_id, e.to_string());
+            log::error!("Error creating book {}: {}", &book_id, e.to_string());
             Err(())
         }
     }
@@ -159,7 +159,7 @@ pub async fn try_load_book(
             let json: Result<Book, reqwest::Error> = book_response.json().await;
             match json {
                 Ok(book) => {
-                    println!("Got book from api: {:?}", &book);
+                    log::info!("Got book from api: {:?}", &book);
                     let mut config = app_manager.config.lock().await;
                     config.current_book = id.clone();
                     let mut config_file = std::fs::File::create(std::env::current_exe().unwrap().parent().unwrap().join("zz_cfg.json")).unwrap();
@@ -168,13 +168,13 @@ pub async fn try_load_book(
                     Ok(book)
                 },
                 Err(e) => {
-                    println!("Error converting book from json: {}", e.to_string());
+                    log::error!("Error converting book from json: {}", e.to_string());
                     Err("Error converting book from json".to_string())
                 }
             }
         },
         Err(e) => {
-            println!("Error fetching existing book: {}", e.to_string());
+            log::error!("Error fetching existing book: {}", e.to_string());
             Err("Error fetching existing book".to_string())
         }
     }
@@ -212,7 +212,7 @@ pub async fn try_parse_wizforms(
     directory: String,
     app_manager: State<'_, AppManager>
 ) -> Result<(), ()> {
-    println!("Trying to parse wizforms");
+    log::info!("Wizforms parsing started");
     let texts = app_manager.texts.lock().await;
     let client = app_manager.client.read().await;
     let response = client.get(format!("https://zz-webapi.shuttleapp.rs/wizforms/{}", &book_id))
@@ -223,28 +223,29 @@ pub async fn try_parse_wizforms(
             let json: Result<Vec<WizformDBModel>, reqwest::Error> = wizforms_response.json().await;
             match json {
                 Ok(existing_wizforms) => {
-                    println!("Existing wizforms: {:?}", &existing_wizforms);
                     let mut wizforms = vec![];
                     parse_wizforms(book_id, directory, &texts, &mut wizforms, &existing_wizforms).await;
                     if wizforms.len() > 500 {
                         let second_chunk = wizforms.split_off(500);
                         upload_wizform_chunk(&wizforms, &client).await.unwrap();
                         upload_wizform_chunk(&second_chunk, &client).await.unwrap();
+                        log::info!("Wizforms uploaded successfully");
                         Ok(())
                     }
                     else {
                         upload_wizform_chunk(&wizforms, &client).await.unwrap();
+                        log::info!("Wizforms uploaded successfully");
                         Ok(())
                     }            
                 },
                 Err(e) => {
-                    println!("Error converting exisiting wizforms from json: {}", e.to_string());
+                    log::error!("Error converting exisiting wizforms from json: {}", e.to_string());
                     Err(())
                 }
             }
         },
         Err(e) => {
-            println!("Error fetching existing wizforms: {}", e.to_string());
+            log::error!("Error fetching existing wizforms: {}", e.to_string());
             Err(())
         }
     }
@@ -267,27 +268,14 @@ pub async fn initialize_book(
         .await;
     match response {
         Ok(success) => {
-            println!("Book initialization response: {}", success.text().await.unwrap());
+            log::info!("Book initialization response: {}", success.text().await.unwrap());
             Ok(())
         },
         Err(e) => {
-            println!("Book initialization error: {}", e.to_string());
+            log::error!("Book initialization error: {}", e.to_string());
             Err(())
         }
     }
-}
-
-#[derive(Deserialize, Clone, Serialize)]
-pub struct WizformTestModel {
-    pub id: String,
-    pub name: String,
-    pub desc: String,
-    pub element: i32,
-    pub enabled: bool,
-    pub filters: Vec<i32>,
-    pub spawn_points: Vec<i32>,
-    pub icon: String,
-    pub number: i16
 }
 
 /// Executed when frontend tries to load all wizforms for book.  
@@ -299,7 +287,7 @@ pub struct WizformTestModel {
 pub async fn load_wizforms(
     book_id: String,
     app_manager: State<'_, AppManager>
-) -> Result<Vec<WizformTestModel>, ()> {
+) -> Result<Vec<WizformFrontendModel>, ()> {
     let client = app_manager.client.read().await;
     let response = client.get(format!("https://zz-webapi.shuttleapp.rs/wizforms/{}", &book_id))
         .send()
@@ -312,7 +300,7 @@ pub async fn load_wizforms(
             match wizforms_json {
                 Ok(wizforms) => {
                     Ok(wizforms.into_iter().map(|w| {
-                        WizformTestModel {
+                        WizformFrontendModel {
                             id: w.id,
                             name: w.name,
                             desc: w.description,
@@ -338,13 +326,13 @@ pub async fn load_wizforms(
                     }).collect())
                 },
                 Err(e) => {
-                    println!("Error converting wizforms json: {}", e.to_string());
+                    log::error!("Error converting wizforms json: {}", e.to_string());
                     Err(())
                 }
             }
         },
         Err(response_fail) => {
-            println!("Error fetching existing wizforms: {}", response_fail.to_string());
+            log::error!("Error fetching existing wizforms: {}", response_fail.to_string());
             Err(())
         }
     }
@@ -379,13 +367,13 @@ pub async fn load_elements(
                         }}).collect())
                 },
                 Err(e) => {
-                    println!("Error converting elements json: {}", e.to_string());
+                    log::error!("Error converting elements json: {}", e.to_string());
                     Err(())
                 }
             }
         },
         Err(response_fail) => {
-            println!("Error fetching existing elements: {}", response_fail.to_string());
+            log::error!("Error fetching existing elements: {}", response_fail.to_string());
             Err(())
         }
     }
@@ -409,13 +397,13 @@ pub async fn load_filters(
                     Ok(filters)
                 },
                 Err(e) => {
-                    println!("Error converting filters json: {}", e.to_string());
+                    log::error!("Error converting filters json: {}", e.to_string());
                     Err(())
                 }
             }
         },
         Err(failure) => {
-            println!("Error fetching existing filters: {}", failure.to_string());
+            log::error!("Error fetching existing filters: {}", failure.to_string());
             Err(())
         }
     }
@@ -438,11 +426,11 @@ pub async fn update_wizform(
         .await;
     match response {
         Ok(_) => {
-            println!("Wizform {} updated successfully", wizform.name);
+            log::info!("Wizform {} updated successfully", wizform.name);
             Ok(())
         },
         Err(response_fail) => {
-            println!("Failed to update wizform {}: {}", wizform.name, response_fail.to_string());
+            log::error!("Failed to update wizform {}: {}", wizform.name, response_fail.to_string());
             Err(())
         }
     }
@@ -460,11 +448,11 @@ pub async fn update_wizforms(
         .await;
     match response {
         Ok(success) => {
-            println!("Wizforms updated successfully");
+            log::info!("Wizforms updated successfully");
             Ok(())
         },
         Err(failure) => {
-            println!("Error updating wizforms: {}", failure.to_string());
+            log::error!("Error updating wizforms: {}", failure.to_string());
             Err(())
         }
     }
@@ -486,11 +474,11 @@ pub async fn update_element(
         .await;
     match response {
         Ok(_) => {
-            println!("Element {} updated successfully", element.name);
+            log::info!("Element {} updated successfully", element.name);
             Ok(())
         },
         Err(response_fail) => {
-            println!("Failed to update element {}: {}", element.name, response_fail.to_string());
+            log::error!("Failed to update element {}: {}", element.name, response_fail.to_string());
             Err(())
         }
     }
@@ -508,16 +496,95 @@ pub async fn update_filter(
         .await;
     match response {
         Ok(_success) => {
-            println!("Filter updated successfully");
+            log::info!("Filter updated successfully");
             Ok(())
         },
         Err(failure) => {
-            println!("Error updating filter: {}", failure.to_string());
+            log::error!("Error updating filter: {}", failure.to_string());
             Err(())
         }
     }
 }
 
+#[tauri::command]
+pub async fn create_spawn_point(
+    book_id: String,
+    name: String,
+    app_manager: State<'_, AppManager>
+) -> Result<WizformSpawnPoint, ()> {
+    let point = WizformSpawnPoint {
+        id: uuid::Uuid::new_v4().to_string().replace("-", ""),
+        book_id: book_id,
+        name: name
+    };
+    let client = app_manager.client.read().await;
+    let response = client.post("https://zz-webapi.shuttleapp.rs/book/point")
+        .json(&point)
+        .send()
+        .await;
+    match response {
+        Ok(_success) => {
+            log::info!("Spawn point {} created successfully with id {}", &point.name, &point.id);
+            Ok(point)
+        }
+        Err(failure) => {
+            log::error!("Failed to create spawn point {}: {}", &point.name, failure.to_string());
+            Err(())
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn remove_spawn_point(
+    point_id: String,
+    app_manager: State<'_, AppManager>
+) -> Result<(), ()> {
+    let client = app_manager.client.read().await;
+    let response = client.delete(format!("https://zz-webapi.shuttleapp.rs/book/point/remove/{}", &point_id))
+        .send()
+        .await;
+    match response {
+        Ok(_success) => {
+            log::trace!("Spawn point {} deleted successfully", &point_id);
+            Ok(())
+        }
+        Err(failure) => {
+            log::error!("Failed to delete spawn point {}: {}", &point_id, failure.to_string());
+            Err(())
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn get_spawn_points(
+    book_id: String,
+    app_manager: State<'_, AppManager>
+) -> Result<Vec<WizformSpawnPoint>, ()> {
+    let client = app_manager.client.read().await;
+    let response = client.get(format!("https://zz-webapi.shuttleapp.rs/book/points/{}", &book_id))
+        .send()
+        .await;
+    match response {
+        Ok(success) => {
+            log::trace!("Spawn points fetched successfully for book {}", &book_id);
+            let json: Result<Vec<WizformSpawnPoint>, reqwest::Error> = success.json().await;
+            match json {
+                Ok(points) => {
+                    log::trace!("Spawn points json converted successfully");
+                    Ok(points)
+                },
+                Err(failure) => {
+                    log::error!("Error converting spawn points json: {}", failure.to_string());
+                    Err(())
+                }
+            }
+        }
+        Err(failure) => {
+            log::error!("Failed to fetch spawn points for book {}: {}", &book_id, failure.to_string());
+            Err(())
+        }
+    }
+}
 
 #[tauri::command]
 pub async fn upload_book(
