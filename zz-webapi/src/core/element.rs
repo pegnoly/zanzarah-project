@@ -22,7 +22,7 @@ async fn get_existing_elements(
         .await;
     match res {
         Ok(query_success) => {
-            tracing::info!("Got wizforms: {:?}", &query_success);
+            //tracing::info!("Got wizforms: {:?}", &query_success);
             Ok(Json(query_success))
         }
         Err(query_failure) => {

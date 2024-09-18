@@ -52,7 +52,7 @@ async fn save_wizforms(
         match res {
             Ok(_r) => {},
             Err(e) => {
-                tracing::info!("Smth happen while inserting wizform {}: {}", &wizform.name, e.to_string());
+                tracing::info!("Smth happen while inserting wizform {}: {}", &wizform.number, e.to_string());
             }
         }
     }
@@ -110,12 +110,12 @@ async fn update_wizform(
         .await;
     match res {
         Ok(_) => {
-            tracing::info!("Wizform {} updated successfully", &wizform.name);
-            Ok(format!("Wizform {} updated successfully", wizform.name))
+            tracing::info!("Wizform {} updated successfully", &wizform.number);
+            Ok(format!("Wizform {} updated successfully", wizform.number))
         },
         Err(e) => {
-            tracing::info!("Failed updating wizform {}", &wizform.name);
-            Err(format!("Failed updating wizform {}: {}", wizform.name, e.to_string()))
+            tracing::info!("Failed updating wizform {}", &wizform.number);
+            Err(format!("Failed updating wizform {}: {}", wizform.number, e.to_string()))
         }
     }
 }

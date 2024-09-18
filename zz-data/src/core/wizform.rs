@@ -79,7 +79,7 @@ pub struct WizformDBModel {
     pub id: String,
     pub book_id: String,
     pub game_id: String,
-    pub name: String,
+    pub name: Vec<u8>,
     pub description: String,
     pub icon64: String,
     pub element: WizformElementType,

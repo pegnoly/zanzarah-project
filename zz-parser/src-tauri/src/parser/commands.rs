@@ -302,7 +302,7 @@ pub async fn load_wizforms(
                     Ok(wizforms.into_iter().map(|w| {
                         WizformFrontendModel {
                             id: w.id,
-                            name: w.name,
+                            name: String::from_utf8(w.name).unwrap(),
                             desc: w.description,
                             element: w.element as i32,
                             enabled: w.enabled,
@@ -426,11 +426,11 @@ pub async fn update_wizform(
         .await;
     match response {
         Ok(_) => {
-            log::info!("Wizform {} updated successfully", wizform.name);
+            log::info!("Wizform {} updated successfully", wizform.number);
             Ok(())
         },
         Err(response_fail) => {
-            log::error!("Failed to update wizform {}: {}", wizform.name, response_fail.to_string());
+            log::error!("Failed to update wizform {}: {}", wizform.number, response_fail.to_string());
             Err(())
         }
     }
