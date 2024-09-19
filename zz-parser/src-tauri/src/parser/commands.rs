@@ -310,20 +310,8 @@ pub async fn load_wizforms(
                             filters: w.filters.clone(),
                             spawn_points: w.spawn_points.clone(),
                             number: w.number,
-                            icon: base64::prelude::BASE64_STANDARD.encode(
-                                    std::fs::read(std::env::current_exe().unwrap().parent().unwrap().join(format!("{}/{}", &book_id, &w.icon64)))
-                                    .unwrap())
+                            icon: w.icon64
                         }
-                        // WizformFrontendModel {
-                        //     id: w.id,
-                        //     name: w.name,
-                        //     desc: w.description,
-                        //     element: w.element as i32,
-                        //     enabled: w.enabled,
-                        //     filters: w.filters.clone(),
-                        //     spawn_points: w.spawn_points.clone(),
-                        //     icon: w.icon64
-                        // }
                     }).collect())
                 },
                 Err(e) => {
@@ -585,83 +573,4 @@ pub async fn get_spawn_points(
             Err(())
         }
     }
-}
-
-#[tauri::command]
-pub async fn upload_book(
-    book_id: String,
-    app_manager: State<'_, AppManager>
-) -> Result<(), ()> {
-    let icons_dir = std::env::current_exe().unwrap().parent().unwrap().join(format!("{}\\", &book_id));
-    let client = app_manager.client.read().await;
-    let response = client.get("https://zz-webapi.shuttleapp.rs/token")
-        .send()
-        .await;
-    match response {
-        Ok(success) => {
-
-            let token = success.text().await.unwrap();
-            println!("Got token: {}", &token);
-
-            let wizforms_response = client.get(format!("https://zz-webapi.shuttleapp.rs/wizforms/{}", &book_id))
-                .send()
-                .await;
-            match wizforms_response {
-                Ok(wizforms_success) => {
-                    let wizforms: Vec<WizformDBModel> = wizforms_success.json().await.unwrap();
-                    let mut icons_map = HashMap::new();
-                    wizforms.into_iter()
-                        .filter(|w| {
-                            w.enabled
-                        })
-                        .for_each(|w| {
-                            let icon_bmp = icons_dir.join(w.icon64);
-                            let icon_base64 = base64::prelude::BASE64_STANDARD.encode(
-                                std::fs::read(icon_bmp).unwrap()
-                            );
-                            icons_map.insert(w.number, icon_base64);
-                        });
-                    let icons_json = serde_json::to_string(&icons_map).unwrap();
-                    let mut icons_file = std::fs::File::create(icons_dir.join(format!("{}.json", &book_id))).unwrap();
-                    icons_file.write_all(&mut icons_json.as_bytes()).unwrap();
-
-                    let dbx_client = DBXClient::new(&token);
-                    let upload_data = UploadOptionBuilder::new()
-                        .set_upload_mode(rust_dropbox::UploadMode::Add)
-                        //.disallow_auto_rename()
-                        .build();       
-                    let upload_result = dbx_client.upload(icons_json.as_bytes().to_vec(), &format!("/icons/{}.json", &book_id), upload_data); 
-                    match upload_result {
-                        Ok(_) => {
-                            log::info!("Book was uploaded correctly");
-                        },
-                        Err(failure) => {
-                            log::info!("Failed to upload book: {:?}", &failure)
-                        }
-                    }
-                },
-                Err(wizforms_failure) => {
-                    log::error!("Failed to fetch existing wizforms: {}", wizforms_failure.to_string());
-                }
-            }
-        },
-        Err(failure) => {
-            log::error!("Failed to get token: {}", failure.to_string());
-        }
-    }
-    Ok(())
-    // let client = app_manager.client.read().await;
-    // let response = client.post("https://zz-webapi.shuttleapp.rs/upload")
-    //     .send()
-    //     .await;
-    // match response {
-    //     Ok(_) => {
-    //         println!("Upload triggered ok");
-    //         Ok(())
-    //     },
-    //     Err(response_fail) => {
-    //         println!("Upload failed: {}", response_fail.to_string());
-    //         Err(())
-    //     }
-    // }
 }

@@ -182,7 +182,7 @@ pub async fn parse_wizforms(
 
         match image.save(&image_path) {
             Ok(saved) => {
-                //image64_repr = base64::prelude::BASE64_STANDARD.encode(&std::fs::read(image_path).unwrap());
+                image64_repr = base64::prelude::BASE64_STANDARD.encode(&std::fs::read(image_path).unwrap());
             },
             Err(save_error) => {
 
@@ -219,7 +219,7 @@ pub async fn parse_wizforms(
                     enabled: wizform.enabled,
                     filters: wizform.filters.clone(),
                     spawn_points: wizform.spawn_points.clone(),
-                    icon64: format!("{}.bmp", number)
+                    icon64: image64_repr
                 });
             },
             None => {
@@ -242,7 +242,7 @@ pub async fn parse_wizforms(
                     enabled: true,
                     filters: vec![],
                     spawn_points: vec![],
-                    icon64: format!("{}.bmp", number)
+                    icon64: image64_repr
                 });
             }
         }

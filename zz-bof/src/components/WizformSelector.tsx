@@ -1,10 +1,11 @@
-import { Col, Grid, Input, Layout, List, Menu, Row, Select, Space, Typography } from "antd";
+import { Typography } from "antd";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Filter, MagicElement, Wizform, WizformElementType } from "./types";
-import { Header } from "antd/es/layout/layout";
 import { WizformFilterMenu } from "./WizformFilterMenu";
 import { useWizformFilterContext } from "../contexts/WizformFilter";
+
+import List from 'rc-virtual-list';
 
 interface WizformSelectorSchema {
     wizforms: Wizform[],
@@ -19,7 +20,6 @@ export function WizformSelector(schema: WizformSelectorSchema) {
     const wizformFilterContext = useWizformFilterContext();
 
     useEffect(() => {
-        console.log(schema.wizforms[0]);
         if (schema.wizforms.length > 0) {
             setWizformsToRender(schema.wizforms
                 .filter((w) => w.enabled == true)
@@ -29,6 +29,7 @@ export function WizformSelector(schema: WizformSelectorSchema) {
                     wizformFilterContext?.state.element == WizformElementType.None ? w : w.element == wizformFilterContext?.state.element)
                 .filter((w) => 
                     wizformFilterContext?.state.custom == -1 ? w : w.filters.includes(wizformFilterContext?.state.custom as number))
+                .sort((w1, w2) => w1.number < w2.number ? -1 : 1)
             );
         }
     }, [schema.wizforms, wizformFilterContext?.state])
@@ -37,18 +38,16 @@ export function WizformSelector(schema: WizformSelectorSchema) {
         <>
             <div>
                 <WizformFilterMenu elements={schema.elements} filters={schema.filters}/>
-                <List>
-                    {wizformsToRender.map((w, index) => (
-                        <List.Item key={index}>
-                            <Link style={{width: "100%"}} to={`focus/${w.id}`}>
-                                <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-                                    <img width={40} height={40} src={`data:image/bmp;base64,${w.icon}`} style={{paddingLeft: '5%'}}></img>
-                                    <Typography.Text style={{fontFamily: 'cursive', paddingLeft: '5%'}}>{w.name}</Typography.Text>
-                                </div>
-                            </Link>
-                        </List.Item>
-                    ))}
-                </List> 
+                <List fullHeight={true} itemHeight={50} data={wizformsToRender} itemKey="id">
+                    {index =>          
+                        <Link key={index.number} to={`focus/${index.id}`}>
+                            <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '2%'}}>
+                                <img width={40} height={40} src={`data:image/bmp;base64,${index.icon}`} style={{paddingLeft: '3%'}}/>
+                                <Typography.Text style={{fontFamily: 'sans-serif', paddingLeft: '2%'}}>{index.name}</Typography.Text>
+                            </div>
+                        </Link>
+                    }            
+                </List>
             </div>
         </>
     )

@@ -1,4 +1,4 @@
-use axum::{extract::{Path, State}, routing::{get, patch, post}, Json, Router};
+use axum::{extract::{Path, DefaultBodyLimit, State}, routing::{get, patch, post}, Json, Router};
 use zz_data::core::wizform::{WizformDBModel, WizformFrontendModel};
 
 use super::utils::{StringPayload, ApiManager};
@@ -10,6 +10,7 @@ pub(crate) fn wizform_routes() -> Router<ApiManager> {
         .route("/wizforms", patch(update_wizforms))
         .route("/wizforms/enabled/:book_id", get(get_enabled_wizforms))
         .route("/wizform", patch(update_wizform))
+        .layer(DefaultBodyLimit::max(10_000_000))
 }
 
 async fn save_wizforms(

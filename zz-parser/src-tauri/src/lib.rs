@@ -23,7 +23,6 @@ pub async fn run() {
             parser::commands::update_wizform,
             parser::commands::update_wizforms,
             parser::commands::update_element,
-            parser::commands::upload_book,
             parser::commands::load_filters,
             parser::commands::update_filter,
             parser::commands::create_spawn_point,
@@ -32,23 +31,4 @@ pub async fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
-
-pub fn test1() {
-    let path = "D:\\Program Files (x86)\\Zanzarah The Hidden Portal\\Resources\\Bitmaps\\WIZ000T.BMP";
-    let open_ok = bmp::open(path);
-    match open_ok {
-        Ok(img) => {
-            let mut new_test_img = bmp::Image::new(40, 40);
-            for (x, y) in new_test_img.coordinates() {
-                let pixel = img.get_pixel(x, y);
-                new_test_img.set_pixel(x, y, pixel);
-            }
-            let new_img_path = "D:\\test.bmp";
-            new_test_img.save(new_img_path).unwrap();
-        },
-        Err(e) => {
-            println!("Failed to open bitmap");
-        }
-    }
 }

@@ -11,7 +11,7 @@ async fn main() {
         std::fs::create_dir_all(&logs_dir).unwrap();
     }
     let logs_path = logs_dir.join(format!("{}.log", timestamp.to_string().replace(" ", "").replace(":", "_")));
-    let logs_file = std::fs::File::create(&logs_path).unwrap();
+    std::fs::File::create(&logs_path).unwrap();
 
     let stderr = ConsoleAppender::builder().target(log4rs::append::console::Target::Stderr).build();
 

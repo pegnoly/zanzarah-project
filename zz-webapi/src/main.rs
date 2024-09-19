@@ -9,25 +9,17 @@ async fn hello_world() -> &'static str {
     "Hello, world!"
 }
 
-async fn get_token(
-    State(api_manager): State<ApiManager>
-) -> String {
-    api_manager.dropbox_token
-}
-
 #[shuttle_runtime::main]
 async fn main(
     #[shuttle_shared_db::Postgres] db: sqlx::PgPool,
     #[shuttle_runtime::Secrets] secrets: shuttle_runtime::SecretStore
 ) -> shuttle_axum::ShuttleAxum {
     let manager = ApiManager {
-        pool: db,
-        dropbox_token: secrets.get("DROPBOX_TOKEN").unwrap()
+        pool: db
     };
     tracing::info!("Tracing ok?");
     let router = Router::new()
         .route("/", get(hello_world))
-        .route("/token", get(get_token))
         .merge(wizform_routes())
         .merge(elements_routes())
         .merge(book_routes())

@@ -14,6 +14,5 @@ pub struct StringOptionPayload {
 
 #[derive(Clone)]
 pub struct ApiManager {
-    pub pool: sqlx::PgPool,
-    pub dropbox_token: String
+    pub pool: sqlx::PgPool
 }

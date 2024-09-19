@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, NavLink, Route, Routes, useParams } from "react-router-dom";
-import { useAppStateContext } from "../contexts/AppState";
+import { Route, Routes, useParams } from "react-router-dom";
 import { WizformFocused } from "./WizformFocused";
 import { invoke } from "@tauri-apps/api/core";
 import { WizformSelector } from "./WizformSelector";
@@ -14,8 +13,6 @@ export function WizformMain() {
     const [filters, setFilters] = useState<Filter[]>([]);
     
     const { id } = useParams();
-
-    const appStateContext = useAppStateContext();
 
     useEffect(() => {
         if (id != undefined) {

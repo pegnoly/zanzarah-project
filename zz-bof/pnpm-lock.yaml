@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  react-virtualized: git+https://git@github.com/remorses/react-virtualized-fixed-import.git#9.22.3
+
 importers:
 
   .:
@@ -17,9 +20,18 @@ importers:
       '@tauri-apps/plugin-shell':
         specifier: '>=2.0.0-rc.0'
         version: 2.0.0-rc.1
+      '@types/react-virtualized':
+        specifier: ^9.21.30
+        version: 9.21.30
       antd:
         specifier: ^5.20.6
         version: 5.20.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      esbuild-plugin-react-virtualized:
+        specifier: ^1.0.4
+        version: 1.0.4(esbuild@0.21.5)
+      rc-virtual-list:
+        specifier: ^3.14.5
+        version: 3.14.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -676,6 +688,9 @@ packages:
   '@types/react-dom@18.3.0':
     resolution: {integrity: sha512-EhwApuTmMBmXuFOikhQLIBUn6uFg81SwLMOAUgodJF14SOBOCMdU04gDoYi0WOJJHD144TL32z4yDqCW3dnkQg==}
 
+  '@types/react-virtualized@9.21.30':
+    resolution: {integrity: sha512-4l2TFLQ8BCjNDQlvH85tU6gctuZoEdgYzENQyZHpgTHU7hoLzYgPSOALMAeA58LOWua8AzC6wBivPj1lfl6JgQ==}
+
   '@types/react@18.3.5':
     resolution: {integrity: sha512-WeqMfGJLGuLCqHGYRGHxnKrXcTitc6L/nBUWfWPcTarG3t9PsquqUMuVeXZeca+mglY4Vo5GZjCi0A3Or2lnxA==}
 
@@ -745,6 +760,11 @@ packages:
 
   electron-to-chromium@1.5.13:
     resolution: {integrity: sha512-lbBcvtIJ4J6sS4tb5TLp1b4LyfCdMkwStzXPyAgVgTRAsep4bvrAGaBOP7ZJtQMNJpSQ9SqG4brWOroNaQtm7Q==}
+
+  esbuild-plugin-react-virtualized@1.0.4:
+    resolution: {integrity: sha512-/Y+82TBduHox0/uhJlTgUqi3ZWN+qZPF0xy9crkHQE2AOOdm76l6VY2F0Mdfvue9hqXz2FOlKHlHUVXNalHLzA==}
+    peerDependencies:
+      esbuild: '*'
 
   esbuild@0.21.5:
     resolution: {integrity: sha512-mg3OPMV4hXywwpoDxu3Qda5xCKQi+vCTZq8S9J/EpkhB2HzKXq4SNFZE3+NK93JYxc8VMSep+lOUSC/RVKaBqw==}
@@ -1715,6 +1735,11 @@ snapshots:
     dependencies:
       '@types/react': 18.3.5
 
+  '@types/react-virtualized@9.21.30':
+    dependencies:
+      '@types/prop-types': 15.7.12
+      '@types/react': 18.3.5
+
   '@types/react@18.3.5':
     dependencies:
       '@types/prop-types': 15.7.12
@@ -1835,6 +1860,10 @@ snapshots:
       ms: 2.1.2
 
   electron-to-chromium@1.5.13: {}
+
+  esbuild-plugin-react-virtualized@1.0.4(esbuild@0.21.5):
+    dependencies:
+      esbuild: 0.21.5
 
   esbuild@0.21.5:
     optionalDependencies:
