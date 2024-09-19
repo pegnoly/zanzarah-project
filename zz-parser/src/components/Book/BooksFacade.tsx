@@ -110,7 +110,7 @@ export function BooksFacade() {
                     <Col style={{display: "flex", alignItems: "center", flexDirection: "column"}} span={10}>
                         <Typography.Text style={{fontFamily: "fantasy"}}>Доступность книги</Typography.Text>
                         <Typography.Text>{bookDownloadable ? "Книга доступна для загрузки" : "Книга недоступна для загрузки"}</Typography.Text>
-                        <Button onClick={() => invoke("upload_book", {bookId: "1"})}>Установить доступность загрузки</Button>
+                        <Button onClick={() => invoke("upload_book", {bookId: bookId})}>Установить доступность загрузки</Button>
                     </Col>
                 </Row>
             </div>
