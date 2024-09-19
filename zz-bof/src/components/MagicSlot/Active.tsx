@@ -11,6 +11,7 @@ import metallIcon from "../../assets/spells_active/metall.svg";
 import chaosIcon from "../../assets/spells_active/chaos.svg";
 import iceIcon from "../../assets/spells_active/ice.svg";
 import jokerIcon from "../../assets/spells_active/joker.svg";
+import blankIcon from "../../assets/spells_active/blank.png";
 
 import { MagicElementType } from "../types";
 import { useEffect, useState } from "react";
@@ -37,7 +38,7 @@ export function ActiveMagicSlot(schema: MagicSlotSchema) {
             return "";
         }
         switch(e) {
-            case MagicElementType.None: return ""; break
+            case MagicElementType.None: return blankIcon; break
             case MagicElementType.Nature: return natureIcon; break
             case MagicElementType.Air: return airIcon; break
             case MagicElementType.Water: return waterIcon; break
@@ -51,7 +52,7 @@ export function ActiveMagicSlot(schema: MagicSlotSchema) {
             case MagicElementType.Chaos: return chaosIcon; break
             case MagicElementType.Metall: return metallIcon; break
             case MagicElementType.Joker: return jokerIcon; break
-            case MagicElementType.Error: return ""; break
+            case MagicElementType.Error: return blankIcon; break
         }
     }
 

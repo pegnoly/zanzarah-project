@@ -9,23 +9,23 @@ interface WizformMagicLevelSchema {
 
 export function WizformMagicLevel(schema: WizformMagicLevelSchema) {
     return (
-        <div style={{display: "flex", flexDirection: "column"}}>
+        <>
             <Typography.Text>{`Уровень ${schema.level?.level}`}</Typography.Text>
             <Row>
-                <Col offset={2} span={5}>
+                <Col span={12} style={{display: 'flex', justifyContent: 'center'}}>
                     <ActiveMagicSlot slot={schema.level?.first_active_slot}/>
                 </Col>
-                <Col span={5}>
+                <Col span={12} style={{display: 'flex', justifyContent: 'center'}}>
                     <PassiveMagicSlot slot={schema.level?.first_passive_slot}/>
                 </Col>
-                <Col span={5}>
+                <Col span={12} style={{display: 'flex', justifyContent: 'center'}}>
                     <ActiveMagicSlot slot={schema.level?.second_active_slot}/>
                 </Col>
-                <Col span={5}>
+                <Col span={12} style={{display: 'flex', justifyContent: 'center'}}>
                     <PassiveMagicSlot slot={schema.level?.second_passive_slot}/>
                 </Col>
             </Row>
-        </div>
+        </>
     )
     
 }

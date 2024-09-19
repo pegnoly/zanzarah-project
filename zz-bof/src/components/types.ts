@@ -6,6 +6,7 @@ export type Book = {
 export type Wizform = {
     id: string,
     name: string,
+    desc: string,
     element: WizformElementType,
     number: number,
     magics: LevelOfMagic[],
@@ -16,7 +17,9 @@ export type Wizform = {
     evolution_form: number,
     evolution_level: number,
     enabled: boolean,
-    filters: number[]
+    filters: number[],
+    spawn_points: string[],
+    icon: string
 }
 
 export type MagicElement = {

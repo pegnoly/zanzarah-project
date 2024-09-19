@@ -41,7 +41,10 @@ export function WizformSelector(schema: WizformSelectorSchema) {
                     {wizformsToRender.map((w, index) => (
                         <List.Item key={index}>
                             <Link style={{width: "100%"}} to={`focus/${w.id}`}>
-                                <Typography.Text>{w.name}</Typography.Text>
+                                <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+                                    <img width={40} height={40} src={`data:image/bmp;base64,${w.icon}`} style={{paddingLeft: '5%'}}></img>
+                                    <Typography.Text style={{fontFamily: 'cursive', paddingLeft: '5%'}}>{w.name}</Typography.Text>
+                                </div>
                             </Link>
                         </List.Item>
                     ))}
