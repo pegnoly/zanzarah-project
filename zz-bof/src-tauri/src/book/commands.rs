@@ -1,9 +1,10 @@
 use std::{collections::HashMap, io::Write};
 
+use rust_dropbox::client::DBXClient;
 use tauri::{AppHandle, Manager, State};
 use zz_data::{book::base::{Book, WizformFilterDBModel}, core::wizform::{WizformDBModel, WizformElementFrontendModel, WizformElementModel}};
 
-use super::utils::{LocalAppManager, WizformMobileFrontendModel};
+use super::utils::{convert_to_mobile_model, LocalAppManager, WizformMobileFrontendModel};
 
 #[tauri::command]
 pub async fn load_books(
@@ -42,42 +43,73 @@ pub async fn load_wizforms(
 ) -> Result<Vec<WizformMobileFrontendModel>, ()> {
     let book_data_path = app.path().data_dir().unwrap().join(format!("{}\\", &book_id));
     let wizforms_data_path = book_data_path.join("wizforms.json");
+    let icons_data_path = book_data_path.join(format!("icons_{}.json", &book_id));
     if wizforms_data_path.exists() {
         println!("Reading wizforms from json file");
-        let wizforms: Result<Vec<WizformDBModel>, serde_json::Error> = serde_json::from_str(&std::fs::read_to_string(&wizforms_data_path).unwrap());
-        Ok(wizforms.unwrap().iter().map(|w| {
-            WizformMobileFrontendModel::from(w)
-        }).collect())
+        let wizforms: Result<Vec<WizformMobileFrontendModel>, serde_json::Error> = serde_json::from_str(&std::fs::read_to_string(&wizforms_data_path).unwrap());
+        Ok(wizforms.unwrap())
     }
     else {
+
+        if book_data_path.exists() == false {
+            std::fs::create_dir(&book_data_path).unwrap();
+        }
+
         let client = app_manager.client.read().await;
-        let response = client.get("https://zz-webapi.shuttleapp.rs/wizforms")
-            .json(&HashMap::from([("value", &book_id)]))
+        // get dropbox token
+        let token_response = client.get("https://zz-webapi.shuttleapp.rs/token")
             .send()
             .await;
-        match response {
-            Ok(response_ok) => {
-                let json: Result<Vec<WizformDBModel>, reqwest::Error> = response_ok.json().await;
-                match json {
-                    Ok(wizforms) => {
-                        if book_data_path.exists() == false {
-                            std::fs::create_dir(book_data_path).unwrap();
+        match token_response {
+            Ok(token_success) => {
+                let token = token_success.text().await.unwrap();
+                let dbx_client = DBXClient::new(&token);
+                // download icons data
+                let download_result = dbx_client.download(&format!("/icons/{}.json", &book_id));
+                match download_result {
+                    Ok(download_success) => {
+                        let icons_string = String::from_utf8(download_success).unwrap();
+                        let mut icons_local_file = std::fs::File::create(&icons_data_path).unwrap();
+                        let icons_map: HashMap<i16, String> = serde_json::from_str(&icons_string).unwrap();
+                        icons_local_file.write_all(&mut icons_string.as_bytes()).unwrap();
+
+                        let wizforms_response = client.get(format!("https://zz-webapi.shuttleapp.rs/wizforms/{}", &book_id))
+                            .send()
+                            .await;
+                        match wizforms_response {
+                            Ok(wizforms_success) => {
+                                let json: Result<Vec<WizformDBModel>, reqwest::Error> = wizforms_success.json().await;
+                                match json {
+                                    Ok(wizforms) => {
+                                        let mut file = std::fs::File::create(&wizforms_data_path).unwrap();
+                                        let wizforms_converted: Vec<WizformMobileFrontendModel> = wizforms.iter().map(|w| {
+                                                convert_to_mobile_model(w, &icons_map)
+                                            }).collect();
+                                        let s = serde_json::to_string(&wizforms_converted).unwrap();
+                                        file.write_all(&mut s.as_bytes()).unwrap();
+                                        Ok(wizforms_converted)
+                                    },
+                                    Err(e) => {
+                                        println!("Failed to parse enabled wizforms json: {}", e.to_string());
+                                        Err(())
+                                    }
+                                }
+                            },
+                            Err(wizforms_failure) => {
+                                println!("Failed to fetch enabled wizforms: {}", wizforms_failure.to_string());
+                                Err(())
+                            }
                         }
-                        let mut file = std::fs::File::create(&wizforms_data_path).unwrap();
-                        let s = serde_json::to_string_pretty(&wizforms).unwrap();
-                        file.write_all(&mut s.as_bytes()).unwrap();
-                        Ok(wizforms.iter().map(|w| {
-                            WizformMobileFrontendModel::from(w)
-                        }).collect())
+
                     },
-                    Err(e) => {
-                        println!("Failed to parse enabled wizforms json: {}", e.to_string());
+                    Err(download_failure) => {
+                        println!("Failed to download icons data: {:?}", download_failure);
                         Err(())
                     }
                 }
             },
-            Err(e) => {
-                println!("Failed to fetch enabled wizforms: {}", e.to_string());
+            Err(token_failure) => {
+                println!("Failed to get dropbox token: {}", token_failure.to_string());
                 Err(())
             }
         }

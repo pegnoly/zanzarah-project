@@ -3005,6 +3005,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust-dropbox"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9f6f1947e7c0f9a3d274903347f6fd4dd9bfba9f2b9bcb75a01e8fa14eb0481"
+dependencies = [
+ "serde",
+ "serde_json",
+ "ureq",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3044,6 +3055,7 @@ version = "0.23.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c58f8c84392efc0a126acce10fa59ff7b3d2ac06ab451a33f2741989b806b044"
 dependencies = [
+ "log",
  "once_cell",
  "ring",
  "rustls-pki-types",
@@ -4544,6 +4556,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
+name = "ureq"
+version = "2.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b74fc6b57825be3373f7054754755f03ac3a8f5d70015ccad699ba2029956f4a"
+dependencies = [
+ "base64 0.22.1",
+ "flate2",
+ "log",
+ "once_cell",
+ "rustls",
+ "rustls-pki-types",
+ "serde",
+ "serde_json",
+ "url",
+ "webpki-roots",
+]
+
+[[package]]
 name = "url"
 version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5331,6 +5361,7 @@ name = "zz-bof"
 version = "0.1.0"
 dependencies = [
  "reqwest",
+ "rust-dropbox",
  "serde",
  "serde_json",
  "strum",
@@ -5343,9 +5374,9 @@ dependencies = [
 
 [[package]]
 name = "zz-data"
-version = "0.1.21"
+version = "0.1.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4bb255d147240eb278920ae0612d9b556e2014a2cf600ff6d89ad13b78975ebc"
+checksum = "9c44be53aee5c1be2e631e82dc15be362ca28c260ccc61f61a78901c6397aaa2"
 dependencies = [
  "serde",
  "sqlx",

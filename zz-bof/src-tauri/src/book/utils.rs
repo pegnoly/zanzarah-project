@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tauri::async_runtime::RwLock;
@@ -37,6 +39,7 @@ pub struct LevelOfMagicFrontendModel {
 pub struct WizformMobileFrontendModel {
     pub id: String,
     pub name: String,
+    pub desc: String,
     pub element: i32,
     pub magics: Vec<LevelOfMagicFrontendModel>,
     pub number: i16,
@@ -48,29 +51,34 @@ pub struct WizformMobileFrontendModel {
     pub evolution_level: i32,
     pub exp_modifier: i32,
     pub enabled: bool,
-    pub filters: Vec<i32>
+    pub filters: Vec<i32>,
+    pub spawn_points: Vec<String>,
+    pub icon: String
 }
 
-impl From<&WizformDBModel> for WizformMobileFrontendModel {
-    fn from(value: &WizformDBModel) -> Self {
-        let magics: Vec<Magic> = serde_json::from_str(&value.magics).unwrap();
-        let converted_magics = convert_magics(magics);
-        WizformMobileFrontendModel { 
-            id: value.id.clone(), 
-            name: value.name.clone(), 
-            element: value.element.clone() as i32, 
-            magics: converted_magics, 
-            number: value.number, 
-            hitpoints: value.hitpoints, 
-            agility: value.agility, 
-            jump_ability: value.jump_ability, 
-            precision: value.precision, 
-            evolution_form: value.evolution_form, 
-            evolution_level: value.evolution_level, 
-            exp_modifier: value.exp_modifier, 
-            enabled: value.enabled, 
-            filters: value.filters.clone() 
-        }
+pub fn convert_to_mobile_model(db_model: &WizformDBModel, icons_map: &HashMap<i16, String>) -> WizformMobileFrontendModel {
+    let magics: Vec<Magic> = serde_json::from_str(&db_model.magics).unwrap();
+    let converted_magics = convert_magics(magics);
+    let actual_name = String::from_utf8(db_model.name.clone()).unwrap();
+    let actual_icon = icons_map.get(&db_model.number).unwrap();
+    WizformMobileFrontendModel { 
+        id: db_model.id.clone(),
+        name: actual_name,
+        desc: db_model.description.clone(),
+        element: db_model.element.clone() as i32, 
+        magics: converted_magics, 
+        number: db_model.number, 
+        hitpoints: db_model.hitpoints, 
+        agility: db_model.agility, 
+        jump_ability: db_model.jump_ability, 
+        precision: db_model.precision, 
+        evolution_form: db_model.evolution_form, 
+        evolution_level: db_model.evolution_level, 
+        exp_modifier: db_model.exp_modifier, 
+        enabled: db_model.enabled, 
+        filters: db_model.filters.clone(),
+        spawn_points: db_model.spawn_points.clone(),
+        icon: actual_icon.clone()
     }
 }
 
