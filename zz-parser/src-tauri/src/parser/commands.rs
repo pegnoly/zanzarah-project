@@ -2,7 +2,6 @@ use std::{collections::HashMap, io::Write};
 
 use base64::Engine;
 use reqwest::multipart;
-use rust_dropbox::{client::DBXClient, UploadOptionBuilder};
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use tauri::{AppHandle, Emitter, State};
