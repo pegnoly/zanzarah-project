@@ -17,7 +17,7 @@ export function BooksSelector() {
     useEffect(() => {
         console.log("App state is ", appStateContext?.state);
         if(appStateContext?.state.current_state == AppState.Ready) {
-            invoke("load_books").then((v) => setBooks(v as Book[]));
+            invoke("load_app").then((v) => setBooks(v as Book[]));
         }
     }, [appStateContext?.state.current_state])
 

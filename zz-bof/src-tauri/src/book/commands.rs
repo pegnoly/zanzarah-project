@@ -1,35 +1,28 @@
 use std::{collections::HashMap, io::Write};
-
-use rust_dropbox::client::DBXClient;
 use tauri::{AppHandle, Manager, State};
-use zz_data::{book::base::{Book, WizformFilterDBModel}, core::wizform::{WizformDBModel, WizformElementFrontendModel, WizformElementModel}};
+use zz_data::{book::base::{Book, WizformFilterDBModel}, core::wizform::{WizformElementFrontendModel, WizformElementModel}};
 
-use super::utils::{convert_to_mobile_model, LocalAppManager, WizformMobileFrontendModel};
+use super::{source::{create_local_db, setup_local_db, try_load_books, try_load_wizforms}, utils::{LocalAppManager, WizformLocalDBModel, WizformMobileFrontendModel}};
 
 #[tauri::command]
-pub async fn load_books(
-    app_manager: State<'_, LocalAppManager>
-) -> Result<Vec<Book>, String> {
-    let client = app_manager.client.read().await;
-    let response = client.get("https://zz-webapi.shuttleapp.rs/book/all")
-        .send()
-        .await;
-    match response {
-        Ok(books_response) => {
-            let json: Result<Vec<Book>, reqwest::Error> = books_response.json().await;
-            match json {
-                Ok(books) => {
-                    Ok(books)
-                },
-                Err(e) => {
-                    println!("Error converting books from json: {}", e.to_string());
-                    Err("Error converting books from json".to_string())
-                }
-            }
+pub async fn load_app(
+    app_manager: State<'_, LocalAppManager>,
+    app: AppHandle
+) -> Result<Vec<Book>, ()> {
+    let mut app_data_path = app_manager.app_data_path.write().await;
+    *app_data_path = Some(app.path().data_dir().unwrap());
+    let data_path_reader = app_data_path.downgrade();
+    //
+    let local_db_path = data_path_reader.as_ref().unwrap().join("local_books_data.db");
+    create_local_db(&app_manager, local_db_path).await;
+    setup_local_db(&app_manager).await;
+    let books_result = try_load_books(&app_manager).await;
+    match books_result {
+        Ok(books) => {
+            Ok(books)
         },
-        Err(e) => {
-            println!("Error fetching existing books: {}", e.to_string());
-            Err("Error fetching existing books".to_string())
+        Err(_e) => {
+            Err(())
         }
     }
 }
@@ -38,80 +31,39 @@ pub async fn load_books(
 #[tauri::command]
 pub async fn load_wizforms(
     book_id: String,
-    app: AppHandle,
     app_manager: State<'_, LocalAppManager>
 ) -> Result<Vec<WizformMobileFrontendModel>, ()> {
-    let book_data_path = app.path().data_dir().unwrap().join(format!("{}\\", &book_id));
-    let wizforms_data_path = book_data_path.join("wizforms.json");
-    let icons_data_path = book_data_path.join(format!("icons_{}.json", &book_id));
-    if wizforms_data_path.exists() {
-        println!("Reading wizforms from json file");
-        let wizforms: Result<Vec<WizformMobileFrontendModel>, serde_json::Error> = serde_json::from_str(&std::fs::read_to_string(&wizforms_data_path).unwrap());
-        Ok(wizforms.unwrap())
-    }
-    else {
-
-        if book_data_path.exists() == false {
-            std::fs::create_dir(&book_data_path).unwrap();
-        }
-
-        let client = app_manager.client.read().await;
-        // get dropbox token
-        let token_response = client.get("https://zz-webapi.shuttleapp.rs/token")
-            .send()
-            .await;
-        match token_response {
-            Ok(token_success) => {
-                let token = token_success.text().await.unwrap();
-                let dbx_client = DBXClient::new(&token);
-                // download icons data
-                let download_result = dbx_client.download(&format!("/icons/{}.json", &book_id));
-                match download_result {
-                    Ok(download_success) => {
-                        let icons_string = String::from_utf8(download_success).unwrap();
-                        let mut icons_local_file = std::fs::File::create(&icons_data_path).unwrap();
-                        let icons_map: HashMap<i16, String> = serde_json::from_str(&icons_string).unwrap();
-                        icons_local_file.write_all(&mut icons_string.as_bytes()).unwrap();
-
-                        let wizforms_response = client.get(format!("https://zz-webapi.shuttleapp.rs/wizforms/{}", &book_id))
-                            .send()
-                            .await;
-                        match wizforms_response {
-                            Ok(wizforms_success) => {
-                                let json: Result<Vec<WizformDBModel>, reqwest::Error> = wizforms_success.json().await;
-                                match json {
-                                    Ok(wizforms) => {
-                                        let mut file = std::fs::File::create(&wizforms_data_path).unwrap();
-                                        let wizforms_converted: Vec<WizformMobileFrontendModel> = wizforms.iter().map(|w| {
-                                                convert_to_mobile_model(w, &icons_map)
-                                            }).collect();
-                                        let s = serde_json::to_string(&wizforms_converted).unwrap();
-                                        file.write_all(&mut s.as_bytes()).unwrap();
-                                        Ok(wizforms_converted)
-                                    },
-                                    Err(e) => {
-                                        println!("Failed to parse enabled wizforms json: {}", e.to_string());
-                                        Err(())
-                                    }
-                                }
-                            },
-                            Err(wizforms_failure) => {
-                                println!("Failed to fetch enabled wizforms: {}", wizforms_failure.to_string());
-                                Err(())
-                            }
-                        }
-
+    let pool_read_locked = app_manager.local_pool.read().await;
+    let pool = pool_read_locked.as_ref().unwrap();
+    let existing_wizforms_result: Result<Vec<WizformLocalDBModel>, sqlx::Error> = sqlx::query_as(r#"
+            SELECT * FROM wizforms WHERE book_id=?;
+        "#)
+        .bind(&book_id)
+        .fetch_all(pool)
+        .await;
+    match existing_wizforms_result {
+        Ok(existing_wizforms) => {
+            if existing_wizforms.len() > 0 {
+                Ok(existing_wizforms.iter().map(|w| {
+                    WizformMobileFrontendModel::from(w)
+                }).collect())
+            }
+            else {
+                let frontend_wizforms = try_load_wizforms(&app_manager, &book_id).await;
+                match frontend_wizforms {
+                    Ok(wizforms) => {
+                        Ok(wizforms)
                     },
-                    Err(download_failure) => {
-                        println!("Failed to download icons data: {:?}", download_failure);
+                    Err(_e) => {
+                        println!("Failed to get wizforms");
                         Err(())
                     }
                 }
-            },
-            Err(token_failure) => {
-                println!("Failed to get dropbox token: {}", token_failure.to_string());
-                Err(())
             }
+        },
+        Err(e) => {
+            println!("Error fetching existing wizforms from local db: {}", e.to_string());
+            Err(())
         }
     }
 }
@@ -119,65 +71,94 @@ pub async fn load_wizforms(
 #[tauri::command]
 pub async fn load_elements(
     book_id: String,
-    app: AppHandle,
     app_manager: State<'_, LocalAppManager>
 ) -> Result<Vec<WizformElementFrontendModel>, ()> {
-    let book_data_path = app.path().data_dir().unwrap().join(format!("{}\\", &book_id));
-    let elements_data_path = book_data_path.join("elements.json");
-    if elements_data_path.exists() {
-        println!("Reading elements from json file");
-        let elements: Result<Vec<WizformElementModel>, serde_json::Error> = serde_json::from_str(&std::fs::read_to_string(&elements_data_path).unwrap());
-        Ok(elements.unwrap().iter()
-            .filter(|e| {e.enabled})
-            .map(|e| {
-                WizformElementFrontendModel {
-                    id: e.id.clone(),
-                    element: e.element.clone() as i32,
-                    name: e.name.clone(),
-                    enabled: e.enabled
-                }
-            })
-            .collect())
-    }
-    else {
-        let client = app_manager.client.read().await;
-        let response = client.get("https://zz-webapi.shuttleapp.rs/elements")
-            .json(&HashMap::from([("value", &book_id)]))
-            .send()
-            .await;
-        match response {
-            Ok(response_ok) => {
-                let json: Result<Vec<WizformElementModel>, reqwest::Error> = response_ok.json().await;
-                match json {
-                    Ok(elements) => {
-                        if book_data_path.exists() == false {
-                            std::fs::create_dir(book_data_path).unwrap();
+    let pool_read_locked = app_manager.local_pool.read().await;
+    let pool = pool_read_locked.as_ref().unwrap();
+
+    let existing_elements_result: Result<Vec<WizformElementModel>, sqlx::Error> = sqlx::query_as(r#"
+            SELECT * FROM elements WHERE book_id=?;
+        "#)
+        .bind(&book_id)
+        .fetch_all(pool)
+        .await;
+    match existing_elements_result {
+        Ok(elements) => {
+            if elements.len() > 0 {
+                Ok(elements.into_iter()
+                .filter(|e| {
+                    e.enabled
+                })
+                .map(|e| {
+                    WizformElementFrontendModel {
+                        id: e.id,
+                        element: e.element as i32,
+                        name: e.name,
+                        enabled: e.enabled
+                    }
+                })
+                .collect())
+            }
+            else {
+                let client = app_manager.client.read().await;
+                let response = client.get("https://zz-webapi.shuttleapp.rs/elements")
+                    .json(&HashMap::from([("value", &book_id)]))
+                    .send()
+                    .await;
+
+                match response {
+                    Ok(response_ok) => {
+                        let json: Result<Vec<WizformElementModel>, reqwest::Error> = response_ok.json().await;
+                        match json {
+                            Ok(elements) => {
+
+                                let mut transaction = pool.begin().await.unwrap();
+                                for element in elements.iter() {
+                                    sqlx::query(r#"
+                                        INSERT INTO elements
+                                        (id, book_id, element, name, enabled)
+                                        VALUES (?, ?, ?, ?, ?);
+                                    "#)
+                                    .bind(&element.id)
+                                    .bind(&element.book_id)
+                                    .bind(element.element.clone() as i32)
+                                    .bind(&element.name)
+                                    .bind(element.enabled)
+                                    .execute(&mut *transaction)
+                                    .await
+                                    .unwrap();
+                                }
+
+                                transaction.commit().await.unwrap();
+
+                                Ok(elements.into_iter()
+                                        .filter(|e| {e.enabled})
+                                        .map(|e| {
+                                            WizformElementFrontendModel {
+                                                id: e.id.clone(),
+                                                element: e.element.clone() as i32,
+                                                name: e.name.clone(),
+                                                enabled: e.enabled
+                                            }
+                                        })
+                                        .collect())
+                            },
+                            Err(e) => {
+                                println!("Failed to parse elements json: {}", e.to_string());
+                                Err(())
+                            }
                         }
-                        let mut file = std::fs::File::create(&elements_data_path).unwrap();
-                        let s = serde_json::to_string_pretty(&elements).unwrap();
-                        file.write_all(&mut s.as_bytes()).unwrap();
-                        Ok(elements.iter()
-                                .filter(|e| {e.enabled})
-                                .map(|e| {
-                                    WizformElementFrontendModel {
-                                        id: e.id.clone(),
-                                        element: e.element.clone() as i32,
-                                        name: e.name.clone(),
-                                        enabled: e.enabled
-                                    }
-                                })
-                                .collect())
                     },
-                    Err(e) => {
-                        println!("Failed to parse elements json: {}", e.to_string());
+                    Err(response_error) => {
+                        println!("Failed to fetch existing elements from api: {}", response_error.to_string());
                         Err(())
                     }
                 }
-            },
-            Err(e) => {
-                println!("Failed to fetch elements: {}", e.to_string());
-                Err(())
             }
+        },
+        Err(e) => {
+            println!("Error fetching existing elements from local db: {}", e.to_string());
+            Err(())
         }
     }
 }

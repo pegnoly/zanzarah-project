@@ -15,7 +15,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             greet,
-            book::commands::load_books,
+            book::commands::load_app,
             book::commands::load_wizforms,
             book::commands::load_elements,
             book::commands::load_filters

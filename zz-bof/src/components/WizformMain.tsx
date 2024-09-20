@@ -24,7 +24,7 @@ export function WizformMain() {
         if (id != "") {
             await loadWizforms(id);
             await loadElements(id);
-            await loadFilters(id);
+            //await loadFilters(id);
         }
     }
 
