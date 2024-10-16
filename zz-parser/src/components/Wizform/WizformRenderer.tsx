@@ -4,9 +4,12 @@ import { WizformListItem } from './WizformListItem';
 import { Link } from 'react-router-dom';
 import { List } from 'antd';
 import { createStyles } from 'antd-style';
+import { useBooksStore } from '../../stores/Book';
+import { useWizformStore } from '../../stores/Wisform';
+import { useState } from 'react';
 
 interface WizformsRendererSchema {
-    wizforms: Wizform[],
+    ids: string[],
 }
 
 const wizformRendererStyles = createStyles(({}) => ({
@@ -22,24 +25,29 @@ const wizformRendererStyles = createStyles(({}) => ({
  * @param schema - wizforms array to render, elements array to get names of wizform's elements
  * @returns 
  */
-export function WizformRenderer(schema: WizformsRendererSchema) {
+export function WizformRenderer() {
+
+    const bookInitialized = useBooksStore((state) => state.initialized);
+    const idsToRender = useWizformStore((state) => state.ids_to_render);
+
+    //console.log("Ids to render: ", idsToRender);
 
     const styles = wizformRendererStyles();
 
      return (
         <div id="scrollcontainer" className={styles.styles.container}>
             <InfiniteScroll
-                dataLength={schema.wizforms.length}
+                dataLength={idsToRender.length}
                 hasMore={false}
                 next={() => {}}     
                 loader={<h4>Загружается...</h4>}
                 scrollableTarget="scrollcontainer"
             >
                 <List>
-                    {schema.wizforms.map((w, index) => (
-                        <List.Item key={index}>
-                            <Link to={`focus/${w.id}`}>
-                                <WizformListItem name={w.name} icon64={w.icon}/>
+                    {idsToRender.map((id, _) => (
+                        <List.Item key={id}>
+                            <Link to={`focus/${id}`}>
+                                <WizformListItem id={id}/>
                             </Link>   
                         </List.Item>
                     ))}

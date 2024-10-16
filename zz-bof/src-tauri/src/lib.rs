@@ -1,6 +1,6 @@
 pub mod book;
 
-use tauri::Manager;
+use tauri::{Manager, RunEvent};
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -18,12 +18,20 @@ pub fn run() {
             book::commands::load_app,
             book::commands::load_wizforms,
             book::commands::load_elements,
-            book::commands::load_filters
+            book::commands::load_wizform
         ])
         .setup(|app| {
             println!("dir is {:?}", app.path().data_dir().unwrap().to_str().unwrap());
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while running tauri application")
+        .run(|_app_handle, event| {
+            match event {
+                RunEvent::Exit => {
+                    println!("Exit!");
+                },
+                _ => {}
+            }
+        });
 }

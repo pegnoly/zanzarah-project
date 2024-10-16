@@ -57,9 +57,9 @@ export type Filter = {
  * @param downloadadble - indicates that book can or can't be downloaded with mobile app                                                                                                                        
  */
 export type Book = {
-    id: string,
-    name: string,
-    directory: string,
+    id: string | null,
+    name: string | null,
+    directory: string | null,
     initialized: boolean,
     downloadadble: boolean
 }    

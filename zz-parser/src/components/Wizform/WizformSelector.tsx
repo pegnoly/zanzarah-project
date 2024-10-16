@@ -34,10 +34,10 @@ export function WizformSelector(schema: WizformSelectorSchema) {
         <div 
             style={{width: '40%', height: '100%', display: 'flex', flexDirection: 'column', alignContent: 'center'}}
         >
-            <SpawnPointsManager pointUpdateCallback={handleSpawnPointRemove}/>
-            <CustomFiltersManager filterUpdateCallback={handleCustomFilterUpdate}/>
+            {/* <SpawnPointsManager pointUpdateCallback={handleSpawnPointRemove}/>
+            <CustomFiltersManager filterUpdateCallback={handleCustomFilterUpdate}/> */}
             <WizformFilterer elements={schema.elements}/>
-            <WizformRenderer wizforms={schema.wizforms}/>
+            <WizformRenderer/>
         </div>
     )
 }

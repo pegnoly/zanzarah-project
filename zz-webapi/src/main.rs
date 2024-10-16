@@ -12,6 +12,7 @@ async fn hello_world() -> &'static str {
 #[shuttle_runtime::main]
 async fn main(
     #[shuttle_shared_db::Postgres] db: sqlx::PgPool,
+    //#[shuttle_shared_db::Postgres] db: sqlx::PgPool,
     #[shuttle_runtime::Secrets] secrets: shuttle_runtime::SecretStore
 ) -> shuttle_axum::ShuttleAxum {
     let manager = ApiManager {

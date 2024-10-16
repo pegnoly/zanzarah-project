@@ -3,12 +3,13 @@ use std::io::Write;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
+use uuid::Uuid;
 use zz_data::core::text::Text;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub existing_books: Vec<String>,
-    pub current_book: String
+    pub existing_books: Vec<Uuid>,
+    pub current_book: Uuid
 }
 
 pub struct AppManager {
@@ -24,7 +25,7 @@ impl AppManager {
             let mut file = std::fs::File::create(&config_file).unwrap();
             let config = Config { 
                 existing_books: vec![], 
-                current_book: String::new() 
+                current_book: Uuid::nil() 
             };
             let s = serde_json::to_string_pretty(&config).unwrap();
             file.write_all(&mut s.as_bytes()).unwrap();

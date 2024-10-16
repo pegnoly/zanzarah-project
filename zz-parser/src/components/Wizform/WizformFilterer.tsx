@@ -1,6 +1,8 @@
 import { Col, Input, Row, Select } from "antd";
 import { useWizformFilterContext } from "../../contexts/WizformFilter";
 import { MagicElement } from "./../types";
+import { useWizformStore } from "../../stores/Wisform";
+import { useShallow } from "zustand/shallow";
 
 interface WizformFiltererSchema {
     elements: MagicElement[],
@@ -14,21 +16,15 @@ interface WizformFiltererSchema {
  */
 export function WizformFilterer(schema: WizformFiltererSchema) {
 
-    const wizformFilterContext = useWizformFilterContext();
-
     function handleNameFilterChange(filter: string) {
-        wizformFilterContext?.setState({
-            ...wizformFilterContext.state,
-            name: filter
-        })
+        updateNameFilter(filter);
     }
 
     function handleElementFilterChange(filter: number) {
-        wizformFilterContext?.setState({
-            ...wizformFilterContext.state,
-            element: filter
-        })
+        updateElementFilter(filter);
     }
+
+    const [updateNameFilter, updateElementFilter] = useWizformStore(useShallow((state) => [state.update_name_filter, state.update_element_filter]));
 
     return (
         <>

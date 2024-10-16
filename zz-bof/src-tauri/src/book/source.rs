@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use zz_data::{book::base::Book, core::wizform::WizformDBModel};
+use zz_data::{book::base::BookDBModel, core::wizform::WizformDBModel};
 
 use super::utils::{LocalAppManager, WizformMobileFrontendModel};
 
@@ -79,14 +79,14 @@ pub async fn setup_local_db(app_manager: &LocalAppManager) {
         .unwrap();
 }
 
-pub async fn try_load_books(app_manager: &LocalAppManager) -> Result<Vec<Book>, ()> {
+pub async fn try_load_books(app_manager: &LocalAppManager) -> Result<Vec<BookDBModel>, ()> {
     let client = app_manager.client.read().await;
     let books_response = client.get("https://zz-webapi.shuttleapp.rs/book/all")
         .send()
         .await;
     match books_response {
         Ok(books_success) => {
-            let json: Result<Vec<Book>, reqwest::Error> = books_success.json().await;
+            let json: Result<Vec<BookDBModel>, reqwest::Error> = books_success.json().await;
             match json {
                 Ok(books) => {
                     Ok(books)
@@ -150,7 +150,7 @@ pub async fn try_load_wizforms(app_manager: &LocalAppManager, book_id: &String) 
                     transaction.commit().await.unwrap();
 
 
-                    let wizforms_converted: Vec<WizformMobileFrontendModel> = wizforms.iter().map(|w| {
+                    let wizforms_converted: Vec<WizformMobileFrontendModel> = wizforms.into_iter().map(|w| {
                             WizformMobileFrontendModel::from(w)
                         }).collect();
                     Ok(wizforms_converted)

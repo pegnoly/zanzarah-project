@@ -1,11 +1,13 @@
 [package]
 name = "zz-data"
-version = "0.1.25"
+version = "0.2.3"
 edition = "2021"
 description = "Data structures for Zanzarah apis"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
 serde = { version = "1.0.209", features = ["derive"] }
-sqlx = { version = "=0.7.4", features = ["macros"] }
+serde_json = { version = "1.0.128", features = ["raw_value"] }
+sqlx = { version = "0.8.2", features = ["postgres", "runtime-tokio", "macros", "uuid", "json"] }
 strum = { version = "0.26.3", features = ["derive"] }
+uuid = { version = "1.10.0", features = ["v4", "serde"] }

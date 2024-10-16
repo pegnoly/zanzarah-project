@@ -1,11 +1,12 @@
 import { useParams } from "react-router-dom";
-import { MagicElement, Wizform } from "../types";
+import { MagicElement, Wizform, WizformElementType } from "../types";
 import { useEffect, useState } from "react";
 import { Button, Checkbox, Col, Row, Select, Typography } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 // import { createStyles } from "antd-style";
 import { useWizformFilterContext } from "../../contexts/WizformFilter";
 import { useSpawnPointsContext } from "../../contexts/SpawnPoints";
+import { invoke } from "@tauri-apps/api/core";
 
 // const wizformFocusedStyles = createStyles(({}) => ({
 //     container: {
@@ -61,12 +62,13 @@ export function WizformFocused(schema: WizformFocusedSchema) {
     const [wizform, setWizform] = useState<Wizform | undefined>(undefined);
 
     const [elementSelectionEnabled, setElementSelectionEnabled] = useState<boolean>(false);
+
     const [currentElement, setCurrentElement] = useState<number | undefined>(undefined);
     const [enabledForBook, setEnabledForBook] = useState<boolean | undefined>(undefined);
     const [name, setName] = useState<string | undefined>(undefined);
     const [desc, setDesc] = useState<string | undefined>(undefined);
-    const [filters, setFilters] = useState<number[]>([]);
-    const [spawns, setSpawns] = useState<string[]>([]);
+    // const [filters, setFilters] = useState<number[]>([]);
+    // const [spawns, setSpawns] = useState<string[]>([]);
 
     const wizformFilterContext = useWizformFilterContext();
 
@@ -78,47 +80,57 @@ export function WizformFocused(schema: WizformFocusedSchema) {
 
     useEffect(() => {
         if (id != undefined) {
-            const focusedWizform = schema.wizforms.find(w => w.id  == id);
-            setWizform(focusedWizform);
-            setCurrentElement(focusedWizform?.element);
-            setEnabledForBook(focusedWizform?.enabled);
-            setName(focusedWizform?.name);
-            setDesc(focusedWizform?.desc);
-            setFilters(focusedWizform?.filters as number[])
-            setSpawns(focusedWizform?.spawn_points as string[]);
+            invoke("load_wizform", {id: id}).then((value) => {
+                let wizform = value as Wizform;
+                console.log("Wizform focused: ", wizform);
+                setCurrentElement(wizform?.element);
+                setEnabledForBook(wizform?.enabled);
+                setName(wizform?.name);
+                setDesc(wizform?.desc);
+            })
+            // setWizform(focusedWizform);
+            // setCurrentElement(focusedWizform?.element);
+            // setEnabledForBook(focusedWizform?.enabled);
+            // setName(focusedWizform?.name);
+            // setDesc(focusedWizform?.desc);
+            // setFilters(focusedWizform?.filters as number[])
+            // setSpawns(focusedWizform?.spawn_points as string[]);
         }
     }, [id])
 
-    function handleEnableUpdate(enabled: boolean) {
+    async function handleEnableUpdate(enabled: boolean) {
+        await invoke("update_wizform_visibility", {id: id, enabled: enabled});
         setEnabledForBook(enabled);
-        schema.enabledUpdateCallback(wizform!, enabled); 
+        //schema.enabledUpdateCallback(wizform!, enabled); 
     }
 
     function handleNameUpdate(newName: string) {
         setName(newName);
-        schema.nameUpdateCallback(wizform!, newName);
+        //schema.nameUpdateCallback(wizform!, newName);
     }
 
     function handleDescUpdate(newDesc: string) {
         setDesc(newDesc);
-        schema.descUpdateCallback(wizform!, newDesc);
+        //schema.descUpdateCallback(wizform!, newDesc);
     }
 
-    function handleElementUpdate(element: number) {
+    async function handleElementUpdate(element: number) {
         setElementSelectionEnabled(false);
         setCurrentElement(element);
-        schema.elementUpdateCallback(wizform!, element); 
+        console.log("New element selected: ", element);
+        await invoke("update_wizform_element", {id: id, element: element});
+        //schema.elementUpdateCallback(wizform!, element); 
     }
 
-    function handleCustomFilterSelection(newFilters: number[]) {
-        setFilters(newFilters);
-        schema.filtersUpdateCallback(wizform!, newFilters);
-    }
+    // function handleCustomFilterSelection(newFilters: number[]) {
+    //     setFilters(newFilters);
+    //     schema.filtersUpdateCallback(wizform!, newFilters);
+    // }
 
-    function handleSpawnPointSelection(newPoints: string[]) {
-        setSpawns(newPoints);
-        schema.spawnsUpdateCallback(wizform!, newPoints);
-    }
+    // function handleSpawnPointSelection(newPoints: string[]) {
+    //     setSpawns(newPoints);
+    //     schema.spawnsUpdateCallback(wizform!, newPoints);
+    // }
 
     return (
         <> { id != undefined &&
@@ -171,7 +183,8 @@ export function WizformFocused(schema: WizformFocusedSchema) {
                 <Typography.Text editable={{
                         onChange: (newText) => {handleDescUpdate(newText)}
                     }}>{desc}</Typography.Text>
-                <Typography.Text 
+
+                {/* <Typography.Text 
                     style={{fontFamily: 'monospace', fontSize: 17, textAlign: 'center', paddingBottom: 5, paddingTop: 5}}
                 >Дополнительные параметры</Typography.Text>
 
@@ -224,7 +237,7 @@ export function WizformFocused(schema: WizformFocusedSchema) {
                             }</Select>
                         </div>
                     </Col>
-                </Row>
+                </Row> */}
             </div>
             }
         </>

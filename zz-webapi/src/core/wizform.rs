@@ -1,15 +1,19 @@
-use axum::{extract::{Path, DefaultBodyLimit, State}, routing::{get, patch, post}, Json, Router};
-use zz_data::core::wizform::{WizformDBModel, WizformFrontendModel};
+use axum::{extract::{DefaultBodyLimit, Path, Query, State}, routing::{get, patch, post}, Json, Router};
+use uuid::Uuid;
+use zz_data::core::wizform::WizformDBModel;
 
-use super::utils::{StringPayload, ApiManager};
+use super::{queries::WizformUpdateQuery, utils::{ApiManager, StringPayload}};
 
 pub(crate) fn wizform_routes() -> Router<ApiManager> {
     Router::new()
         .route("/wizforms/:book_id", get(get_existing_wizforms))
         .route("/wizforms", post(save_wizforms))
-        .route("/wizforms", patch(update_wizforms))
+        //.route("/wizforms", patch(update_wizforms))
         .route("/wizforms/enabled/:book_id", get(get_enabled_wizforms))
-        .route("/wizform", patch(update_wizform))
+        .route("/wizform/:id", get(load_wizform))
+        .route("/wizform/:id/update", patch(update_wizform))
+        //.route("/wizform", patch(update_wizform))
+        //.route("/wizform/:id/:name", patch(update_wizform_name))
         .layer(DefaultBodyLimit::max(10_000_000))
 }
 
@@ -27,7 +31,10 @@ async fn save_wizforms(
             evolution_form, evolution_level, exp_modifier, 
             enabled, 
             filters, spawn_points)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19);
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+            ON CONFLICT(id) DO UPDATE 
+            SET name=$20, description=$21, element=$22, magics=$23, hitpoints=$24, agility=$25, jump_ability=$26, 
+            precision=$27, evolution_form=$28, evolution_level=$29, exp_modifier=$30, enabled=$31;
             "#)
             .bind(wizform.id)
             .bind(wizform.book_id)
@@ -35,8 +42,8 @@ async fn save_wizforms(
             .bind(&wizform.name)
             .bind(&wizform.description)
             .bind(&wizform.icon64)
-            .bind(wizform.element)
-            .bind(wizform.magics)
+            .bind(wizform.element.clone())
+            .bind(&wizform.magics)
             .bind(wizform.number)
             .bind(wizform.hitpoints)
             .bind(wizform.agility)
@@ -48,6 +55,18 @@ async fn save_wizforms(
             .bind(wizform.enabled)
             .bind(wizform.filters)
             .bind(wizform.spawn_points)
+            .bind(&wizform.name)
+            .bind(&wizform.description)
+            .bind(wizform.element)
+            .bind(&wizform.magics)
+            .bind(wizform.hitpoints)
+            .bind(wizform.agility)
+            .bind(wizform.jump_ability)
+            .bind(wizform.precision)
+            .bind(wizform.evolution_form)
+            .bind(wizform.evolution_level)
+            .bind(wizform.exp_modifier)
+            .bind(wizform.enabled)
             .execute(&mut *tx)
             .await;
         match res {
@@ -71,7 +90,7 @@ async fn save_wizforms(
 
 async fn get_existing_wizforms(
     State(api_manager) : State<ApiManager>,
-    Path(book_id): Path<String> 
+    Path(book_id): Path<Uuid> 
 ) -> Result<Json<Vec<WizformDBModel>>, ()> {
     let wizforms_res: Result<Vec<WizformDBModel>, sqlx::Error> = sqlx::query_as(r#"
             SELECT * FROM wizforms WHERE book_id=$1;
@@ -90,74 +109,196 @@ async fn get_existing_wizforms(
     }
 }
 
-async fn update_wizform(
+async fn load_wizform(
     State(api_manager) : State<ApiManager>,
-    Json(wizform) : Json<WizformFrontendModel> 
-) -> Result<String, String> {
-    let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(r#"
-            UPDATE wizforms 
-            SET name=$1, description=$2, element=$3, enabled=$4, filters=$5, spawn_points=$6
-            WHERE id=$7
-            RETURNING *;
-        "#)
-        .bind(&wizform.name)
-        .bind(&wizform.desc)
-        .bind(&wizform.element)
-        .bind(&wizform.enabled)
-        .bind(&wizform.filters)
-        .bind(&wizform.spawn_points)
-        .bind(&wizform.id)
+    Path(id): Path<Uuid>
+) -> Result<Json<WizformDBModel>, ()> {
+    let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as("SELECT * FROM wizforms WHERE id=$1")
+        .bind(&id)
         .fetch_one(&api_manager.pool)
         .await;
     match res {
-        Ok(_) => {
-            tracing::info!("Wizform {} updated successfully", &wizform.number);
-            Ok(format!("Wizform {} updated successfully", wizform.number))
+        Ok(success) => {
+            tracing::info!("Wizform {} successfully fetched", &success.number);
+            Ok(Json(success))
         },
-        Err(e) => {
-            tracing::info!("Failed updating wizform {}", &wizform.number);
-            Err(format!("Failed updating wizform {}: {}", wizform.number, e.to_string()))
+        Err(failure) => {
+            tracing::info!("Failed to fetch wizform {}: {}", &id, failure.to_string());
+            Err(())
         }
     }
 }
 
-async fn update_wizforms(
+async fn update_wizform(
     State(api_manager) : State<ApiManager>,
-    Json(wizforms): Json<Vec<WizformFrontendModel>>
+    Path(id): Path<Uuid>,
+    Query(wizform_update_query): Query<WizformUpdateQuery>
 ) -> Result<(), ()> {
-    let mut tx = api_manager.pool.begin().await.unwrap();
-    for wizform in wizforms {
-        let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(r#"
-                UPDATE wizforms 
-                SET name=$1, description=$2, element=$3, enabled=$4, filters=$5, spawn_points=$6
-                WHERE id=$7
-                RETURNING *;
-            "#)
-            .bind(&wizform.name)
-            .bind(&wizform.desc)
-            .bind(&wizform.element)
-            .bind(&wizform.enabled)
-            .bind(&wizform.filters)
-            .bind(&wizform.spawn_points)
-            .bind(&wizform.id)
-            .fetch_one(&mut *tx)
-            .await;
-        match res {
-            Ok(success) => {
-                tracing::info!("Wizform was updated in transaction");
-            },
-            Err(failure) => {
-                tracing::info!("Wizform update in transaction failed: {}", failure.to_string());
+    let current_res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as("SELECT * FROM wizforms WHERE id=$1")
+        .bind(&id)
+        .fetch_one(&api_manager.pool)
+        .await;
+    match current_res {
+        Ok(wizform) => {
+            let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(
+            r#"
+                    UPDATE wizforms 
+                    SET element = COALESCE($1, $2), 
+                    enabled = COALESCE($3, $4)
+                    WHERE id=$5
+                    RETURNING *;
+                "#)
+                .bind(&wizform_update_query.element)
+                .bind(&wizform.element)
+                .bind(&wizform_update_query.enabled)
+                .bind(&wizform.enabled)
+                .bind(&id)
+                .fetch_one(&api_manager.pool)
+                .await;
+            match res {
+                Ok(success) => {
+                    tracing::info!("Wizform {} updated successfully", success.number);
+                    Ok(())
+                },
+                Err(failure) => {
+                    tracing::error!("Failed to update wizform {}: {}", &id, failure.to_string());
+                    Err(())
+                }
             }
+        },
+        Err(wizform_failure) => {
+            tracing::error!("Failed to fetch current wizform state {}: {}", &id, wizform_failure.to_string());
+            Err(())
         }
     }
-    tx.commit().await.unwrap();
-    Ok(())
 }
+
+// async fn update_wizform(
+//     State(api_manager) : State<ApiManager>,
+//     Json(wizform) : Json<WizformFrontendModel> 
+// ) -> Result<String, String> {
+//     let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(r#"
+//             UPDATE wizforms 
+//             SET name=$1, description=$2, element=$3, enabled=$4, filters=$5, spawn_points=$6
+//             WHERE id=$7
+//             RETURNING *;
+//         "#)
+//         .bind(&wizform.name)
+//         .bind(&wizform.desc)
+//         .bind(&wizform.element)
+//         .bind(&wizform.enabled)
+//         .bind(&wizform.filters)
+//         .bind(&wizform.spawn_points)
+//         .bind(&wizform.id)
+//         .fetch_one(&api_manager.pool)
+//         .await;
+//     match res {
+//         Ok(_) => {
+//             tracing::info!("Wizform {} updated successfully", &wizform.number);
+//             Ok(format!("Wizform {} updated successfully", wizform.number))
+//         },
+//         Err(e) => {
+//             tracing::info!("Failed updating wizform {}", &wizform.number);
+//             Err(format!("Failed updating wizform {}: {}", wizform.number, e.to_string()))
+//         }
+//     }
+// }
+
+
+
+// async fn update_wizform_name(
+//     State(api_manager) : State<ApiManager>,
+//     Query(query) : Query<WizformNameQuery>
+// ) -> Result<(), ()> {
+//     let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(
+//     r#"
+//             UPDATE wizforms 
+//             SET name=$1
+//             WHERE id=$2
+//             RETURNING *;
+//         "#)
+//         .bind(&query.name)
+//         .bind(&query.id)
+//         .fetch_one(&api_manager.pool)
+//         .await;
+
+//     match res {
+//         Ok(_success) => {
+//             tracing::info!("Wizform name {} updated successfully", query.name);
+//             Ok(())
+//         },
+//         Err(failure) => {
+//             tracing::error!("Failed to update wizform name as {}: {}", query.name, failure.to_string());
+//             Err(())
+//         }
+//     }
+// }
+
+// async fn update_wizform_desc(
+//     State(api_manager) : State<ApiManager>,
+//     Query(query) : Query<WizformDescQuery>
+// ) -> Result<(), ()> {
+//     let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(
+//     r#"
+//             UPDATE wizforms 
+//             SET description=$1
+//             WHERE id=$2
+//             RETURNING *;
+//         "#)
+//         .bind(&query.desc)
+//         .bind(&query.id)
+//         .fetch_one(&api_manager.pool)
+//         .await;
+
+//     match res {
+//         Ok(_success) => {
+//             tracing::info!("Wizform desc {} updated successfully", query.desc);
+//             Ok(())
+//         },
+//         Err(failure) => {
+//             tracing::error!("Failed to update wizform desc as {}: {}", query.desc, failure.to_string());
+//             Err(())
+//         }
+//     }
+// }
+
+// async fn update_wizforms(
+//     State(api_manager) : State<ApiManager>,
+//     Json(wizforms): Json<Vec<WizformFrontendModel>>
+// ) -> Result<(), ()> {
+//     let mut tx = api_manager.pool.begin().await.unwrap();
+//     for wizform in wizforms {
+//         let res: Result<WizformDBModel, sqlx::Error> = sqlx::query_as(r#"
+//                 UPDATE wizforms 
+//                 SET name=$1, description=$2, element=$3, enabled=$4, filters=$5, spawn_points=$6
+//                 WHERE id=$7
+//                 RETURNING *;
+//             "#)
+//             .bind(&wizform.name)
+//             .bind(&wizform.desc)
+//             .bind(&wizform.element)
+//             .bind(&wizform.enabled)
+//             .bind(&wizform.filters)
+//             .bind(&wizform.spawn_points)
+//             .bind(&wizform.id)
+//             .fetch_one(&mut *tx)
+//             .await;
+//         match res {
+//             Ok(success) => {
+//                 tracing::info!("Wizform was updated in transaction");
+//             },
+//             Err(failure) => {
+//                 tracing::info!("Wizform update in transaction failed: {}", failure.to_string());
+//             }
+//         }
+//     }
+//     tx.commit().await.unwrap();
+//     Ok(())
+// }
 
 async fn get_enabled_wizforms(
     State(api_manager) : State<ApiManager>,
-    Path(book_id): Path<String> 
+    Path(book_id): Path<Uuid> 
 ) -> Result<Json<Vec<WizformDBModel>>, String> {
     let res: Result<Vec<WizformDBModel>, sqlx::Error> = sqlx::query_as("SELECT * FROM wizforms WHERE book_id=$1 AND enabled=true;")
         .bind(&book_id)
@@ -174,3 +315,8 @@ async fn get_enabled_wizforms(
         }
     }
 }
+
+// async fn load_wizforms(
+//     State(api_manager) : State<ApiManager>,
+//     Path(book_id): Path<String>
+// )

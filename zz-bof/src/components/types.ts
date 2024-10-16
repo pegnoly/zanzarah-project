@@ -16,10 +16,7 @@ export type Wizform = {
     precision: number,
     evolution_form: number,
     evolution_level: number,
-    enabled: boolean,
-    filters: number[],
-    spawn_points: string[],
-    icon: string
+    exp_modifier: number
 }
 
 export type MagicElement = {

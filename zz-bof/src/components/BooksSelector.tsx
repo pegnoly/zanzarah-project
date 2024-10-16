@@ -1,17 +1,13 @@
 import { useEffect, useState } from "react";
 import { List, Typography } from "antd";
-import { Link, Route, Routes } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { AppState, useAppStateContext } from "../contexts/AppState";
 import { invoke } from "@tauri-apps/api/core";
-import { WizformMain } from "./WizformMain";
 import { Book } from "./types";
 
 export function BooksSelector() {
 
     const [books, setBooks] = useState<Book[]>([]);
-    const [selectedBookId, setSelectedBookId] = useState<string>("");
-    const [selectedBookName, setSelectedBookName] = useState<string>("");
-
     const appStateContext = useAppStateContext();
 
     useEffect(() => {
@@ -25,13 +21,16 @@ export function BooksSelector() {
 
     return (
         <>
-            <List>{books.map((b, index) => (
-                <List.Item key={index}>
-                    <Link to={`/wizforms/${b.id}`}>
-                        <Typography.Text>{b.name}</Typography.Text>
-                    </Link>
-                </List.Item>
-            ))}</List>
+            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '5%'}}>
+                <Typography.Text style={{fontSize: 20}}>Выбрать книгу</Typography.Text>
+                <List>{books.map((b, index) => (
+                    <List.Item key={index}>
+                        <Link to={`/wizforms/${b.id}`}>
+                            <Typography.Text style={{fontFamily: 'Shantell Sans', fontWeight: 'bold', fontSize: 15}}>{b.name}</Typography.Text>
+                        </Link>
+                    </List.Item>
+                ))}</List>
+            </div>
         </>
     )
 }
