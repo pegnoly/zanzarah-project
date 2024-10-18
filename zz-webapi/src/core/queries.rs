@@ -26,3 +26,20 @@ pub struct ElementUpdateQuery {
     pub name: String,
     pub enabled: bool
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct WizformFilterQuery {
+    pub element: i16,
+    pub name: String
+}
+
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+pub struct WizformFilteredModel {
+    pub id: Uuid,
+    pub cleared_name: String,
+    pub icon: String,
+    pub number: i16
+}
+
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+pub struct ClearedName(pub String);

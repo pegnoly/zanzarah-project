@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { Wizform, WizformElementType } from "../components/types"
+import { WizformElementType } from "../components/types"
 import { invoke } from "@tauri-apps/api/core"
 
 type WizformTransferModel = {
@@ -29,10 +29,6 @@ type Action = {
     //update: (wizform: Wizform) => void
 }
 
-type WizformListItem = {
-    id: string,
-    name: string
-}
 
 export const useWizformStore = create<State & Action>((set, get) => ({
     names: new Map<string, string>(),

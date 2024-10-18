@@ -109,7 +109,8 @@ pub struct WizformDBModel {
     pub description: String,
     pub icon64: String,
     pub spawn_points: Json<SpawnPoints>,
-    pub name: Vec<u8>
+    pub name: Vec<u8>,
+    pub cleared_name: String
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]

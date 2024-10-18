@@ -8,16 +8,20 @@ use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 use zz_data::core::{magic::Magic, text::Text, wizform::{Filters, Magics, SpawnPoints, Wizform, WizformDBModel, WizformElementType}};
 
-use crate::parser::plugins::types::{DescCleaner, SymbolRemover};
+use crate::parser::plugins::types::{DescCleaner, DescPlugin, DescPluginType, NamePlugin, NamePluginType, NullCharDetector, SymbolRemover};
 
-use super::{commands::MAIN_URL, utils::to_le_hex_string};
+use super::{commands::MAIN_URL, utils::{to_le_hex_string, Config}};
 
 pub struct ParseController {
     pub texts: RwLock<Vec<Text>>,
     pub wizforms: Mutex<Vec<Wizform>>
 }
 
-pub async fn parse_texts(directory: String, texts: &mut Vec<Text>) {
+pub async fn parse_texts(config: &Config, book_id: Uuid, texts: &mut Vec<Text>) {
+
+    let book_config = config.books_data.get(&book_id).unwrap();
+    let directory = &book_config.directory;
+
     let path = PathBuf::from(directory).join("Data\\_fb0x02.fbs");
     log::info!("Texts path: {:?}", &path);
     let mut file = std::fs::File::open(path).unwrap();
@@ -48,11 +52,54 @@ pub async fn parse_texts(directory: String, texts: &mut Vec<Text>) {
 
 pub async fn parse_wizforms(
     book_id: Uuid,
-    directory: String, 
+    config: &Config,
     texts: &Vec<Text>, 
     wizforms: &mut Vec<WizformDBModel>, 
     existing_wizforms: &Vec<WizformDBModel>
 ) {
+
+    let book_config = config.books_data.get(&book_id).unwrap();
+    let directory = &book_config.directory;
+
+    let mut name_plugins: Vec<Box<dyn NamePlugin>> = vec![];
+    let mut desc_plugins: Vec<Box<dyn DescPlugin>> = vec![];
+
+    for plugin_info in &book_config.name_plugins {
+        match plugin_info.plugin_type {
+            NamePluginType::SymbolResolver => {
+                let symbol_resolver_plugin: Result<SymbolRemover, serde_json::Error> = serde_json::from_str(plugin_info.data.get());
+                match symbol_resolver_plugin {
+                    Ok(symbol_resolver_plugin) => {
+                        name_plugins.push(Box::new(symbol_resolver_plugin));
+                    },
+                    Err(json_error) => {
+                        println!("Error deserializing raw value into symbol resolver: {}", json_error.to_string());
+                    }
+                }
+            },
+            NamePluginType::NullDetector => {
+                name_plugins.push(Box::new(NullCharDetector{}))
+            }
+        }
+    }
+
+    for plugin_info in &book_config.desc_plugins {
+        match plugin_info.plugin_type {
+            DescPluginType::DescCleaner => {
+                desc_plugins.push(Box::new(DescCleaner{}));
+                // let desc_cleaner_plugin: Result<DescCleaner, serde_json::Error> = serde_json::from_str(plugin_info.data.get());
+                // match desc_cleaner_plugin {
+                //     Ok(desc_cleaner_plugin) => {
+                //         desc_plugins.push(Box::new(desc_cleaner_plugin));
+                //     },
+                //     Err(json_error) => {
+                //         println!("Error deserializing raw value into desc cleaner: {}", json_error.to_string());
+                //     }
+                // }
+            }
+        }
+    }
+
     let path = PathBuf::from(&directory).join("Data\\_fb0x01.fbs");
     log::info!("Wizforms path: {:?}", &path);
     let mut file = std::fs::File::open(path).unwrap();
@@ -64,7 +111,7 @@ pub async fn parse_wizforms(
     let wizforms_icon = bmp::open(icons_path).unwrap();
 
     let desc_cleaner = DescCleaner {};
-    let symbol_remover = SymbolRemover::new();
+    //let symbol_remover = SymbolRemover::new();
 
     // first 4 bytes is wizforms count
     let count = reader.read_u32().unwrap();
@@ -84,7 +131,10 @@ pub async fn parse_wizforms(
             .unwrap()
             .content.clone();
 
-        name = symbol_remover.apply(name);
+        for plugin in &name_plugins {
+            name = plugin.apply(name);
+        }
+        //name = symbol_remover.apply(name);
 
         reader.read_bytes(8).unwrap();
         // litter + 4 bytes skip.
@@ -120,7 +170,7 @@ pub async fn parse_wizforms(
             .unwrap()
             .content.clone();
 
-        desc = desc_cleaner.apply(desc);
+        //desc = desc_cleaner.apply(desc);
 
         reader.read_bytes(8).unwrap();
         // litter 3
@@ -235,7 +285,8 @@ pub async fn parse_wizforms(
                     enabled: wizform.enabled,
                     filters: wizform.filters.clone(),
                     spawn_points: wizform.spawn_points.clone(),
-                    icon64: image64_repr
+                    icon64: image64_repr,
+                    cleared_name: name
                 });
             },
             None => {
@@ -264,7 +315,8 @@ pub async fn parse_wizforms(
                     spawn_points: zz_data::json(SpawnPoints {
                         ids: vec![]
                     }),
-                    icon64: image64_repr
+                    icon64: image64_repr,
+                    cleared_name: name
                 });
             }
         }

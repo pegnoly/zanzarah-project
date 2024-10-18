@@ -1,16 +1,9 @@
-import { Wizform } from './../types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { WizformListItem } from './WizformListItem';
 import { Link } from 'react-router-dom';
 import { List } from 'antd';
 import { createStyles } from 'antd-style';
-import { useBooksStore } from '../../stores/Book';
 import { useWizformStore } from '../../stores/Wisform';
-import { useState } from 'react';
-
-interface WizformsRendererSchema {
-    ids: string[],
-}
 
 const wizformRendererStyles = createStyles(({}) => ({
     container: {
@@ -27,7 +20,7 @@ const wizformRendererStyles = createStyles(({}) => ({
  */
 export function WizformRenderer() {
 
-    const bookInitialized = useBooksStore((state) => state.initialized);
+    //const bookInitialized = useBooksStore((state) => state.initialized);
     const idsToRender = useWizformStore((state) => state.ids_to_render);
 
     //console.log("Ids to render: ", idsToRender);

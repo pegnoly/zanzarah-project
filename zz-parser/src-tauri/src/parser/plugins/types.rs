@@ -1,24 +1,22 @@
-pub enum WizformNamePluginType {
-    SymbolRemovePlugin(SymbolRemover)   
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum NamePluginType {
+    SymbolResolver,
+    NullDetector
 }
 
-pub enum WizformDescPluginType {
-    DescCleanerPlugin(DescCleaner)
+pub trait NamePlugin {
+    fn apply(&self, name: String) -> String;
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SymbolRemover {
     symbols: Vec<char>
 }
 
-impl SymbolRemover {
-
-    pub fn new() -> Self {
-        SymbolRemover { 
-            symbols: vec!['ќ', 'Ў', 'Ђ', 'Џ', 'Њ', 'љ', 'Ї', 'ѓ', 'џ', 'Љ', 'Ќ', 'њ', 'ў', 'Ѓ', 'Ћ']  
-        }
-    }
-
-    pub fn apply(&self, name: String) -> String {
+impl NamePlugin for SymbolRemover {
+    fn apply(&self, name: String) -> String {
         let mut answer = name;
         self.symbols.iter()
             .for_each(|s| {
@@ -26,15 +24,33 @@ impl SymbolRemover {
                     answer = answer.replace(*s, "").trim_start().to_string();
                 }
             });
-        answer
+        answer 
     }
+}
+
+pub struct NullCharDetector {}
+
+impl NamePlugin for NullCharDetector {
+    fn apply(&self, name: String) -> String {
+        let answer = name.trim_matches(char::from(0));
+        answer.to_string()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum DescPluginType {
+    DescCleaner
+}
+
+pub trait DescPlugin {
+    fn apply(&self, desc: String) -> String; 
 }
 
 pub struct DescCleaner {
 }
 
-impl DescCleaner {
-    pub fn apply(&self, desc: String) -> String {
+impl DescPlugin for DescCleaner {
+    fn apply(&self, desc: String) -> String {
         let parts = desc.split('}');
         parts.last().unwrap().to_string()
     }

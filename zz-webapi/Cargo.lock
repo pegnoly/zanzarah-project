@@ -3466,9 +3466,9 @@ checksum = "ced3678a2879b30306d323f4542626697a464a97c0a07c9aebf7ebca65cd4dde"
 
 [[package]]
 name = "zz-data"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8506eecc4fde20a810e34deea42a11f32cd092793d533b1a59eb28313c655e4"
+checksum = "2088f2f164cb91d3fff98e963395b71da984c60115edda711aeb6889b9990c9f"
 dependencies = [
  "serde",
  "serde_json",

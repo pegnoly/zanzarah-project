@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { Button, Col, Row, Typography } from "antd";
 import { invoke } from "@tauri-apps/api/core";
 import { BookCreator } from "./BookCreator";
-import { Book } from "../types";
 import { AppState, useAppStateContext } from "../../contexts/AppState";
 import { BookDataRenderer } from "./BookRenderer";
 import WizformFilterProvider from "../../contexts/WizformFilter";
@@ -58,7 +57,7 @@ export function BooksFacade() {
      * Scans files for current book
      */
     function performScan() {
-        invoke("try_parse_texts", {directory: directory})
+        invoke("try_parse_texts", {bookId: id})
             .then(() => 
                 invoke("try_parse_wizforms", {bookId: id, directory: directory})
                     .then(() => {

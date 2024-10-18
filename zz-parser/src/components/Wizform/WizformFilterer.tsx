@@ -1,5 +1,4 @@
 import { Col, Input, Row, Select } from "antd";
-import { useWizformFilterContext } from "../../contexts/WizformFilter";
 import { MagicElement } from "./../types";
 import { useWizformStore } from "../../stores/Wisform";
 import { useShallow } from "zustand/shallow";

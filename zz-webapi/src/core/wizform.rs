@@ -1,8 +1,8 @@
-use axum::{extract::{DefaultBodyLimit, Path, Query, State}, routing::{get, patch, post}, Json, Router};
+use axum::{extract::{DefaultBodyLimit, Path, Query, State}, http::StatusCode, routing::{get, patch, post}, Json, Router};
 use uuid::Uuid;
 use zz_data::core::wizform::WizformDBModel;
 
-use super::{queries::WizformUpdateQuery, utils::{ApiManager, StringPayload}};
+use super::{queries::{ClearedName, WizformFilterQuery, WizformFilteredModel, WizformUpdateQuery}, utils::{ApiManager, StringPayload}};
 
 pub(crate) fn wizform_routes() -> Router<ApiManager> {
     Router::new()
@@ -12,6 +12,8 @@ pub(crate) fn wizform_routes() -> Router<ApiManager> {
         .route("/wizforms/enabled/:book_id", get(get_enabled_wizforms))
         .route("/wizform/:id", get(load_wizform))
         .route("/wizform/:id/update", patch(update_wizform))
+        .route("/wizform/name/:number", get(get_wizform_name))
+        .route("/wizforms/filtered/", get(get_filtered_wizforms))
         //.route("/wizform", patch(update_wizform))
         //.route("/wizform/:id/:name", patch(update_wizform_name))
         .layer(DefaultBodyLimit::max(10_000_000))
@@ -30,11 +32,11 @@ async fn save_wizforms(
             hitpoints, agility, jump_ability, precision, 
             evolution_form, evolution_level, exp_modifier, 
             enabled, 
-            filters, spawn_points)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+            filters, spawn_points, cleared_name)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
             ON CONFLICT(id) DO UPDATE 
-            SET name=$20, description=$21, element=$22, magics=$23, hitpoints=$24, agility=$25, jump_ability=$26, 
-            precision=$27, evolution_form=$28, evolution_level=$29, exp_modifier=$30, enabled=$31;
+            SET name=$21, description=$22, element=$23, magics=$24, hitpoints=$25, agility=$26, jump_ability=$27, 
+            precision=$28, evolution_form=$29, evolution_level=$30, exp_modifier=$31, enabled=$32, cleared_name=$33;
             "#)
             .bind(wizform.id)
             .bind(wizform.book_id)
@@ -55,6 +57,7 @@ async fn save_wizforms(
             .bind(wizform.enabled)
             .bind(wizform.filters)
             .bind(wizform.spawn_points)
+            .bind(&wizform.cleared_name)
             .bind(&wizform.name)
             .bind(&wizform.description)
             .bind(wizform.element)
@@ -67,6 +70,7 @@ async fn save_wizforms(
             .bind(wizform.evolution_level)
             .bind(wizform.exp_modifier)
             .bind(wizform.enabled)
+            .bind(&wizform.cleared_name)
             .execute(&mut *tx)
             .await;
         match res {
@@ -312,6 +316,61 @@ async fn get_enabled_wizforms(
         Err(res_fail) => {
             tracing::info!("Failed to get existing wizforms of book {}: {}", &book_id, &res_fail.to_string());
             Err(format!("Failed to get existing wizforms of book {}: {}", book_id, res_fail.to_string()))
+        }
+    }
+}
+
+async fn get_filtered_wizforms(
+    State(api_manager) : State<ApiManager>,
+    Query(wizform_filter_query): Query<WizformFilterQuery>
+) -> Result<Json<Vec<WizformFilteredModel>>, ()> {
+    let pattern = format!("'%{}%'", &wizform_filter_query.name);
+    let res: Result<Vec<WizformFilteredModel>, sqlx::Error> = sqlx::query_as(
+    r#"
+            SELECT id, cleared_name, icon64, number FROM wizforms WHERE enabled=true AND element=$1 AND cleared_name LIKE $2;
+        "#)
+        .bind(&wizform_filter_query.element)
+        .bind(&pattern)
+        .fetch_all(&api_manager.pool)
+        .await;
+
+    match res {
+        Ok(success) => {
+            Ok(Json(success))
+        },
+        Err(failure) => {
+            tracing::info!("Failed to execute filter query with name {} and element {}: {}", wizform_filter_query.name, wizform_filter_query.element, failure.to_string());
+            Err(())
+        }
+    }
+}
+ 
+async fn get_wizform_name(
+    State(api_manager) : State<ApiManager>,
+    Path(number): Path<i16>
+) -> Result<(StatusCode, String), ()> {
+    let res: Result<Option<ClearedName>, sqlx::Error> = sqlx::query_as(
+    r#"
+            SELECT cleared_name FROM wizforms WHERE number=$1;
+        "#)
+        .bind(number)
+        .fetch_optional(&api_manager.pool)
+        .await;
+
+    match res {
+        Ok(success) => {
+            match success {
+                Some(name) => {
+                    Ok((StatusCode::OK, name.0))
+                },
+                None => {
+                    Ok((StatusCode::NO_CONTENT, String::new()))
+                }
+            }
+        },
+        Err(failure) => {
+            tracing::info!("Failed to fetch name of wizform {}: {}", number, failure.to_string());
+            Err(())
         }
     }
 }

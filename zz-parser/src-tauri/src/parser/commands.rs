@@ -16,6 +16,8 @@ use zz_data::{
 
 pub(crate) const MAIN_URL: &'static str = "https://zz-webapi-cv7m.shuttle.app";
 
+use crate::parser::utils::BookConfigSchema;
+
 use super::{
     source::{
         parse_texts, 
@@ -31,7 +33,7 @@ pub async fn load_existing_books_info(
     app_manager: State<'_, AppManager>
 ) -> Result<Vec<Uuid>, ()> {
     let config_locked = app_manager.config.lock().await;
-    Ok(config_locked.existing_books.clone())
+    Ok(vec![])
 }
 
 /// Executed on frontend startup, on success returns id of last edited book.
@@ -41,7 +43,7 @@ pub async fn load_current_book_info(
     app_manager: State<'_, AppManager>
 ) -> Result<Uuid, ()> {
     let config_locked = app_manager.config.lock().await; 
-    Ok(config_locked.current_book.clone())
+    Ok(config_locked.as_ref().unwrap().current_book)
 }
 
 /// Executed when user tries to pick up directory in a process of new book creation.
@@ -88,7 +90,7 @@ pub async fn try_create_book(
         std::env::current_exe().unwrap().parent().unwrap().join(format!("{}\\", &book_id))
     ).unwrap();
     let mut config = app_manager.config.lock().await;
-    config.existing_books.push(book_id.clone());
+    //config.existing_books.push(book_id.clone());
     let book_creation_response = client.post(format!("{}/book/create?id={}&name={}&directory={}", MAIN_URL, &book_id, name, directory))
         .send()
         .await;
@@ -96,6 +98,11 @@ pub async fn try_create_book(
         Ok(success) => {
             if success.status() == StatusCode::CREATED {
                 println!("Book {} created successfully", &book_id);
+                config.as_mut().unwrap().books_data.insert(book_id, BookConfigSchema {
+                    name_plugins: vec![],
+                    desc_plugins: vec![],
+                    directory: directory
+                });
                 Ok(book_id)
             }
             else {
@@ -130,7 +137,7 @@ pub async fn try_load_book(
                 Ok(book) => {
                     log::info!("Got book from api: {:?}", &book);
                     let mut config = app_manager.config.lock().await;
-                    config.current_book = id.clone();
+                    config.as_mut().unwrap().current_book = id.clone();
                     let mut config_file = std::fs::File::create(std::env::current_exe().unwrap().parent().unwrap().join("zz_cfg.json")).unwrap();
                     let s = serde_json::to_string_pretty(&*config).unwrap();
                     config_file.write_all(&mut s.as_bytes()).unwrap();
@@ -156,11 +163,12 @@ pub async fn try_load_book(
 /// * `directory` - directory of game files to parse
 #[tauri::command]
 pub async fn try_parse_texts(
-    directory: String,
+    book_id: Uuid,
     app_manager: State<'_, AppManager>
 ) -> Result<(), ()> {
     let mut texts = app_manager.texts.lock().await;
-    parse_texts(directory, &mut texts).await;
+    let config_locked = app_manager.config.lock().await;
+    parse_texts(&config_locked.as_ref().unwrap(), book_id, &mut texts).await;
     Ok(())
 }
 
@@ -182,6 +190,7 @@ pub async fn try_parse_wizforms(
     app_manager: State<'_, AppManager>
 ) -> Result<(), ()> {
     log::info!("Wizforms parsing started");
+    let config_locked = app_manager.config.lock().await;
     let texts = app_manager.texts.lock().await;
     let client = app_manager.client.read().await;
     let response = client.get(format!("{}/wizforms/{}", MAIN_URL, &book_id))
@@ -193,7 +202,7 @@ pub async fn try_parse_wizforms(
             match json {
                 Ok(existing_wizforms) => {
                     let mut wizforms = vec![];
-                    parse_wizforms(book_id, directory, &texts, &mut wizforms, &existing_wizforms).await;
+                    parse_wizforms(book_id, &config_locked.as_ref().unwrap(), &texts, &mut wizforms, &existing_wizforms).await;
                     if wizforms.len() > 500 {
                         let second_chunk = wizforms.split_off(500);
                         upload_wizform_chunk(&wizforms, &client).await.unwrap();

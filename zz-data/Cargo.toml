@@ -1,6 +1,6 @@
 [package]
 name = "zz-data"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 description = "Data structures for Zanzarah apis"
 license = "MIT OR Apache-2.0"

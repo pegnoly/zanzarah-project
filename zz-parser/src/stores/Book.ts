@@ -12,7 +12,7 @@ type Action = {
     initialize: (book_id: string) => void
 }
 
-export const useBooksStore = create<Book & State & Action>((set, get) => ({
+export const useBooksStore = create<Book & State & Action>((set) => ({
     id: null,
     name: null,
     directory: null,

@@ -1,9 +1,9 @@
-import { Filter, MagicElement, Wizform } from "../types";
-import { CustomFiltersManager } from "./CustomFiltersManager";
-import { SpawnPointsManager } from "./SpawnPointsManager";
+import { MagicElement, Wizform } from "../types";
+// import { CustomFiltersManager } from "./CustomFiltersManager";
+// import { SpawnPointsManager } from "./SpawnPointsManager";
 import { WizformFilterer } from "./WizformFilterer";
 import { WizformRenderer } from "./WizformRenderer";
-import { invoke } from "@tauri-apps/api/core";
+//import { invoke } from "@tauri-apps/api/core";
 
 interface WizformSelectorSchema {
     elements: MagicElement[],
@@ -14,21 +14,21 @@ interface WizformSelectorSchema {
 
 export function WizformSelector(schema: WizformSelectorSchema) {
 
-    function handleCustomFilterUpdate(filter: Filter | null) {
-        if (filter != null) {
-            invoke("update_filter", {filter: filter});
-            if (filter.enabled == false) {
-                schema.filterDisabledCallback(filter.filter_type);
-            } 
-        }
-    }
+    // function handleCustomFilterUpdate(filter: Filter | null) {
+    //     if (filter != null) {
+    //         invoke("update_filter", {filter: filter});
+    //         if (filter.enabled == false) {
+    //             schema.filterDisabledCallback(filter.filter_type);
+    //         } 
+    //     }
+    // }
 
-    async function handleSpawnPointRemove(spawn: string | null) {
-        if (spawn != null) {
-            await invoke("remove_spawn_point", {pointId: spawn});
-            schema.spawnPointRemovedCallback(spawn);
-        }
-    }
+    // async function handleSpawnPointRemove(spawn: string | null) {
+    //     if (spawn != null) {
+    //         await invoke("remove_spawn_point", {pointId: spawn});
+    //         schema.spawnPointRemovedCallback(spawn);
+    //     }
+    // }
 
     return (
         <div 

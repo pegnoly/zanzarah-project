@@ -1,11 +1,9 @@
 import { useParams } from "react-router-dom";
-import { MagicElement, Wizform, WizformElementType } from "../types";
+import { MagicElement, Wizform } from "../types";
 import { useEffect, useState } from "react";
 import { Button, Checkbox, Col, Row, Select, Typography } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 // import { createStyles } from "antd-style";
-import { useWizformFilterContext } from "../../contexts/WizformFilter";
-import { useSpawnPointsContext } from "../../contexts/SpawnPoints";
 import { invoke } from "@tauri-apps/api/core";
 
 // const wizformFocusedStyles = createStyles(({}) => ({
@@ -59,8 +57,6 @@ interface WizformFocusedSchema {
 
 export function WizformFocused(schema: WizformFocusedSchema) {
 
-    const [wizform, setWizform] = useState<Wizform | undefined>(undefined);
-
     const [elementSelectionEnabled, setElementSelectionEnabled] = useState<boolean>(false);
 
     const [currentElement, setCurrentElement] = useState<number | undefined>(undefined);
@@ -70,13 +66,10 @@ export function WizformFocused(schema: WizformFocusedSchema) {
     // const [filters, setFilters] = useState<number[]>([]);
     // const [spawns, setSpawns] = useState<string[]>([]);
 
-    const wizformFilterContext = useWizformFilterContext();
-
     const {id} = useParams();
 
     // const styles = wizformFocusedStyles();
 
-    const spawnPointsContext = useSpawnPointsContext();
 
     useEffect(() => {
         if (id != undefined) {
