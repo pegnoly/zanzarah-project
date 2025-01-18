@@ -6,13 +6,13 @@ use super::{queries::{ClearedName, WizformFilterQuery, WizformFilteredModel, Wiz
 
 pub(crate) fn wizform_routes() -> Router<ApiManager> {
     Router::new()
-        .route("/wizforms/:book_id", get(get_existing_wizforms))
+        .route("/wizforms/{book_id}", get(get_existing_wizforms))
         .route("/wizforms", post(save_wizforms))
         //.route("/wizforms", patch(update_wizforms))
-        .route("/wizforms/enabled/:book_id", get(get_enabled_wizforms))
-        .route("/wizform/:id", get(load_wizform))
-        .route("/wizform/:id/update", patch(update_wizform))
-        .route("/wizform/name/:number", get(get_wizform_name))
+        .route("/wizforms/enabled/{book_id}", get(get_enabled_wizforms))
+        .route("/wizform/{id}", get(load_wizform))
+        .route("/wizform/{id}/update", patch(update_wizform))
+        .route("/wizform/name/{number}", get(get_wizform_name))
         .route("/wizforms/filtered/", get(get_filtered_wizforms))
         //.route("/wizform", patch(update_wizform))
         //.route("/wizform/:id/:name", patch(update_wizform_name))

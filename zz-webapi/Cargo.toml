@@ -4,15 +4,27 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.7.4"
-shuttle-axum = "0.48.0"
-shuttle-runtime = "0.48.0"
+axum = "0.8.0"
+shuttle-axum = "0.51.0"
+shuttle-runtime = "0.51.0"
 tokio = "1.28.2"
-sqlx = {version = "0.8.2", features = ["runtime-tokio-rustls", "postgres", "uuid", "json"]}
+sqlx = {version = "0.8.3", features = ["runtime-tokio-rustls", "postgres", "uuid", "json"]}
 serde = { version = "1.0.209", features = ["derive"] }
 uuid = { version = "1.10.0", features = ["v4"] }
-zz-data = "0.2.4"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-shuttle-shared-db = { version = "0.48.0", features = ["postgres", "sqlx"] }
+shuttle-shared-db = { version = "0.51.0", features = ["postgres", "sqlx"] }
 strum = { version = "0.26.3", features = ["derive"] }
+async-graphql = {version = "7.0.13", features = ["uuid"]}
+async-graphql-axum = "7.0.13"
+async-stream = "0.3.6"
+futures-channel = "0.3.31"
+futures-core = "0.3.31"
+futures-util = "0.3.31"
+once_cell = "1.20.2"
+slab = "0.4.9"
+tokio-stream = "0.1.17"
+sea-orm = { version = "1.1.4", features = ["sqlx-postgres"] }
+serde_json = { version = "1.0.135", features = ["raw_value"] }
+dotenv = "0.15.0"
+zz-data = "0.2.4"

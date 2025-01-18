@@ -6,7 +6,7 @@ use super::{queries::ElementUpdateQuery, utils::{ApiManager, StringPayload}};
 
 pub(crate) fn elements_routes() -> Router<ApiManager> {
     Router::new()
-        .route("/elements/:book_id", get(get_existing_elements))
+        .route("/elements/{book_id}", get(get_existing_elements))
         .route("/element", patch(update_element))
 }
 

@@ -10,9 +10,9 @@ use super::{queries::BookCreationQuery, utils::{ApiManager, StringOptionPayload,
 pub(crate) fn book_routes() -> Router<ApiManager> {
     Router::new()
         .route("/book/create", post(create_book))
-        .route("/book/:book_id", get(get_book))
+        .route("/book/{book_id}", get(get_book))
         .route("/book/all", get(get_existing_books))
-        .route("/book/initialize/:book_id", patch(initialize_book))
+        .route("/book/initialize/{book_id}", patch(initialize_book))
         // .route("/book/filters", get(get_filters))
         // .route("/book/filters", patch(update_filter))
         // .route("/book/points/:book_id", get(get_spawn_points))
@@ -104,7 +104,7 @@ async fn get_book(
 async fn get_existing_books(
     State(api_manager) : State<ApiManager>
 ) -> Result<Json<Vec<BookDBModel>>, String> {
-    let res: Result<Vec<BookDBModel>, sqlx::Error> = sqlx::query_as("SELECT * FROM books;")
+    let res: Result<Vec<BookDBModel>, sqlx::Error> = sqlx::query_as("SELECT * FROM books WHERE initialized=true AND downloadable=true;")
         .fetch_all(&api_manager.pool)
         .await;
     match res {
