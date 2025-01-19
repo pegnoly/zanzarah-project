@@ -7,6 +7,7 @@ use super::magic::Magics;
 #[sea_orm(rs_type = "i16", db_type = "Integer")]
 #[derive(async_graphql::Enum)]
 pub enum WizformElementType {
+    None = -1,
     NeutralOne = 0,
     #[default]
     Nature = 1,
@@ -53,8 +54,11 @@ pub struct Model {
     pub cleared_name: String
 }
 
+
+pub type WizformModel = Model;
+
 #[async_graphql::Object]
-impl Model {
+impl WizformModel {
     async fn id(&self) -> Uuid {
         self.id
     }
@@ -114,7 +118,7 @@ impl Model {
         self.description.clone()
     }
 
-    async fn icon64(&self) -> String {
+    async fn icon64(&self) -> String {          
         self.icon64.clone()
     }
 

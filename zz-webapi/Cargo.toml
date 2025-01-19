@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.8.0"
+axum = "0.8.1"
 shuttle-axum = "0.51.0"
 shuttle-runtime = "0.51.0"
 tokio = "1.28.2"
@@ -28,3 +28,4 @@ sea-orm = { version = "1.1.4", features = ["sqlx-postgres"] }
 serde_json = { version = "1.0.135", features = ["raw_value"] }
 dotenv = "0.15.0"
 zz-data = "0.2.4"
+tower-http = { version = "0.6.2", features = ["cors"] }

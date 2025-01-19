@@ -14,9 +14,48 @@ pub(crate) fn wizform_routes() -> Router<ApiManager> {
         .route("/wizform/{id}/update", patch(update_wizform))
         .route("/wizform/name/{number}", get(get_wizform_name))
         .route("/wizforms/filtered/", get(get_filtered_wizforms))
+        .route("/wizforms/change/{book_id}", get(change_names))
         //.route("/wizform", patch(update_wizform))
         //.route("/wizform/:id/:name", patch(update_wizform_name))
         .layer(DefaultBodyLimit::max(10_000_000))
+}
+
+async fn change_names(
+    State(api_manager) : State<ApiManager>,
+    Path(book_id): Path<Uuid>
+) -> Result<(), ()> {
+    let names: Result<Vec<(Uuid, Vec<u8>)>, sqlx::Error> = sqlx::query_as(r#"
+            SELECT id, name FROM wizforms WHERE book_id=$1
+        "#)
+        .bind(book_id)
+        .fetch_all(&api_manager.pool)
+        .await;
+
+    match names {
+        Ok(names) => {
+            let mut transaction = api_manager.pool.begin().await.unwrap();
+            for (id, name) in names {
+                let cleared_name = std::str::from_utf8(&name).unwrap();
+                let _res: WizformDBModel = sqlx::query_as(r#"
+                        UPDATE wizforms 
+                        SET cleared_name=$1 
+                        WHERE id=$2
+                        RETURNING *;
+                    "#)
+                    .bind(cleared_name)
+                    .bind(id)
+                    .fetch_one(&mut *transaction)
+                    .await
+                    .unwrap();
+            }
+            transaction.commit().await.unwrap();
+            Ok(())
+        },
+        Err(error) => {
+            tracing::error!("Error updating... {}", error.to_string());
+            Err(())
+        }
+    }
 }
 
 async fn save_wizforms(
