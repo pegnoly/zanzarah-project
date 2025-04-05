@@ -1,5 +1,5 @@
 import { Space, Typography } from "antd";
-import { LevelOfMagic } from "../types";
+import { LevelOfMagic } from "../../types";
 import { ActiveMagicSlot } from "../MagicSlot/Active";
 import { PassiveMagicSlot } from "../MagicSlot/Passive";
 

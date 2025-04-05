@@ -1,50 +1,41 @@
 import { Input, Menu, Select } from "antd"
-import { WizformElementType } from "./types"
-import { useWizformStore } from "../stores/Wizform";
+import { MagicElement, WizformElementType } from "../types"
+
 import { useShallow } from "zustand/shallow";
 import { useBooksStore } from "../stores/Book";
+import { useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 
 
 export function WizformFilterMenu() {
 
-    // const wizformFilterContext = useWizformFilterContext();
-
-    // function handleNameFilterUpdate(s: string) {
-    //     wizformFilterContext?.setState({
-    //         ...wizformFilterContext.state,
-    //         name: s
-    //     })
-    // }
-
-    // function handleElementSelection(element: WizformElementType) {
-    //     wizformFilterContext?.setState({
-    //         ...wizformFilterContext.state,
-    //         element: element
-    //     })
-    // }
-
-    // function handleCustomFilterSelection(type: number) {
-    //     wizformFilterContext?.setState({
-    //         ...wizformFilterContext.state,
-    //         custom: type
-    //     })
-    // } 
-
-    const [nameFilter, elementFilter, updateNameFilter, updateElementFilter] = useWizformStore(useShallow((state) => [
-        state.name_filter, 
-        state.element_filter, 
-        state.update_name_filter,
-        state.update_element_filter
+    const [currentBook, elements, setElements, elementFilter, setElementFilter, nameFilter, setNameFilter] = useBooksStore(useShallow((state) => [
+        state.currentId,
+        state.elements,
+        state.loadElements,
+        state.currentElementFilter,
+        state.setElementFilter,
+        state.currentNameFilter,
+        state.setNameFilter
     ]));
 
-    const elements = useBooksStore((state) => state.elements);
+    useEffect(() => {
+        if (currentBook != undefined) {
+            loadElements()
+        }
+    }, [currentBook]);
+
+    const loadElements = async () => {
+        await invoke<MagicElement[] | null>("load_elements", {bookId: currentBook})
+            .then((elements) => setElements(elements))
+    }
 
     function handleNameFilterUpdate(filter: string) {
-        updateNameFilter(filter);
+        setNameFilter(filter);
     }
 
     function handleElementSelection(filter: WizformElementType) {
-        updateElementFilter(filter as number);
+        setElementFilter(filter);
     }
 
     return (
@@ -67,7 +58,7 @@ export function WizformFilterMenu() {
                             <Input 
                                 style={{width: "100%"}}
                                 onChange={(e) => handleNameFilterUpdate(e.currentTarget.value)}
-                                defaultValue={nameFilter}
+                                defaultValue={nameFilter!}
                             />
                         )
                     },
@@ -85,7 +76,7 @@ export function WizformFilterMenu() {
                                     value={WizformElementType.None} 
                                     key={-1}
                                 >Все стихии</Select.Option> 
-                                {elements.map((e, i) => (
+                                {elements!.map((e, i) => (
                                 <Select.Option 
                                     value={e.element} 
                                     key={i}

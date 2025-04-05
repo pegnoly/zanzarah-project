@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { WizformElementType } from "../components/types"
+import { WizformElementType } from "../types"
 import { invoke } from "@tauri-apps/api/core"
 
 type WizformTransferModel = {

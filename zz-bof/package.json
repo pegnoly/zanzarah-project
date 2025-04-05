@@ -15,6 +15,7 @@
     "@tauri-apps/plugin-shell": ">=2.0.0-rc.0",
     "@types/react-virtualized": "^9.21.30",
     "antd": "^5.20.6",
+    "antd-style": "^3.7.1",
     "esbuild-plugin-react-virtualized": "^1.0.4",
     "rc-virtual-list": "^3.14.5",
     "react": "^18.2.0",
@@ -31,7 +32,7 @@
     "@types/react-slick": "^0.23.13",
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.2.2",
-    "vite": "^5.3.1"
+    "vite": "^6.2.5"
   },
   "resolutions": {
     "react-virtualized": "git+https://git@github.com/remorses/react-virtualized-fixed-import.git#9.22.3"

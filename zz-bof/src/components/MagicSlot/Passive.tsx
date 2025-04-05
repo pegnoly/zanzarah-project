@@ -14,7 +14,7 @@ import jokerIcon from "../../assets/spells_passive/joker.svg";
 import blankIcon from "../../assets/spells_passive/blank.png";
 
 
-import { MagicElementType, MagicSlot } from "../types";
+import { MagicElementType, MagicSlot } from "../../types";
 import { useEffect, useState } from "react";
 
 export interface MagicSlotSchema {

@@ -1,7 +1,7 @@
 import { Carousel, Col, Row, Space, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { LevelOfMagic, Wizform, WizformElementType } from "./types";
+import { LevelOfMagic, Wizform, WizformElementType } from "../types";
 import { createStyles } from "antd-style";
 import { WizformMagicLevel } from "./MagicLevel/WizformMagicLevel";
 import { useWizformStore } from "../stores/Wizform";

@@ -13,7 +13,7 @@ import iceIcon from "../../assets/spells_active/ice.svg";
 import jokerIcon from "../../assets/spells_active/joker.svg";
 import blankIcon from "../../assets/spells_active/blank.png";
 
-import { MagicElementType } from "../types";
+import { MagicElementType } from "../../types";
 import { useEffect, useState } from "react";
 import { MagicSlotSchema } from "./Passive";
 

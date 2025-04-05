@@ -1,19 +1,36 @@
 import { create } from "zustand"
-import { MagicElement } from "../components/types"
+import { MagicElement, WizformElementType } from "../types"
 import { invoke } from "@tauri-apps/api/core"
 
 type State = {
-    elements: MagicElement[]
+    currentId: string | undefined,
+    currentElementFilter: WizformElementType,
+    currentNameFilter: string | null,
+    elements: MagicElement[] | null
 }
 
 type Action = {
-    load_elements: (id: string) => void
+    setId: (id: string) => void,
+    setElementFilter: (element: WizformElementType) => void,
+    setNameFilter: (name: string | null) => void,  
+    loadElements: (elements: MagicElement[] | null) => void
 }
 
 export const useBooksStore = create<State & Action>((set) => ({
+    currentId: undefined,
+    currentElementFilter: WizformElementType.None,
+    currentNameFilter: null,
     elements: [],
-    async load_elements(id) {
-        await invoke("load_elements", {bookId: id})
-            .then((value) => set({elements: value as MagicElement[]}));
+    setId(id) {
+        set({currentId: id})
+    },
+    setElementFilter(element) {
+        set({currentElementFilter: element})
+    },
+    setNameFilter(name) {
+        set({currentNameFilter: name})
+    },
+    async loadElements(elements) {
+        set({elements: elements})
     },
 }));

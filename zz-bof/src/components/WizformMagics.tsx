@@ -1,6 +1,6 @@
 import { List } from "antd";
 import { WizformMagicLevel } from "./MagicLevel/WizformMagicLevel";
-import { LevelOfMagic } from "./types";
+import { LevelOfMagic } from "../types";
 
 interface WizformMagicsSchema {
     magics: LevelOfMagic[] | undefined

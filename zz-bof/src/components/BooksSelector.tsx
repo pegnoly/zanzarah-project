@@ -3,34 +3,40 @@ import { List, Typography } from "antd";
 import { Link } from "react-router-dom";
 import { AppState, useAppStateContext } from "../contexts/AppState";
 import { invoke } from "@tauri-apps/api/core";
-import { Book } from "./types";
+import { Book } from "../types";
 
 export function BooksSelector() {
-
-    const [books, setBooks] = useState<Book[]>([]);
+    const [availableBooks, setAvailableBooks] = useState<Book[] | null>([]);
     const appStateContext = useAppStateContext();
 
     useEffect(() => {
-        console.log("App state is ", appStateContext?.state);
         if(appStateContext?.state.current_state == AppState.Ready) {
-            invoke("load_app").then((v) => setBooks(v as Book[]));
+            loadBooks()
         }
     }, [appStateContext?.state.current_state])
 
-    console.log(books);
+    const loadBooks = async () => {
+        invoke<Book[] | null>("load_books")
+            .then((books) => {
+                setAvailableBooks(books)
+            })
+    }
 
     return (
-        <>
+        <>{
+            availableBooks == null ? 
+            <h1>No books</h1> :
+
             <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '5%'}}>
                 <Typography.Text style={{fontSize: 20}}>Выбрать книгу</Typography.Text>
-                <List>{books.map((b, index) => (
+                <List>{availableBooks.map((book, index) => (
                     <List.Item key={index}>
-                        <Link to={`/wizforms/${b.id}`}>
-                            <Typography.Text style={{fontFamily: 'Shantell Sans', fontWeight: 'bold', fontSize: 15}}>{b.name}</Typography.Text>
+                        <Link to={`/wizforms/${book.id}`}>
+                            <Typography.Text style={{fontFamily: 'Shantell Sans', fontWeight: 'bold', fontSize: 15}}>{book.name}</Typography.Text>
                         </Link>
                     </List.Item>
                 ))}</List>
             </div>
-        </>
+        }</>
     )
 }

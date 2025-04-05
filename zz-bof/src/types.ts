@@ -35,26 +35,26 @@ export type Filter = {
 }
 
 export enum WizformElementType {
-    None = -1,
-    NeutralOne = 0,
-    Nature = 1,
-    Air = 2,
-    Water = 3,
-    Light = 4,
-    Energy = 5,
-    Psi = 6,
-    Stone = 7,
-    Ice = 8,
-    Fire = 9,
-    Dark = 10,
-    Chaos = 11,
-    Metal = 12,
-    NeutralTwo = 13,
-    Custom1 = 14,
-    Custom2 = 15,
-    Custom3 = 16,
-    Custom4 = 17,
-    Custom5 = 18
+    None = "NONE",
+    NeutralOne = "NEUTRAL_ONE",
+    Nature = "NATURE",
+    Air = "AIR",
+    Water = "WATER",
+    Light = "LIGHT",
+    Energy = "ENERGY",
+    Psi = "PSI",
+    Stone = "STONE",
+    Ice = "ICE",
+    Fire = "FIRE",
+    Dark = "DARK",
+    Chaos = "CHAOS",
+    Metall = "METALL",
+    NeutralTwo = "NEUTRAL_TWO",
+    Custom1 = "CUSTOM_1",
+    Custom2 = "CUSTOM_2",
+    Custom3 = "CUSTOM_3",
+    Custom4 = "CUSTOM_4",
+    Custom5 = "CUSTOM_5"
 }
 
 export enum MagicElementType {
