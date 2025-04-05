@@ -1,2 +1,2 @@
-pub mod wizform;
+pub mod book;
 pub mod test;

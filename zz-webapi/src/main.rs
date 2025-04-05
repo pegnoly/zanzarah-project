@@ -1,16 +1,19 @@
+// #![forbid(clippy::unwrap_used)]
+
 use core::{book::book_routes, element::elements_routes, utils::ApiManager, wizform::wizform_routes};
 
 use async_graphql::{http::GraphiQLSource, EmptyMutation, EmptySubscription, Schema};
-use async_graphql_axum::{GraphQL, GraphQLRequest, GraphQLResponse};
+use async_graphql_axum::GraphQL;
 use axum::{http::Method, response::{Html, IntoResponse}, routing::{get, get_service, post_service}, Extension, Router};
 use graphql::query::Query;
 use sea_orm::SqlxPostgresConnector;
-use services::wizform::service::WizformService;
+use services::book::service::WizformService;
 use tower_http::cors::{Any, CorsLayer};
 
 mod core;
 mod services;
 mod graphql;
+mod error;
 
 async fn graphiql() -> impl IntoResponse {
     Html(

@@ -59,12 +59,12 @@ pub type WizformModel = Model;
 
 #[async_graphql::Object]
 impl WizformModel {
-    async fn id(&self) -> Uuid {
-        self.id
+    async fn id(&self) -> async_graphql::ID {
+        self.id.into()
     }
 
-    async fn book_id(&self) -> Uuid {
-        self.book_id
+    async fn book_id(&self) -> async_graphql::ID {
+        self.book_id.into()
     }
     
     async fn game_id(&self) -> String {

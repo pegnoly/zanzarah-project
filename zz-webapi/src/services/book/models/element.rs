@@ -18,12 +18,12 @@ pub type ElementModel = Model;
 
 #[async_graphql::Object]
 impl ElementModel {
-    async fn id(&self) -> Uuid {
-        self.id
+    async fn id(&self) -> async_graphql::ID {
+        self.id.into()
     }
 
-    async fn book_id(&self) -> Uuid {
-        self.book_id
+    async fn book_id(&self) -> async_graphql::ID {
+        self.book_id.into()
     }
 
     async fn name(&self) -> String {

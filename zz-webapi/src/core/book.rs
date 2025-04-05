@@ -44,17 +44,12 @@ async fn create_book(
         .map(|element| {
             ElementDBModel {
                 id: Uuid::new_v4(),
-                book_id: book_creation_query.id.clone(),
+                book_id: book_creation_query.id,
                 element: element.clone(),
                 name: element.to_string(),
-                enabled: match element {
-                    WizformElementType::Custom1 | WizformElementType::Custom2 | 
+                enabled: !matches!(element, WizformElementType::Custom1 | WizformElementType::Custom2 | 
                     WizformElementType::Custom3 | WizformElementType::Custom4 |
-                    WizformElementType::Custom5 => {
-                        false
-                    },
-                    _=> true
-                }
+                    WizformElementType::Custom5)
             }
         })
         .collect::<Vec<ElementDBModel>>();
