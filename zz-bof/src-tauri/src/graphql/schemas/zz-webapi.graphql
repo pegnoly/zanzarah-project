@@ -1,0 +1,142 @@
+type BookModel {
+  id: ID!
+  name: String!
+  directory: String!
+  initialized: Boolean!
+  available: Boolean!
+  majorVersion: Int!
+  minorVersion: Int!
+  patchVersion: Int!
+}
+
+type ElementModel {
+  id: ID!
+  bookId: ID!
+  name: String!
+  element: WizformElementType!
+  enabled: Boolean!
+}
+
+type Magic {
+  level: Int!
+  slotType: MagicSlotType!
+  slotNumber: Int!
+  firstElement: MagicElementType!
+  secondElement: MagicElementType!
+  thirdElement: MagicElementType!
+}
+
+enum MagicElementType {
+  NONE
+  NATURE
+  AIR
+  WATER
+  LIGHT
+  ENERGY
+  PSI
+  STONE
+  ICE
+  FIRE
+  DARK
+  CHAOS
+  METALL
+  JOKER
+  ERROR
+}
+
+enum MagicSlotType {
+  NOT_EXIST
+  ACTIVE
+  PASSIVE
+}
+
+type Magics {
+  types: [Magic!]!
+}
+
+type Query {
+  wizforms(
+    """
+    Book this wizform belongs to
+    """
+    bookId: ID!
+    """
+    Select all or only enabled wizforms
+    """
+    enabled: Boolean
+    """
+    Optional element of wizform
+    """
+    elementFilter: WizformElementType
+    """
+    Optional name filter
+    """
+    nameFilter: String
+  ): [WizformModel!]!
+  wizform(
+    """
+    Id of wizform to focus
+    """
+    id: ID!
+  ): WizformModel
+  elements(
+    """
+    Book this element belongs to
+    """
+    bookId: ID!
+    """
+    Select all or only enabled elements
+    """
+    enabled: Boolean
+  ): [ElementModel!]!
+  books(
+    """
+    Query only available for user books
+    """
+    available: Boolean
+  ): [BookModel!]!
+}
+
+enum WizformElementType {
+  NONE
+  NEUTRAL_ONE
+  NATURE
+  AIR
+  WATER
+  LIGHT
+  ENERGY
+  PSI
+  STONE
+  ICE
+  FIRE
+  DARK
+  CHAOS
+  METALL
+  NEUTRAL_TWO
+  CUSTOM_1
+  CUSTOM_2
+  CUSTOM_3
+  CUSTOM_4
+  CUSTOM_5
+}
+
+type WizformModel {
+  id: ID!
+  bookId: ID!
+  gameId: String!
+  element: WizformElementType!
+  magics: Magics!
+  number: Int!
+  hitpoints: Int!
+  agility: Int!
+  jumpAbility: Int!
+  precision: Int!
+  evolutionForm: Int!
+  evolutionLevel: Int!
+  expModifier: Int!
+  enabled: Boolean!
+  description: String!
+  icon64: String!
+  name: String!
+}
+

@@ -13,7 +13,7 @@ import iceIcon from "../../assets/spells_active/ice.svg";
 import jokerIcon from "../../assets/spells_active/joker.svg";
 import blankIcon from "../../assets/spells_active/blank.png";
 
-import { MagicElementType } from "../types";
+import { MagicElementType } from "../../types";
 import { useEffect, useState } from "react";
 import { MagicSlotSchema } from "./Passive";
 
@@ -57,10 +57,10 @@ export function ActiveMagicSlot(schema: MagicSlotSchema) {
     }
 
     return (
-        <div style={{width: 50, height: 50, position: "relative"}}>
-            <img width={15} height={15} style={{position: "absolute", top: 5, left: 5}} src={getIcon(firstElement)}></img>
-            <img width={15} height={15} style={{position: "absolute", top: 15, left: 15}} src={getIcon(secondElement)}></img>
-            <img width={15} height={15} style={{position: "absolute", top: 25, left: 25}} src={getIcon(thirdElement)}></img>
+        <div style={{width: '40%', height: '20%', position: "relative", display: 'flex', flexDirection: 'row'}}>
+            <img width={15} height={15} src={getIcon(firstElement)}></img>
+            <img width={15} height={15} src={getIcon(secondElement)}></img>
+            <img width={15} height={15} src={getIcon(thirdElement)}></img>
         </div>
     )
 }

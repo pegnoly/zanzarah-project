@@ -3,17 +3,25 @@ use std::path::PathBuf;
 use base64::Engine;
 use binary_reader::BinaryReader;
 use encoding_rs::WINDOWS_1251;
+use serde::de;
 use tokio::sync::{Mutex, RwLock};
-use zz_data::core::{magic::Magic, text::Text, wizform::{Wizform, WizformDBModel, WizformElementType}};
+use uuid::Uuid;
+use zz_data::core::{magic::Magic, text::Text, wizform::{Filters, Magics, SpawnPoints, Wizform, WizformDBModel, WizformElementType}};
 
-use super::utils::to_le_hex_string;
+use crate::parser::plugins::types::{DescCleaner, DescPlugin, DescPluginType, NamePlugin, NamePluginType, NullCharDetector, SymbolRemover};
+
+use super::{commands::MAIN_URL, utils::{to_le_hex_string, Config}};
 
 pub struct ParseController {
     pub texts: RwLock<Vec<Text>>,
     pub wizforms: Mutex<Vec<Wizform>>
 }
 
-pub async fn parse_texts(directory: String, texts: &mut Vec<Text>) {
+pub async fn parse_texts(config: &Config, book_id: Uuid, texts: &mut Vec<Text>) {
+
+    let book_config = config.books_data.get(&book_id).unwrap();
+    let directory = &book_config.directory;
+
     let path = PathBuf::from(directory).join("Data\\_fb0x02.fbs");
     log::info!("Texts path: {:?}", &path);
     let mut file = std::fs::File::open(path).unwrap();
@@ -43,12 +51,55 @@ pub async fn parse_texts(directory: String, texts: &mut Vec<Text>) {
 }
 
 pub async fn parse_wizforms(
-    book_id: String,
-    directory: String, 
+    book_id: Uuid,
+    config: &Config,
     texts: &Vec<Text>, 
     wizforms: &mut Vec<WizformDBModel>, 
     existing_wizforms: &Vec<WizformDBModel>
 ) {
+
+    let book_config = config.books_data.get(&book_id).unwrap();
+    let directory = &book_config.directory;
+
+    let mut name_plugins: Vec<Box<dyn NamePlugin>> = vec![];
+    let mut desc_plugins: Vec<Box<dyn DescPlugin>> = vec![];
+
+    for plugin_info in &book_config.name_plugins {
+        match plugin_info.plugin_type {
+            NamePluginType::SymbolResolver => {
+                let symbol_resolver_plugin: Result<SymbolRemover, serde_json::Error> = serde_json::from_str(plugin_info.data.get());
+                match symbol_resolver_plugin {
+                    Ok(symbol_resolver_plugin) => {
+                        name_plugins.push(Box::new(symbol_resolver_plugin));
+                    },
+                    Err(json_error) => {
+                        println!("Error deserializing raw value into symbol resolver: {}", json_error.to_string());
+                    }
+                }
+            },
+            NamePluginType::NullDetector => {
+                name_plugins.push(Box::new(NullCharDetector{}))
+            }
+        }
+    }
+
+    for plugin_info in &book_config.desc_plugins {
+        match plugin_info.plugin_type {
+            DescPluginType::DescCleaner => {
+                desc_plugins.push(Box::new(DescCleaner{}));
+                // let desc_cleaner_plugin: Result<DescCleaner, serde_json::Error> = serde_json::from_str(plugin_info.data.get());
+                // match desc_cleaner_plugin {
+                //     Ok(desc_cleaner_plugin) => {
+                //         desc_plugins.push(Box::new(desc_cleaner_plugin));
+                //     },
+                //     Err(json_error) => {
+                //         println!("Error deserializing raw value into desc cleaner: {}", json_error.to_string());
+                //     }
+                // }
+            }
+        }
+    }
+
     let path = PathBuf::from(&directory).join("Data\\_fb0x01.fbs");
     log::info!("Wizforms path: {:?}", &path);
     let mut file = std::fs::File::open(path).unwrap();
@@ -58,6 +109,10 @@ pub async fn parse_wizforms(
     let icons_path = PathBuf::from(&directory).join("Resources\\Bitmaps\\WIZ000T.BMP");
     let icons_save_path = std::env::current_exe().unwrap().parent().unwrap().join(format!("{}\\", &book_id));
     let wizforms_icon = bmp::open(icons_path).unwrap();
+
+    let desc_cleaner = DescCleaner {};
+    //let symbol_remover = SymbolRemover::new();
+
     // first 4 bytes is wizforms count
     let count = reader.read_u32().unwrap();
     for _ in 0..count {
@@ -69,12 +124,18 @@ pub async fn parse_wizforms(
         reader.read_bytes(12).unwrap();
         // name + 8 bytes skip
         let name_id = reader.read_i32().unwrap();
-        let name = texts.iter()
+        let mut name = texts.iter()
             .find(|t| {
                 t.id == to_le_hex_string(name_id)
             })
             .unwrap()
             .content.clone();
+
+        for plugin in &name_plugins {
+            name = plugin.apply(name);
+        }
+        //name = symbol_remover.apply(name);
+
         reader.read_bytes(8).unwrap();
         // litter + 4 bytes skip.
         let _litter_0 = reader.read_i32().unwrap();
@@ -102,12 +163,15 @@ pub async fn parse_wizforms(
         reader.read_bytes(4).unwrap();
         // description + 8 bytes skip.
         let desc_id = reader.read_i32().unwrap();
-        let desc = texts.iter()
+        let mut desc = texts.iter()
             .find(|t| {
                 t.id == to_le_hex_string(desc_id)
             })
             .unwrap()
             .content.clone();
+
+        //desc = desc_cleaner.apply(desc);
+
         reader.read_bytes(8).unwrap();
         // litter 3
         let _litter_3 = reader.read_i32().unwrap();
@@ -201,48 +265,58 @@ pub async fn parse_wizforms(
         match existing_wizform {
             Some(wizform) => {
                 wizforms.push(WizformDBModel { 
-                    id: wizform.id.clone(), 
-                    book_id: book_id.clone(), 
+                    id: wizform.id, 
+                    book_id: book_id, 
                     game_id: wizform.game_id.clone(), 
                     name: name.as_bytes().to_vec(), 
                     description: desc,
-                    element: WizformElementType::from_repr(element).unwrap(), 
-                    magics: serde_json::to_string(&magics).unwrap(), 
+                    element: WizformElementType::from_repr(element as i16).unwrap(), 
+                    magics: zz_data::json(Magics {
+                        types: magics
+                    }), 
                     number: number as i16, 
-                    hitpoints: hit_points, 
-                    agility: agility, 
-                    jump_ability: jump_ability, 
-                    precision: precision, 
-                    evolution_form: evolution_form_number, 
-                    evolution_level: evolution_level, 
-                    exp_modifier: exp_modifier,
+                    hitpoints: hit_points as i16, 
+                    agility: agility as i16, 
+                    jump_ability: jump_ability as i16, 
+                    precision: precision as i16, 
+                    evolution_form: evolution_form_number as i16, 
+                    evolution_level: evolution_level as i16, 
+                    exp_modifier: exp_modifier as i16,
                     enabled: wizform.enabled,
                     filters: wizform.filters.clone(),
                     spawn_points: wizform.spawn_points.clone(),
-                    icon64: image64_repr
+                    icon64: image64_repr,
+                    cleared_name: name
                 });
             },
             None => {
                 wizforms.push(WizformDBModel { 
-                    id: uuid::Uuid::new_v4().to_string().replace("-", ""), 
+                    id: uuid::Uuid::new_v4(),
                     book_id: book_id.clone(), 
                     game_id: hex_id, 
                     name: name.as_bytes().to_vec(), 
                     description: desc,
-                    element: WizformElementType::from_repr(element).unwrap(), 
-                    magics: serde_json::to_string(&magics).unwrap(), 
+                    element: WizformElementType::from_repr(element as i16).unwrap(), 
+                    magics: zz_data::json(Magics {
+                            types: magics
+                    }), 
                     number: number as i16, 
-                    hitpoints: hit_points, 
-                    agility: if agility == 5 {0} else {agility + 1}, 
-                    jump_ability: if jump_ability == 5 {0} else {jump_ability + 1}, 
-                    precision: if precision == 5 {0} else {precision + 1}, 
-                    evolution_form: evolution_form_number, 
-                    evolution_level: evolution_level, 
-                    exp_modifier: exp_modifier,
+                    hitpoints: hit_points as i16, 
+                    agility: if agility == 5 {0} else {(agility + 1) as i16}, 
+                    jump_ability: if jump_ability == 5 {0} else {(jump_ability + 1) as i16}, 
+                    precision: if precision == 5 {0} else {(precision + 1) as i16}, 
+                    evolution_form: evolution_form_number as i16, 
+                    evolution_level: evolution_level as i16, 
+                    exp_modifier: exp_modifier as i16,
                     enabled: true,
-                    filters: vec![],
-                    spawn_points: vec![],
-                    icon64: image64_repr
+                    filters: zz_data::json(Filters {
+                        ids: vec![]
+                    }),
+                    spawn_points: zz_data::json(SpawnPoints {
+                        ids: vec![]
+                    }),
+                    icon64: image64_repr,
+                    cleared_name: name
                 });
             }
         }
@@ -253,7 +327,7 @@ pub async fn upload_wizform_chunk(
     chunk: &Vec<WizformDBModel>, 
     client: &tokio::sync::RwLockReadGuard<'_, reqwest::Client>
 ) -> Result<(), ()> {
-    let wizform_load_response = client.post("https://zz-webapi.shuttleapp.rs/wizforms")
+    let wizform_load_response = client.post(format!("{}/wizforms", MAIN_URL))
         .json(chunk)
         .send()
         .await;

@@ -14,7 +14,7 @@ import jokerIcon from "../../assets/spells_passive/joker.svg";
 import blankIcon from "../../assets/spells_passive/blank.png";
 
 
-import { MagicElementType, MagicSlot } from "../types";
+import { MagicElementType, MagicSlot } from "../../types";
 import { useEffect, useState } from "react";
 
 export interface MagicSlotSchema {
@@ -61,21 +61,18 @@ export function PassiveMagicSlot(schema: MagicSlotSchema) {
     }
 
     return (
-        <div style={{width: 50, height: 50, position: "relative"}}>
+        <div style={{width: '40%', height: '20%', position: "relative", display: 'flex', flexDirection: 'row'}}>
             <img 
                 width={15} 
                 height={15} 
-                style={{position: "absolute", top: 5, left: 5}} 
                 src={getIcon(firstElement)}/>
             <img 
                 width={15} 
                 height={15} 
-                style={{position: "absolute", top: 15, left: 15}} 
                 src={getIcon(secondElement)}/>
             <img 
                 width={15} 
                 height={15} 
-                style={{position: "absolute", top: 25, left: 25}} 
                 src={getIcon(thirdElement)}/>
         </div>
     )

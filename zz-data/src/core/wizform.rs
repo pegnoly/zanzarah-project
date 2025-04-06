@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
+use sqlx::types::Json;
 use strum::{Display, EnumIter, FromRepr};
-
-use crate::book::base::WizformFilterType;
+use uuid::Uuid;
 
 use super::magic::Magic;
 
 #[derive(Debug, Serialize, Default, Deserialize, FromRepr, Display, EnumIter, Clone, sqlx::Type)]
-#[repr(i32)]
+#[repr(i16)]
 pub enum WizformElementType {
     #[strum(to_string = "Нейтральная стихия 1")]
     NeutralOne = 0,
@@ -74,63 +74,58 @@ pub struct Wizform {
     pub exp_modifier: i32
 }
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
-pub struct WizformDBModel {
-    pub id: String,
-    pub book_id: String,
-    pub game_id: String,
-    pub name: Vec<u8>,
-    pub description: String,
-    pub icon64: String,
-    pub element: WizformElementType,
-    pub magics: String,
-    pub number: i16,
-    pub hitpoints: i32,
-    pub agility: i32,
-    pub jump_ability: i32,
-    pub precision: i32,
-    pub evolution_form: i32,
-    pub evolution_level: i32,
-    pub exp_modifier: i32,
-    pub enabled: bool,
-    pub filters: Vec<i32>,
-    pub spawn_points: Vec<String>
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
-pub struct WizformSpawnPoint {
-    pub id: String,
-    pub book_id: String,
-    pub name: String
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Magics {
+    pub types: Vec<Magic>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct WizformFrontendModel {
-    pub id: String,
-    pub name: String,
-    pub desc: String,
-    pub element: i32,
-    pub enabled: bool,
-    pub filters: Vec<i32>,
-    pub spawn_points: Vec<String>,
-    pub icon: String,
-    pub number: i16
+pub struct Filters {
+    pub ids: Vec<Uuid>
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SpawnPoints {
+    pub ids: Vec<Uuid>
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
-pub struct WizformElementModel {
-    pub id: String,
+pub struct WizformDBModel {
+    pub id: Uuid,
+    pub book_id: Uuid,
+    pub game_id: String,
     pub element: WizformElementType,
-    pub name: String,
-    pub book_id: String,
-    pub enabled: bool
+    pub magics: Json<Magics>,
+    pub number: i16,
+    pub hitpoints: i16,
+    pub agility: i16,
+    pub jump_ability: i16,
+    pub precision: i16,
+    pub evolution_form: i16,
+    pub evolution_level: i16,
+    pub exp_modifier: i16,
+    pub enabled: bool,
+    pub filters: Json<Filters>,
+    pub description: String,
+    pub icon64: String,
+    pub spawn_points: Json<SpawnPoints>,
+    pub name: Vec<u8>,
+    pub cleared_name: String
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct WizformElementFrontendModel {
-    pub id: String,
-    pub element: i32,
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct SpawnPointDBModel {
+    pub id: Uuid,
+    pub book_id: Uuid,
+    pub name: String
+}
+
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+pub struct ElementDBModel {
+    pub id: Uuid,
+    pub element: WizformElementType,
     pub name: String,
+    pub book_id: Uuid,
     pub enabled: bool
 }
 
@@ -160,7 +155,7 @@ impl Wizform {
     }
 
     pub fn element(mut self, element: u8) -> Self {
-        self.element = WizformElementType::from_repr(element as i32).unwrap_or_default();
+        self.element = WizformElementType::from_repr(element as i16).unwrap_or_default();
         self
     }
 

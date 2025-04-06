@@ -4,7 +4,7 @@ use strum::FromRepr;
 // region: data
 
 /// Possible magic elements. 
-#[derive(Debug, Serialize, Deserialize, FromRepr)]
+#[derive(Debug, Serialize, Deserialize, FromRepr, Clone)]
 #[repr(u8)]
 pub enum MagicElementType {
     None = 0,
@@ -25,7 +25,7 @@ pub enum MagicElementType {
 }
 
 /// Possible types of wizform magic slot.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum MagicSlotType {
     NotExist,
     Active,
@@ -33,7 +33,7 @@ pub enum MagicSlotType {
 }
 
 /// Represents wizform's magic level parsed from game files.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Magic {
     /// Level wizform must have to gain this magic
     pub level: u16,

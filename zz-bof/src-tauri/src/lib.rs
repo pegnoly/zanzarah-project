@@ -1,29 +1,37 @@
-pub mod book;
+mod app;
+mod services;
+mod error;
 
-use tauri::Manager;
-
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+use tauri::{Manager, RunEvent};
+use services::prelude::*;
+use reqwest::Client;
+use app::prelude::*;
+use tokio::sync::{Mutex, RwLock};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
+pub async fn run() {
     tauri::Builder::default()
-        .manage(crate::book::utils::LocalAppManager::new())
+        .manage(ZanzarahApiService::new(Client::new()))
+        .manage(LocalDataContainer { current_book: Mutex::new(None), wizforms: RwLock::new(vec![])})
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
-            greet,
-            book::commands::load_app,
-            book::commands::load_wizforms,
-            book::commands::load_elements,
-            book::commands::load_filters
+            load_books,
+            load_elements,
+            build_wizforms_list,
+            focus_wizform
         ])
         .setup(|app| {
             println!("dir is {:?}", app.path().data_dir().unwrap().to_str().unwrap());
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while running tauri application")
+        .run(|_app_handle, event| {
+            match event {
+                RunEvent::Exit => {
+                    println!("Exit!");
+                },
+                _ => {}
+            }
+        });
 }

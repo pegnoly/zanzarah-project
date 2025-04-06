@@ -1,8 +1,9 @@
-import "./App.css";
 import { Route, Routes } from "react-router-dom";
 import { BooksSelector } from "./components/BooksSelector";
 import AppStateProvider from "./contexts/AppState";
-import { WizformMain } from "./components/WizformMain";
+import { WizformSelector } from "./components/WizformSelector";
+
+import "./App.css";
 
 function App() {
 
@@ -10,7 +11,7 @@ function App() {
         <AppStateProvider>
             <Routes>
                 <Route path="/" element={<BooksSelector/>}/>
-                <Route path="wizforms/:id/*" element={<WizformMain/>}/>
+                <Route path="wizforms/:id/*" element={<WizformSelector/>}/>
             </Routes>
         </AppStateProvider>
     );

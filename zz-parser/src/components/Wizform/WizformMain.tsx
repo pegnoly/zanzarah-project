@@ -6,6 +6,9 @@ import { WizformFocused } from "./WizformFocused";
 import { Route, Routes } from "react-router-dom";
 import { WizformSelector } from "./WizformSelector";
 import { invoke } from "@tauri-apps/api/core";
+import { useBooksStore } from "../../stores/Book";
+import { useShallow } from "zustand/shallow";
+import { useWizformStore } from "../../stores/Wisform";
 
 const wizformMainStyles = createStyles(({}) => ({
     main: {
@@ -42,6 +45,18 @@ export function WizformMain(schema: WizformsMainSchema) {
     const wizformFilterContext = useWizformFilterContext();
 
     const styles = wizformMainStyles();
+
+
+    const [bookId, bookInitialized] = useBooksStore(useShallow((state) => [state.id, state.initialized]));
+    const loadWizforms = useWizformStore(useShallow((state) => state.load));
+ 
+    useEffect(() => {
+        if (bookInitialized == true) {
+            console.log("Ready to load wizforms...")
+            loadWizforms(bookId!);
+        }
+    }, [bookInitialized])
+
 
     // initially all wizforms must be rendered(until i implement storing of filters)
     useEffect(() => {

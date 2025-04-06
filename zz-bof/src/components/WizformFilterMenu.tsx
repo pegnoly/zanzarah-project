@@ -1,36 +1,42 @@
 import { Input, Menu, Select } from "antd"
-import { Filter, MagicElement, WizformElementType } from "./types"
-import { useWizformFilterContext } from "../contexts/WizformFilter";
+import { MagicElement, WizformElementType } from "../types"
 
-interface WizformFilterMenuSchema {
-    elements: MagicElement[],
-    filters: Filter[]
-}
+import { useShallow } from "zustand/shallow";
+import { useBooksStore } from "../stores/Book";
+import { useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 
-export function WizformFilterMenu(schema: WizformFilterMenuSchema) {
 
-    const wizformFilterContext = useWizformFilterContext();
+export function WizformFilterMenu() {
 
-    function handleNameFilterUpdate(s: string) {
-        wizformFilterContext?.setState({
-            ...wizformFilterContext.state,
-            name: s
-        })
+    const [currentBook, elements, setElements, elementFilter, setElementFilter, nameFilter, setNameFilter] = useBooksStore(useShallow((state) => [
+        state.currentId,
+        state.elements,
+        state.loadElements,
+        state.currentElementFilter,
+        state.setElementFilter,
+        state.currentNameFilter,
+        state.setNameFilter
+    ]));
+
+    useEffect(() => {
+        if (currentBook != undefined) {
+            loadElements()
+        }
+    }, [currentBook]);
+
+    const loadElements = async () => {
+        await invoke<MagicElement[] | null>("load_elements", {bookId: currentBook})
+            .then((elements) => setElements(elements))
     }
 
-    function handleElementSelection(element: WizformElementType) {
-        wizformFilterContext?.setState({
-            ...wizformFilterContext.state,
-            element: element
-        })
+    function handleNameFilterUpdate(filter: string) {
+        setNameFilter(filter);
     }
 
-    function handleCustomFilterSelection(type: number) {
-        wizformFilterContext?.setState({
-            ...wizformFilterContext.state,
-            custom: type
-        })
-    } 
+    function handleElementSelection(filter: WizformElementType) {
+        setElementFilter(filter);
+    }
 
     return (
         <>
@@ -47,56 +53,56 @@ export function WizformFilterMenu(schema: WizformFilterMenuSchema) {
                     {
                         type: "item",
                         key: "name_selector",
-                        style: {width: "32%", padding: 1},
+                        style: {width: "48%", padding: "2%"},
                         label: (
                             <Input 
                                 style={{width: "100%"}}
                                 onChange={(e) => handleNameFilterUpdate(e.currentTarget.value)}
-                                defaultValue={wizformFilterContext?.state.name}
+                                defaultValue={nameFilter!}
                             />
                         )
                     },
                     {
                         type: "item",
                         key: "element_selector",
-                        style: {width: "32%", padding: 1},
+                        style: {width: "48%", padding: 1},
                         label: (
                             <Select 
                                 onChange={(e) => handleElementSelection(e)} 
                                 style={{width: "100%"}}
-                                defaultValue={wizformFilterContext?.state.element}
+                                defaultValue={elementFilter}
                             >
                                 <Select.Option
                                     value={WizformElementType.None} 
                                     key={-1}
                                 >Все стихии</Select.Option> 
-                                {schema.elements.map((e, i) => (
+                                {elements!.map((e, i) => (
                                 <Select.Option 
                                     value={e.element} 
                                     key={i}
                                 >{e.name}</Select.Option>
                             ))}</Select>
                         )
-                    },
-                    {
-                        type: "item",
-                        key: "custom_selector",
-                        style: {width: "33%", padding: 1},
-                        label: (
-                            <Select 
-                                onChange={handleCustomFilterSelection}
-                                style={{width: "100%"}}
-                                defaultValue={wizformFilterContext?.state.custom}
-                            >
-                                <Select.Option 
-                                    value={-1} 
-                                    key={-1}
-                                >Без доп. фильтра</Select.Option> 
-                                {schema.filters.filter(f => f.enabled).map((f, i) => (
-                                <Select.Option key={i} value={f.filter_type}>{f.name}</Select.Option>
-                            ))}</Select>
-                        )
                     }
+                    // {
+                    //     type: "item",
+                    //     key: "custom_selector",
+                    //     style: {width: "33%", padding: 1},
+                    //     label: (
+                    //         <Select 
+                    //             onChange={handleCustomFilterSelection}
+                    //             style={{width: "100%"}}
+                    //             defaultValue={wizformFilterContext?.state.custom}
+                    //         >
+                    //             <Select.Option 
+                    //                 value={-1} 
+                    //                 key={-1}
+                    //             >Без доп. фильтра</Select.Option> 
+                    //             {schema.filters.filter(f => f.enabled).map((f, i) => (
+                    //             <Select.Option key={i} value={f.filter_type}>{f.name}</Select.Option>
+                    //         ))}</Select>
+                    //     )
+                    // }
                 ]}>
             </Menu>
         </>

@@ -23,11 +23,14 @@ pub async fn run() {
             parser::commands::update_wizform,
             parser::commands::update_wizforms,
             parser::commands::update_element,
-            parser::commands::load_filters,
-            parser::commands::update_filter,
-            parser::commands::create_spawn_point,
-            parser::commands::remove_spawn_point,
-            parser::commands::get_spawn_points
+            parser::commands::load_wizform,
+            parser::commands::update_wizform_visibility,
+            parser::commands::update_wizform_element
+            // parser::commands::load_filters,
+            // parser::commands::update_filter,
+            // parser::commands::create_spawn_point,
+            // parser::commands::remove_spawn_point,
+            // parser::commands::get_spawn_points
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

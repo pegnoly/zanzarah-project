@@ -1,5 +1,5 @@
 {
-  "productName": "zz-bof",
+  "productName": "Zanzarah - Book of faeries",
   "version": "0.1.0",
   "identifier": "com.zzbof.app",
   "build": {
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "zz-bof",
+        "title": "Zanzarah - Book of faeries",
         "width": 800,
         "height": 600
       }

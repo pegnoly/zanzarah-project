@@ -1,7 +1,6 @@
 import { List } from "antd";
 import { WizformMagicLevel } from "./MagicLevel/WizformMagicLevel";
-import { LevelOfMagic } from "./types";
-import { ScrollArea, ScrollAreaViewport } from "@radix-ui/react-scroll-area";
+import { LevelOfMagic } from "../types";
 
 interface WizformMagicsSchema {
     magics: LevelOfMagic[] | undefined

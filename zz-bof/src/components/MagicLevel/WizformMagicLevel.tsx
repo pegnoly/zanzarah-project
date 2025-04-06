@@ -1,5 +1,5 @@
-import { Col, Row, Typography } from "antd";
-import { LevelOfMagic } from "../types";
+import { Space, Typography } from "antd";
+import { LevelOfMagic } from "../../types";
 import { ActiveMagicSlot } from "../MagicSlot/Active";
 import { PassiveMagicSlot } from "../MagicSlot/Passive";
 
@@ -10,21 +10,33 @@ interface WizformMagicLevelSchema {
 export function WizformMagicLevel(schema: WizformMagicLevelSchema) {
     return (
         <>
-            <Typography.Text>{`Уровень ${schema.level?.level}`}</Typography.Text>
-            <Row>
-                <Col span={12} style={{display: 'flex', justifyContent: 'center'}}>
-                    <ActiveMagicSlot slot={schema.level?.first_active_slot}/>
-                </Col>
-                <Col span={12} style={{display: 'flex', justifyContent: 'center'}}>
-                    <PassiveMagicSlot slot={schema.level?.first_passive_slot}/>
-                </Col>
-                <Col span={12} style={{display: 'flex', justifyContent: 'center'}}>
-                    <ActiveMagicSlot slot={schema.level?.second_active_slot}/>
-                </Col>
-                <Col span={12} style={{display: 'flex', justifyContent: 'center'}}>
-                    <PassiveMagicSlot slot={schema.level?.second_passive_slot}/>
-                </Col>
-            </Row>
+            <Typography.Text style={{fontFamily: 'Shantell Sans', color: 'white', textAlign: 'center'}}>{`Уровень ${schema.level?.level}`}</Typography.Text>
+            <div style={{paddingTop: '2%', display: 'flex', flexDirection: 'column'}}>
+                <div style={{paddingTop: '3%'}}>
+                    <Space>
+                        <Typography.Text style={{fontFamily: 'Shantell Sans', color: 'white', textAlign: 'center'}}>Активное 1</Typography.Text>
+                        <ActiveMagicSlot slot={schema.level?.first_active_slot}/>
+                    </Space>
+                </div>
+                <div style={{paddingTop: '3%'}}>
+                    <Space>
+                        <Typography.Text style={{fontFamily: 'Shantell Sans', color: 'white', textAlign: 'center'}}>Пассивное 1</Typography.Text>
+                        <PassiveMagicSlot slot={schema.level?.first_passive_slot}/>
+                    </Space>
+                </div>
+                <div style={{paddingTop: '3%'}}>
+                    <Space>
+                        <Typography.Text style={{fontFamily: 'Shantell Sans', color: 'white', textAlign: 'center'}}>Активное 2</Typography.Text>
+                        <ActiveMagicSlot slot={schema.level?.second_active_slot}/>
+                    </Space>
+                </div>
+                <div style={{paddingTop: '3%'}}>
+                    <Space>
+                        <Typography.Text style={{fontFamily: 'Shantell Sans', color: 'white', textAlign: 'center'}}>Пассивное 2</Typography.Text>
+                        <PassiveMagicSlot slot={schema.level?.second_passive_slot}/>
+                    </Space>
+                </div>
+            </div>
         </>
     )
     

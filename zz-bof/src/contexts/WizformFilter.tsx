@@ -1,5 +1,5 @@
 import { createContext, PropsWithChildren, useContext, useState } from "react"
-import { WizformElementType } from "../components/types"
+import { WizformElementType } from "../types"
 
 export type WizformFilter = {
     name: string,
