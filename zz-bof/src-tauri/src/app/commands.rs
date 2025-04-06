@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use tauri::State;
 use uuid::Uuid;
 
@@ -51,6 +52,31 @@ pub async fn build_wizforms_list(
         },
         Err(error) => {
             println!("Error in load_wizforms command: {:#}", &error);
+            Err(error)
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn focus_wizform(
+    zanzarah_service: State<'_, ZanzarahApiService>,
+    id: Uuid
+) -> Result<Option<WizformFocused>, ZZBookError> {
+    match zanzarah_service.get_wizform_focused(GetWizformFocused { id }).await {
+        Ok(wizform) => {
+            if let Some(mut wizform) = wizform {
+                let magics_deduplicated = wizform.magics.types.clone().into_iter()
+                    .unique_by(|magic| magic.level)
+                    .collect_vec();
+                wizform.magics.types = magics_deduplicated;
+                //println!("Magics after removing duplicates: {:#?}", &wizform.magics.types);
+                Ok(Some(wizform)) 
+            } else {
+                Ok(None)
+            }
+        },
+        Err(error) => {
+            println!("Error in focus_wizform command: {:#}", &error);
             Err(error)
         }
     }

@@ -3,20 +3,39 @@ export type Book = {
     name: string
 }
 
+export enum MagicSlotType {
+    NotExist = "NOT_EXIST",
+    Active = "ACTIVE",
+    Passive = "PASSIVE"
+}
+
+export type Magic = {
+    level: number,
+    slot_type: MagicSlotType,
+    slot_number: number,
+    first_element: MagicElementType,
+    second_element: MagicElementType,
+    third_element: MagicElementType
+}
+
+export type Magics = {
+    types: Magic[]
+}
+
 export type Wizform = {
-    id: string,
     name: string,
-    desc: string,
+    description: string,
     element: WizformElementType,
     number: number,
-    magics: LevelOfMagic[],
+    magics: Magics,
     hitpoints: number,
     agility: number,
     jump_ability: number,
     precision: number,
     evolution_form: number,
     evolution_level: number,
-    exp_modifier: number
+    exp_modifier: number,
+    icon64: string
 }
 
 export type MagicElement = {
@@ -58,21 +77,21 @@ export enum WizformElementType {
 }
 
 export enum MagicElementType {
-    None = 0,
-    Nature = 1,
-    Air = 2,
-    Water = 3,
-    Light = 4,
-    Energy = 5,
-    Psi = 6,
-    Stone = 7,
-    Ice = 8,
-    Fire = 9,
-    Dark = 10, 
-    Chaos = 11,
-    Metall = 12,
-    Joker = 13,
-    Error = 14
+    None = "NONE",
+    Nature = "NATURE",
+    Air = "AIR",
+    Water = "WATER",
+    Light = "LIGHT",
+    Energy = "ENERGY",
+    Psi = "PSI",
+    Stone = "STONE",
+    Ice = "ICE",
+    Fire = "FIRE",
+    Dark = "DARK", 
+    Chaos = "CHAOS",
+    Metall = "METALL",
+    Joker = "JOKER",
+    Error = "ERROR"
 }
 
 export type MagicSlot = {

@@ -17,11 +17,8 @@ pub async fn run() {
         .invoke_handler(tauri::generate_handler![
             load_books,
             load_elements,
-            build_wizforms_list
-            // book::commands::load_app,
-            // book::commands::load_wizforms,
-            // book::commands::load_elements,
-            // book::commands::load_wizform
+            build_wizforms_list,
+            focus_wizform
         ])
         .setup(|app| {
             println!("dir is {:?}", app.path().data_dir().unwrap().to_str().unwrap());

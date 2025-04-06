@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use crate::services::prelude::{BooksQueryArguments, ElementsQueryArguments, WizformElementType, WizformListArguments};
+use crate::services::prelude::{BooksQueryArguments, ElementsQueryArguments, WizformElementType, WizformFocusedQueryArguments, WizformListArguments};
 
 pub struct GetBooks {
     pub available: Option<bool>
@@ -79,5 +79,16 @@ impl GetElements {
 impl From<GetElements> for ElementsQueryArguments {
     fn from(value: GetElements) -> Self {
         ElementsQueryArguments { id: cynic::Id::from(value.book_id), enabled: value.enabled }
+    }
+}
+
+#[derive(Debug)]
+pub struct GetWizformFocused {
+    pub id: Uuid
+}
+
+impl From<GetWizformFocused> for WizformFocusedQueryArguments {
+    fn from(value: GetWizformFocused) -> Self {
+        WizformFocusedQueryArguments { id: cynic::Id::from(value.id) }
     }
 }

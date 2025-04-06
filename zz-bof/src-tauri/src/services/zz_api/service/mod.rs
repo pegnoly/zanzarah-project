@@ -65,4 +65,19 @@ impl ZanzarahApiService {
             Err(ZZBookError::UnknownGraphQLError)
         }
     }
+
+    pub async fn get_wizform_focused(&self, payload: GetWizformFocused) -> Result<Option<WizformFocused>, ZZBookError> {
+        let client = self.client.read().await;
+        let query = WizformFocusedQuery::build(WizformFocusedQueryArguments::from(payload));
+        let response = client.post(ZANZARAH_API_URL)
+            .run_graphql(query)
+            .await?;
+        if let Some(data) = response.data {
+            Ok(data.wizform)
+        } else if let Some(errors) = response.errors {
+            Err(ZZBookError::GraphQLErrorsArray {route: "Get wizform focused".to_string(), errors})
+        } else {
+            Err(ZZBookError::UnknownGraphQLError)
+        }
+    }
 }
