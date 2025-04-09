@@ -3,3 +3,4 @@ pub mod source;
 pub mod types;
 pub mod utils;
 pub mod plugins;
+pub mod schema;

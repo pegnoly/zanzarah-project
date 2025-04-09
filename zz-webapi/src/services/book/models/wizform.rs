@@ -1,9 +1,12 @@
 use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::magic::Magics;
+use crate::error::ZZApiError;
 
-#[derive(Debug, Default, Clone, Copy, EnumIter, DeriveActiveEnum, PartialEq, Eq)]
+use super::magic::{Magics, MagicsInputModel};
+
+#[derive(Debug, Default, Clone, Copy, EnumIter, DeriveActiveEnum, PartialEq, Eq, Serialize, Deserialize)]
 #[sea_orm(rs_type = "i16", db_type = "Integer")]
 #[derive(async_graphql::Enum)]
 pub enum WizformElementType {
@@ -30,8 +33,8 @@ pub enum WizformElementType {
     Custom5 = 18
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel)]
-#[sea_orm(table_name = "wizforms")]
+#[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel, async_graphql::InputObject)]
+#[sea_orm(table_name = "wizforms_new")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
@@ -44,14 +47,16 @@ pub struct Model {
     pub agility: i16,
     pub jump_ability: i16,
     pub precision: i16,
-    pub evolution_form: i16,
+    pub evolution_form: i32,
+    pub evolution_name: Option<String>,
+    pub previous_form: Option<i32>,
+    pub previous_form_name: Option<String>,
     pub evolution_level: i16,
     pub exp_modifier: i16,
     pub enabled: bool,
     pub description: String,
     pub icon64: String,
-    pub name: Vec<u8>,
-    pub cleared_name: String
+    pub name: String
 }
 
 
@@ -98,8 +103,20 @@ impl WizformModel {
         self.precision
     }
 
-    async fn evolution_form(&self) -> i16 {
+    async fn evolution_form(&self) -> i32 {
         self.evolution_form
+    }
+
+    async fn evolution_name(&self) -> Option<String> {
+        self.evolution_name.clone()
+    }
+
+    async fn previous_form(&self) -> Option<i32> {
+        self.previous_form
+    }
+
+    async fn previous_form_name(&self) -> Option<String> {
+        self.previous_form_name.clone()
     }
 
     async fn evolution_level(&self) -> i16 {
@@ -123,7 +140,7 @@ impl WizformModel {
     }
 
     async fn name(&self) -> String {
-        self.cleared_name.clone()
+        self.name.clone()
     }
 }
 
@@ -131,3 +148,56 @@ impl WizformModel {
 pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}
+
+#[derive(Debug, Clone, Serialize, Deserialize, async_graphql::InputObject)]
+pub struct WizformInputModel {
+    pub id: async_graphql::ID,
+    pub book_id: async_graphql::ID,
+    pub game_id: String,
+    pub element: WizformElementType,
+    pub magics: MagicsInputModel,
+    pub number: i16,
+    pub hitpoints: i16,
+    pub agility: i16,
+    pub jump_ability: i16,
+    pub precision: i16,
+    pub evolution_form: i32,
+    pub evolution_name: Option<String>,
+    pub previous_form: Option<i32>,
+    pub previous_form_name: Option<String>,
+    pub evolution_level: i16,
+    pub exp_modifier: i16,
+    pub enabled: bool,
+    pub description: String,
+    pub icon64: String,
+    pub name: String
+}
+
+impl TryFrom<WizformInputModel> for WizformModel {
+    type Error = ZZApiError;
+    
+    fn try_from(value: WizformInputModel) -> Result<Self, Self::Error> {
+        Ok(WizformModel {
+            id: Uuid::try_from(value.id)?,
+            book_id: Uuid::try_from(value.book_id)?,
+            game_id: value.game_id,
+            element: value.element,
+            magics: value.magics.into(),
+            number: value.number,
+            hitpoints: value.hitpoints,
+            agility: value.agility,
+            jump_ability: value.jump_ability,
+            precision: value.precision,
+            evolution_form: value.evolution_form,
+            evolution_name: value.evolution_name,
+            previous_form: value.previous_form,
+            previous_form_name: value.previous_form_name,
+            evolution_level: value.evolution_level,
+            exp_modifier: value.exp_modifier,
+            enabled: value.enabled,
+            description: value.description,
+            icon64: value.icon64,
+            name: value.name
+        })
+    }
+}

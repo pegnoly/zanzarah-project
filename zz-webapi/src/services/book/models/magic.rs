@@ -23,40 +23,15 @@ pub enum MagicElementType {
     Error = 14
 }
 
-#[derive(Debug, Default, DeriveActiveEnum, EnumIter, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[sea_orm(rs_type = "i16", db_type = "Integer")]
-#[derive(async_graphql::Enum)]
-pub enum MagicSlotType {
-    #[default]
-    NotExist = 0,
-    Active = 1,
-    Passive = 2
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-pub struct Magic {
-    pub level: u16,
-    pub slot_type: MagicSlotType,
-    pub slot_number: u8,
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, FromJsonQueryResult, async_graphql::InputObject)]
+pub struct MagicSlotModel {
     pub first_element: MagicElementType,
     pub second_element: MagicElementType,
     pub third_element: MagicElementType
 }
 
 #[async_graphql::Object]
-impl Magic {
-    async fn level(&self) -> u16 {
-        self.level
-    }
-
-    async fn slot_type(&self) -> MagicSlotType {
-        self.slot_type
-    }
-
-    async fn slot_number(&self) -> u8 {
-        self.slot_number
-    }
-
+impl MagicSlotModel {
     async fn first_element(&self) -> MagicElementType {
         self.first_element
     }
@@ -70,7 +45,39 @@ impl Magic {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, FromJsonQueryResult)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, FromJsonQueryResult, async_graphql::InputObject)]
+pub struct Magic {
+    pub level: u16,
+    pub first_active_slot: MagicSlotModel,
+    pub first_passive_slot: MagicSlotModel,
+    pub second_active_slot: MagicSlotModel,
+    pub second_passive_slot: MagicSlotModel
+}
+
+#[async_graphql::Object]
+impl Magic {
+    async fn level(&self) -> u16 {
+        self.level
+    }
+
+    async fn first_active_slot(&self) -> MagicSlotModel {
+        self.first_active_slot.clone()
+    }
+
+    async fn first_passive_slot(&self) -> MagicSlotModel {
+        self.first_passive_slot.clone()
+    }
+
+    async fn second_active_slot(&self) -> MagicSlotModel {
+        self.second_active_slot.clone()
+    }
+
+    async fn second_passive_slot(&self) -> MagicSlotModel {
+        self.second_passive_slot.clone()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, FromJsonQueryResult, async_graphql::InputObject)]
 pub struct Magics {
     pub types: Vec<Magic>
 }
@@ -79,5 +86,54 @@ pub struct Magics {
 impl Magics {
     async fn types(&self) -> Vec<Magic> {
         self.types.clone()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, async_graphql::InputObject)]
+pub struct MagicSlotInputModel {
+    pub first_element: MagicElementType,
+    pub second_element: MagicElementType,
+    pub third_element: MagicElementType
+}
+
+impl Into<MagicSlotModel> for MagicSlotInputModel {
+    fn into(self) -> MagicSlotModel {
+        MagicSlotModel { 
+            first_element: self.first_element, 
+            second_element: self.second_element, 
+            third_element: self.third_element 
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, async_graphql::InputObject)]
+pub struct MagicInputModel {
+    pub level: u16,
+    pub first_active_slot: MagicSlotInputModel,
+    pub first_passive_slot: MagicSlotInputModel,
+    pub second_active_slot: MagicSlotInputModel,
+    pub second_passive_slot: MagicSlotInputModel
+}
+
+impl Into<Magic> for MagicInputModel {
+    fn into(self) -> Magic {
+        Magic { 
+            level: self.level, 
+            first_active_slot: self.first_active_slot.into(), 
+            first_passive_slot: self.first_passive_slot.into(), 
+            second_active_slot: self.second_active_slot.into(), 
+            second_passive_slot: self.second_passive_slot.into() 
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, async_graphql::InputObject)]
+pub struct MagicsInputModel {
+    pub types: Vec<MagicInputModel>
+}
+
+impl Into<Magics> for MagicsInputModel {
+    fn into(self) -> Magics {
+        Magics { types: self.types.into_iter().map(|m| m.into()).collect::<Vec<Magic>>() }
     }
 }

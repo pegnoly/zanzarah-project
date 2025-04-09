@@ -3,10 +3,8 @@ use std::path::PathBuf;
 use base64::Engine;
 use binary_reader::BinaryReader;
 use encoding_rs::WINDOWS_1251;
-use serde::de;
 use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
-use zz_data::core::{magic::Magic, text::Text, wizform::{Filters, Magics, SpawnPoints, Wizform, WizformDBModel, WizformElementType}};
 
 use crate::parser::plugins::types::{DescCleaner, DescPlugin, DescPluginType, NamePlugin, NamePluginType, NullCharDetector, SymbolRemover};
 

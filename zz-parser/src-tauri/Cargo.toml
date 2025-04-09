@@ -16,8 +16,7 @@ tauri-build = { version = "2.1.1", features = [] }
 cynic-codegen = { version = "3.10.0"}
 
 [dependencies]
-zz-data = "0.2.4"
-tauri = { version = "2.4.1" }
+tauri = { version = "2.4.1", features = [] }
 tauri-plugin-shell = "2.2.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = {version = "1.0.140", features = ["raw_value"] }

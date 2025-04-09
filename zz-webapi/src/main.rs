@@ -2,10 +2,10 @@
 
 use core::{book::book_routes, element::elements_routes, utils::ApiManager, wizform::wizform_routes};
 
-use async_graphql::{http::GraphiQLSource, EmptyMutation, EmptySubscription, Schema};
+use async_graphql::{http::GraphiQLSource, EmptySubscription, Schema};
 use async_graphql_axum::GraphQL;
-use axum::{http::Method, response::{Html, IntoResponse}, routing::{get, get_service, post_service}, Extension, Router};
-use graphql::query::Query;
+use axum::{http::Method, response::{Html, IntoResponse}, routing::get, Router};
+use graphql::{mutation::Mutation, query::Query};
 use sea_orm::SqlxPostgresConnector;
 use services::book::service::WizformService;
 use tower_http::cors::{Any, CorsLayer};
@@ -30,7 +30,7 @@ async fn main(
         pool: pool.clone()
     };
     let db = SqlxPostgresConnector::from_sqlx_postgres_pool(pool);
-    let schema = Schema::build(Query, EmptyMutation, EmptySubscription)
+    let schema = Schema::build(Query, Mutation, EmptySubscription)
         .data(db)
         .data(WizformService {})
         .finish();
