@@ -1,3 +1,7 @@
+type ActiveConfirmationInfo {
+  activatedAt: DateTime!
+}
+
 type BookModel {
   id: ID!
   name: String!
@@ -9,12 +13,30 @@ type BookModel {
   patchVersion: Int!
 }
 
+type ConfirmationCodeInfo {
+  value: String!
+  exprirationTime: DateTime!
+}
+
+union ConfirmationState = ConfirmationCodeInfo | ActiveConfirmationInfo
+
+"""
+Implement the DateTime<Local> scalar
+
+The input/output is a string in RFC3339 format.
+"""
+scalar DateTime
+
 type ElementModel {
   id: ID!
   bookId: ID!
   name: String!
   element: WizformElementType!
   enabled: Boolean!
+}
+
+type EmailConfirmationResponse {
+  message: String!
 }
 
 type InsertWizformsResponse {
@@ -75,11 +97,34 @@ input MagicsInputModel {
   types: [MagicInputModel!]!
 }
 
+type Model {
+  id: ID!
+  name: String!
+  email: String!
+  password: String!
+  confirmationState: ConfirmationState!
+  permissions: Permissions!
+}
+
 type Mutation {
   insertWizformsBulk(wizforms: [WizformInputModel!]!): InsertWizformsResponse!
+  tryRegisterUser(email: String!, password: String!): RegisterUserResponse!
+  confirmEmail(email: String!, code: String!): EmailConfirmationResponse!
+}
+
+enum PermissionType {
+  UNCONFIRMED_USER
+  CONFIRMED_USER
+  MOD_ADMIN
+  SUPER_ADMIN
+}
+
+type Permissions {
+  types: [PermissionType!]!
 }
 
 type Query {
+  userByEmail(email: String!): Model
   wizforms(
     """
     Book this wizform belongs to
@@ -120,6 +165,10 @@ type Query {
     """
     available: Boolean
   ): [BookModel!]!
+}
+
+type RegisterUserResponse {
+  message: String!
 }
 
 enum WizformElementType {

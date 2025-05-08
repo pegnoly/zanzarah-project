@@ -47,23 +47,7 @@ export type Filter = {
     filter_type: number,
     enabled: boolean
 }
-
-/**
- * Represents a book instance modder can edit.
- * @param id - id of a book in the database
- * @param name - displayable book name
- * @param directory - directory of game this book build upon
- * @param initialized - book becomes initialized only after correct parsing of game files
- * @param downloadadble - indicates that book can or can't be downloaded with mobile app                                                                                                                        
- */
-export type Book = {
-    id: string | null,
-    name: string | null,
-    directory: string | null,
-    initialized: boolean,
-    downloadadble: boolean
-}    
-
+ 
 export type SpawnPoint = {
     id: string,
     book_id: string,

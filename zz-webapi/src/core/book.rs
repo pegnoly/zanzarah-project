@@ -1,11 +1,9 @@
-use std::collections::HashMap;
-
-use axum::{extract::{DefaultBodyLimit, Path, Query, State}, http::StatusCode, response::IntoResponse, routing::{delete, get, patch, post}, Json, Router};
+use axum::{extract::{Path, Query, State}, http::StatusCode, response::IntoResponse, routing::{get, patch, post}, Json, Router};
 use strum::IntoEnumIterator;
 use uuid::Uuid;
 use zz_data::{book::base::BookDBModel, core::wizform::{ElementDBModel, WizformElementType}};
 
-use super::{queries::BookCreationQuery, utils::{ApiManager, StringOptionPayload, StringPayload}};
+use super::{queries::BookCreationQuery, utils::ApiManager};
 
 pub(crate) fn book_routes() -> Router<ApiManager> {
     Router::new()
@@ -127,12 +125,12 @@ async fn initialize_book(
         Ok(_success) => {
             Ok(())
         },
-        Err(e) => {
+        Err(_e) => {
             Err(())
         }
     }
 }
-
+ 
 // async fn get_filters(
 //     State(api_manager): State<ApiManager>,
 //     Json(book_id): Json<StringOptionPayload>

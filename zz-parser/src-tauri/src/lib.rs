@@ -1,9 +1,6 @@
-use std::{collections::HashMap, io::Write, str::FromStr};
-
-use app::prelude::{start_parsing, AppConfig, BookConfigSchema};
+use app::prelude::{try_register_user, try_confirm_email, load_books, load_current_book, start_parsing, test, AppConfig};
 use reqwest::Client;
-use services::prelude::{NamePluginType, SymbolRemover, ZanzarahApiService};
-use uuid::Uuid;
+use services::prelude::ZanzarahApiService;
 
 mod app;
 mod services;
@@ -21,6 +18,11 @@ pub async fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
+            test,
+            try_register_user,
+            try_confirm_email,
+            load_books,
+            load_current_book,
             start_parsing
             // parser::commands::try_pick_directory,
             // parser::commands::try_create_book,

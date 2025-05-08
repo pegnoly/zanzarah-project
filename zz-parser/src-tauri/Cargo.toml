@@ -36,3 +36,5 @@ human_regex = "0.3.0"
 cynic = { version = "3.10.0", features = ["reqwest", "http-reqwest", "serde_json"] }
 thiserror = "2.0.12"
 itertools = "0.14.0"
+argon2 = "0.5.3"
+machine-uid = "0.5.3"

@@ -7,7 +7,7 @@ use async_graphql_axum::GraphQL;
 use axum::{http::Method, response::{Html, IntoResponse}, routing::get, Router};
 use graphql::{mutation::Mutation, query::Query};
 use sea_orm::SqlxPostgresConnector;
-use services::book::service::WizformService;
+use services::{auth::prelude::AuthRepository, book::repo::BookRepository};
 use tower_http::cors::{Any, CorsLayer};
 
 mod core;
@@ -32,7 +32,8 @@ async fn main(
     let db = SqlxPostgresConnector::from_sqlx_postgres_pool(pool);
     let schema = Schema::build(Query, Mutation, EmptySubscription)
         .data(db)
-        .data(WizformService {})
+        .data(BookRepository)
+        .data(AuthRepository::new(&secrets).map_err(|err| shuttle_runtime::Error::Custom(err.into()))?)
         .finish();
     tracing::info!("Tracing ok?");
 

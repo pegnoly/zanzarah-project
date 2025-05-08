@@ -2,12 +2,43 @@ use async_graphql::Context;
 use sea_orm::DatabaseConnection;
 use uuid::Uuid;
 
-use crate::{error::ZZApiError, services::book::{models::{book::BookModel, element::ElementModel, wizform::{WizformElementType, WizformModel}}, service::WizformService}};
+use crate::{error::ZZApiError, services::{auth::prelude::{AuthRepository, UserModel}, book::{models::{book::BookModel, element::ElementModel, wizform::{WizformElementType, WizformModel}}, repo::BookRepository}}};
 
 pub struct Query;
 
 #[async_graphql::Object]
 impl Query {
+
+    async fn user_by_email(
+        &self,
+        context: &Context<'_>,
+        email: String
+    ) -> Result<Option<UserModel>, ZZApiError> {
+        let repo = context.data::<AuthRepository>().map_err(|error| {
+            tracing::error!("Failed to get auth repository from context. {}", &error.message);
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!("Failed to get database connection from context. {}", &error.message);
+            ZZApiError::Empty
+        })?;
+
+        match repo.get_user_by_email(db, email.clone()).await {
+            Ok(user) => {
+                Ok(user)
+            },
+            Err(error) => {
+                tracing::error!("
+                    Failed to get user by email. 
+                    Params: email - {:?}. 
+                    Error message: {:?}", 
+                    email, error
+                );
+                Err(error)
+            }
+        }
+    }
+
     async fn wizforms(
         &self,
         context: &Context<'_>,
@@ -20,7 +51,7 @@ impl Query {
         #[graphql(desc = "Optional name filter")]
         name_filter: Option<String>
     ) -> Result<Vec<WizformModel>, ZZApiError> {
-        let service = context.data::<WizformService>().map_err(|error| {
+        let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!("Failed to get wizform service from context. {}", &error.message);
             ZZApiError::Empty
         })?;
@@ -50,7 +81,7 @@ impl Query {
         #[graphql(desc = "Id of wizform to focus")]
         id: async_graphql::ID
     ) -> Result<Option<WizformModel>, ZZApiError> {
-        let service = context.data::<WizformService>().map_err(|error| {
+        let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!("Failed to get wizform service from context. {}", &error.message);
             ZZApiError::Empty
         })?;
@@ -83,7 +114,7 @@ impl Query {
         #[graphql(desc = "Select all or only enabled elements")]
         enabled: Option<bool>
     ) -> Result<Vec<ElementModel>, ZZApiError> {
-        let service = context.data::<WizformService>().map_err(|error| {
+        let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!("Failed to get wizform service from context. {}", &error.message);
             ZZApiError::Empty
         })?;
@@ -113,7 +144,7 @@ impl Query {
         #[graphql(desc = "Query only available for user books")]
         available: Option<bool>
     ) -> Result<Vec<BookModel>, ZZApiError> {
-        let service = context.data::<WizformService>().map_err(|error| {
+        let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!("Failed to get wizform service from context. {}", &error.message);
             ZZApiError::Empty
         })?;

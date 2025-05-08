@@ -1,7 +1,7 @@
 {
     "rust-analyzer.linkedProjects": [
-        "C:/Users/pegn0ly/zanzarah-project/zz-parser/src-tauri/Cargo.toml",
-        "C:/Users/pegn0ly/zanzarah-project/zz-webapi/Cargo.toml",
+        "D:/projects/zanzarah-project/zz-parser/src-tauri/Cargo.toml",
+        "D:/projects/zanzarah-project/zz-webapi/Cargo.toml",
     ],
     "rust-analyzer.check.command": "clippy"
 }

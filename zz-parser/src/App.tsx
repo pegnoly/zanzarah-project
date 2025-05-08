@@ -1,21 +1,23 @@
-import { Button } from "antd";
-import { BooksFacade } from "./components/Book/BooksFacade";
-import AppStateProvider from "./contexts/AppState";
 import { invoke } from "@tauri-apps/api/core";
+import { Button, MantineProvider } from "@mantine/core";
+import BooksMain from "./components/Book/main";
+import AuthMain from "./components/auth/main";
 
 function App() {
 
     async function test() {
-        await invoke("start_parsing");
+        await invoke("test");
     }
 
     return (
-        <>
+        <MantineProvider>
             {/* <AppStateProvider>
                 <BooksFacade/>
             </AppStateProvider> */}
             <Button onClick={() => test()}>123</Button>
-        </>
+            <AuthMain/>
+            <BooksMain/>
+        </MantineProvider>
     );
 }
 

@@ -5,9 +5,9 @@ use crate::error::ZZApiError;
 
 use super::models::{book::{self, BookModel}, element::{self, ElementModel}, wizform::{self, WizformElementType, WizformModel}};
 
-pub struct WizformService;
+pub struct BookRepository;
 
-impl WizformService {
+impl BookRepository {
 
     pub async fn get_wizforms(
         &self, 

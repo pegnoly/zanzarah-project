@@ -7,7 +7,7 @@ use log4rs::{append::{console::ConsoleAppender, file::FileAppender}, config::{Ap
 async fn main() {
     let timestamp = chrono::prelude::Local::now().naive_local();
     let logs_dir = std::env::current_exe().unwrap().parent().unwrap().join("logs\\");
-    if logs_dir.exists() == false {
+    if !logs_dir.exists() {
         std::fs::create_dir_all(&logs_dir).unwrap();
     }
     let logs_path = logs_dir.join(format!("{}.log", timestamp.to_string().replace(" ", "").replace(":", "_")));

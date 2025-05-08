@@ -6,3 +6,5 @@ pub use super::wizform::{
     WizformsBulkInsertMutation, 
     WizformsBulkInsertMutationArguments
 };
+pub use super::book::{BookFullModel, BooksQuery, BooksQueryArguments};
+pub use super::user::{RegisterUserMutation, RegisterUserMutationVariables, RegisterUserResponse, ConfirmEmailMutation, ConfirmEmailMutationVariables, EmailConfirmationResponse};

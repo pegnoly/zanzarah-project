@@ -30,6 +30,10 @@ pub enum ZZParserError {
     },
     #[error("Unknown graphql error")]
     UnknownGraphQLError,
+    #[error("Unknown error")]
+    Unknown,
+    #[error(transparent)]
+    Uuid(#[from]uuid::Error)
 }
 
 impl serde::Serialize for ZZParserError {

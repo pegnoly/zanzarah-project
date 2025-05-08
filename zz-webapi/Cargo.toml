@@ -15,7 +15,7 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 shuttle-shared-db = { version = "0.53.0", features = ["postgres", "sqlx"] }
 strum = { version = "0.26.3", features = ["derive"] }
-async-graphql = {version = "7.0.13", features = ["uuid"]}
+async-graphql = {version = "7.0.13", features = ["uuid", "chrono"]}
 async-graphql-axum = "7.0.13"
 async-stream = "0.3.6"
 futures-channel = "0.3.31"
@@ -31,3 +31,8 @@ zz-data = "0.2.6"
 tower-http = { version = "0.6.2", features = ["cors"] }
 thiserror = "2.0.12"
 itertools = "0.14.0"
+mailjet_api_wrapper = "0.4.0"
+reqwest = { version = "0.12.15", features = ["json"] }
+mail-send = "0.5.0"
+chrono = "0.4.41"
+totp-rs = "5.7.0"

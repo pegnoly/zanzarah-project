@@ -1,9 +1,8 @@
-use serde::Serialize;
 use strum::{Display, EnumIter, EnumString, FromRepr};
 
 use crate::services::zanzarah_api::schema;
 
-use super::magic::{Magics, MagicsInputModel};
+use super::magic::MagicsInputModel;
 
 #[derive(cynic::Enum, Debug, Default, Clone, Copy, PartialEq, Eq, EnumString, Display, EnumIter, FromRepr)]
 #[repr(i32)]
