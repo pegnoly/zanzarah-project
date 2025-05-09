@@ -1,0 +1,181 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type BookModel {
+  available: Boolean!
+  directory: String!
+  id: ID!
+  initialized: Boolean!
+  majorVersion: Int!
+  minorVersion: Int!
+  name: String!
+  patchVersion: Int!
+}
+
+type ElementModel {
+  bookId: ID!
+  element: WizformElementType!
+  enabled: Boolean!
+  id: ID!
+  name: String!
+}
+
+type InsertWizformsResponse {
+  message: String!
+}
+
+type Magic {
+  firstActiveSlot: MagicSlotModel!
+  firstPassiveSlot: MagicSlotModel!
+  level: Int!
+  secondActiveSlot: MagicSlotModel!
+  secondPassiveSlot: MagicSlotModel!
+}
+
+enum MagicElementType {
+  AIR
+  CHAOS
+  DARK
+  ENERGY
+  ERROR
+  FIRE
+  ICE
+  JOKER
+  LIGHT
+  METALL
+  NATURE
+  NONE
+  PSI
+  STONE
+  WATER
+}
+
+input MagicInputModel {
+  firstActiveSlot: MagicSlotInputModel!
+  firstPassiveSlot: MagicSlotInputModel!
+  level: Int!
+  secondActiveSlot: MagicSlotInputModel!
+  secondPassiveSlot: MagicSlotInputModel!
+}
+
+input MagicSlotInputModel {
+  firstElement: MagicElementType!
+  secondElement: MagicElementType!
+  thirdElement: MagicElementType!
+}
+
+type MagicSlotModel {
+  firstElement: MagicElementType!
+  secondElement: MagicElementType!
+  thirdElement: MagicElementType!
+}
+
+type Magics {
+  types: [Magic!]!
+}
+
+input MagicsInputModel {
+  types: [MagicInputModel!]!
+}
+
+type Mutation {
+  insertWizformsBulk(wizforms: [WizformInputModel!]!): InsertWizformsResponse!
+}
+
+type Query {
+  books(
+    """Query only available for user books"""
+    available: Boolean
+  ): [BookModel!]!
+  elements(
+    """Book this element belongs to"""
+    bookId: ID!
+    """Select all or only enabled elements"""
+    enabled: Boolean
+  ): [ElementModel!]!
+  wizform(
+    """Id of wizform to focus"""
+    id: ID!
+  ): WizformModel
+  wizforms(
+    """Book this wizform belongs to"""
+    bookId: ID!
+    """Optional element of wizform"""
+    elementFilter: WizformElementType
+    """Select all or only enabled wizforms"""
+    enabled: Boolean
+    """Optional name filter"""
+    nameFilter: String
+  ): [WizformModel!]!
+}
+
+enum WizformElementType {
+  AIR
+  CHAOS
+  CUSTOM_1
+  CUSTOM_2
+  CUSTOM_3
+  CUSTOM_4
+  CUSTOM_5
+  DARK
+  ENERGY
+  FIRE
+  ICE
+  LIGHT
+  METALL
+  NATURE
+  NEUTRAL_ONE
+  NEUTRAL_TWO
+  NONE
+  PSI
+  STONE
+  WATER
+}
+
+input WizformInputModel {
+  agility: Int!
+  bookId: ID!
+  description: String!
+  element: WizformElementType!
+  enabled: Boolean!
+  evolutionForm: Int!
+  evolutionLevel: Int!
+  evolutionName: String
+  expModifier: Int!
+  gameId: String!
+  hitpoints: Int!
+  icon64: String!
+  id: ID!
+  jumpAbility: Int!
+  magics: MagicsInputModel!
+  name: String!
+  number: Int!
+  precision: Int!
+  previousForm: Int
+  previousFormName: String
+}
+
+type WizformModel {
+  agility: Int!
+  bookId: ID!
+  description: String!
+  element: WizformElementType!
+  enabled: Boolean!
+  evolutionForm: Int!
+  evolutionLevel: Int!
+  evolutionName: String
+  expModifier: Int!
+  gameId: String!
+  hitpoints: Int!
+  icon64: String!
+  id: ID!
+  jumpAbility: Int!
+  magics: Magics!
+  name: String!
+  number: Int!
+  precision: Int!
+  previousForm: Int
+  previousFormName: String
+}
