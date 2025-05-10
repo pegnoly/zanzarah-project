@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { WizformElementType } from '../graphql/graphql'
 import { fetchWizformsOptions } from '../utils/queries/wizforms'
+import { Button } from '@mantine/core';
 
 export const Route = createFileRoute('/wizforms')({
     component: RouteComponent,
@@ -18,6 +19,7 @@ export const Route = createFileRoute('/wizforms')({
 function RouteComponent() {
     const wizformsData = Route.useLoaderData();
     return <div>
+        <Button>Test button</Button>
         <ol>
             {wizformsData?.wizforms.map((w, i) => (
                 <li key={i}>

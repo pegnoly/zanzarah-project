@@ -8,9 +8,10 @@ import {
   createRootRouteWithContext,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
-
-import appCss from "@/styles/app.css?url"
+import '@mantine/core/styles.css';
 import { QueryClient } from '@tanstack/react-query'
+import { MantineProvider } from "@mantine/core"
+import mantineCssUrl from '@mantine/core/styles.css?url'
 
 export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
   head: () => ({
@@ -26,6 +27,7 @@ export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
         title: 'TanStack Start Starter',
       },
     ],
+    links: [{ rel: 'stylesheet', href: mantineCssUrl }]
   }),
   component: RootComponent,
 })
@@ -33,8 +35,10 @@ export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
 function RootComponent() {
   return (
     <RootDocument>
-      <Outlet />
-      <TanStackRouterDevtools/>
+      <MantineProvider>
+        <Outlet />
+        <TanStackRouterDevtools/>
+      </MantineProvider>
     </RootDocument>
   )
 }

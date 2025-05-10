@@ -1,48 +1,45 @@
 // app/routes/index.tsx
-import * as fs from 'node:fs'
-import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
 
-const filePath = 'count.txt'
-
-async function readCount() {
-  return parseInt(
-    await fs.promises.readFile(filePath, 'utf-8').catch(() => '0'),
-  )
-}
-
-const getCount = createServerFn({
-  method: 'GET',
-}).handler(() => {
-  return readCount()
-})
-
-const updateCount = createServerFn({ method: 'POST' })
-  .validator((d: number) => d)
-  .handler(async ({ data }) => {
-    const count = await readCount()
-    await fs.promises.writeFile(filePath, `${count + data}`)
-  })
+import { Grid, GridCol, NumberInput, PasswordInput } from "@mantine/core"
+import { createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute('/')({
-  component: Home,
-  loader: async () => await getCount(),
+  component: Home
 })
 
 function Home() {
-  const router = useRouter()
   const state = Route.useLoaderData()
 
   return (
-    <button
-      type="button"
-      onClick={() => {
-        updateCount({ data: 1 }).then(() => {
-          router.invalidate()
-        })
-      }}
-    >
-      Add 1 to {state}?
-    </button>
+    <div style={{padding: '4%'}}>
+      <Grid
+        type="container"
+        breakpoints={{xs: '100px', sm: '200px', md: '300px', lg: '400px', xl: '500px'}}
+      >
+          <GridCol span={{ base: 12, md: 12, lg: 6 }}>
+            <div style={{width: '100%', height: '100%', backgroundColor: 'crimson'}}>
+              <h1>Book selection</h1>
+              <form>
+                <NumberInput label="Code" placeholder="Enter code"/>
+                <PasswordInput label="Password" placeholder="Enter password"/>
+              </form>
+            </div>
+          </GridCol>
+          <GridCol span={{ base: 12, md: 12, lg: 6 }}>
+            <div style={{width: '100%', height: '100%', backgroundColor: 'green'}}>
+              <h1>Wizforms</h1>
+            </div>
+          </GridCol>
+          <GridCol span={{ base: 12, md: 12, lg: 6 }}>            
+            <div style={{width: '100%', height: '100%', backgroundColor: 'blue'}}>
+              <h1>Collections</h1>
+            </div></GridCol>
+          <GridCol span={{ base: 12, md: 12, lg: 6 }}>
+            <div style={{width: '100%', height: '100%', backgroundColor: 'yellow'}}>
+              <h1>Map</h1>
+            </div>
+          </GridCol>
+      </Grid>
+    </div>
   )
 }
