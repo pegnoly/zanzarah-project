@@ -14,7 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as WizformsImport } from './routes/wizforms'
 import { Route as BooksImport } from './routes/books'
 import { Route as IndexImport } from './routes/index'
-import { Route as WizformIdImport } from './routes/wizform/$id'
+import { Route as WizformsFocusedIdImport } from './routes/wizforms/focused.$id'
 
 // Create/Update Routes
 
@@ -36,10 +36,10 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const WizformIdRoute = WizformIdImport.update({
-  id: '/wizform/$id',
-  path: '/wizform/$id',
-  getParentRoute: () => rootRoute,
+const WizformsFocusedIdRoute = WizformsFocusedIdImport.update({
+  id: '/focused/$id',
+  path: '/focused/$id',
+  getParentRoute: () => WizformsRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -67,61 +67,71 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WizformsImport
       parentRoute: typeof rootRoute
     }
-    '/wizform/$id': {
-      id: '/wizform/$id'
-      path: '/wizform/$id'
-      fullPath: '/wizform/$id'
-      preLoaderRoute: typeof WizformIdImport
-      parentRoute: typeof rootRoute
+    '/wizforms/focused/$id': {
+      id: '/wizforms/focused/$id'
+      path: '/focused/$id'
+      fullPath: '/wizforms/focused/$id'
+      preLoaderRoute: typeof WizformsFocusedIdImport
+      parentRoute: typeof WizformsImport
     }
   }
 }
 
 // Create and export the route tree
 
+interface WizformsRouteChildren {
+  WizformsFocusedIdRoute: typeof WizformsFocusedIdRoute
+}
+
+const WizformsRouteChildren: WizformsRouteChildren = {
+  WizformsFocusedIdRoute: WizformsFocusedIdRoute,
+}
+
+const WizformsRouteWithChildren = WizformsRoute._addFileChildren(
+  WizformsRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/books': typeof BooksRoute
-  '/wizforms': typeof WizformsRoute
-  '/wizform/$id': typeof WizformIdRoute
+  '/wizforms': typeof WizformsRouteWithChildren
+  '/wizforms/focused/$id': typeof WizformsFocusedIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/books': typeof BooksRoute
-  '/wizforms': typeof WizformsRoute
-  '/wizform/$id': typeof WizformIdRoute
+  '/wizforms': typeof WizformsRouteWithChildren
+  '/wizforms/focused/$id': typeof WizformsFocusedIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/books': typeof BooksRoute
-  '/wizforms': typeof WizformsRoute
-  '/wizform/$id': typeof WizformIdRoute
+  '/wizforms': typeof WizformsRouteWithChildren
+  '/wizforms/focused/$id': typeof WizformsFocusedIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/books' | '/wizforms' | '/wizform/$id'
+  fullPaths: '/' | '/books' | '/wizforms' | '/wizforms/focused/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/books' | '/wizforms' | '/wizform/$id'
-  id: '__root__' | '/' | '/books' | '/wizforms' | '/wizform/$id'
+  to: '/' | '/books' | '/wizforms' | '/wizforms/focused/$id'
+  id: '__root__' | '/' | '/books' | '/wizforms' | '/wizforms/focused/$id'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BooksRoute: typeof BooksRoute
-  WizformsRoute: typeof WizformsRoute
-  WizformIdRoute: typeof WizformIdRoute
+  WizformsRoute: typeof WizformsRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BooksRoute: BooksRoute,
-  WizformsRoute: WizformsRoute,
-  WizformIdRoute: WizformIdRoute,
+  WizformsRoute: WizformsRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -136,8 +146,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/books",
-        "/wizforms",
-        "/wizform/$id"
+        "/wizforms"
       ]
     },
     "/": {
@@ -147,10 +156,14 @@ export const routeTree = rootRoute
       "filePath": "books.tsx"
     },
     "/wizforms": {
-      "filePath": "wizforms.tsx"
+      "filePath": "wizforms.tsx",
+      "children": [
+        "/wizforms/focused/$id"
+      ]
     },
-    "/wizform/$id": {
-      "filePath": "wizform/$id.tsx"
+    "/wizforms/focused/$id": {
+      "filePath": "wizforms/focused.$id.tsx",
+      "parent": "/wizforms"
     }
   }
 }

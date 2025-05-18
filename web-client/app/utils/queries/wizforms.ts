@@ -8,17 +8,21 @@ const query = `
     query wizformsQuery($bookId: ID!, $enabled: Boolean, $elementFilter: WizformElementType, $nameFilter: String) {
         wizforms(bookId: $bookId, enabled: $enabled, elementFilter: $elementFilter, nameFilter: $nameFilter) {
             name,
-            icon64
+            icon64,
+            id,
+            number
         }
     }    
 `
 
 type WizformModel = {
+    id: string,
     name: string,
-    icon64
+    icon64: string,
+    number: number
 }
 
-type WizformsModel = {
+export type WizformsModel = {
     wizforms: WizformModel[]
 }
 
