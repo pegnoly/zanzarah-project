@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { graphql } from "app/graphql";
-import { WizformElementType } from "app/graphql/graphql";
+import { graphql } from "../../graphql";
+import { WizformElementType } from "../../graphql/graphql"
 import request from "graphql-request";
 
 const query = `
@@ -15,7 +15,7 @@ const query = `
     }    
 `
 
-type WizformModel = {
+export type WizformSimpleModel = {
     id: string,
     name: string,
     icon64: string,
@@ -23,7 +23,7 @@ type WizformModel = {
 }
 
 export type WizformsModel = {
-    wizforms: WizformModel[]
+    wizforms: WizformSimpleModel[]
 }
 
 export type WizformsQueryVariables = {
@@ -48,4 +48,13 @@ const fetchWizforms = createServerFn({method: 'POST'})
 export const fetchWizformsOptions = (variables: WizformsQueryVariables) => queryOptions({
     queryKey: ['wizforms'],
     queryFn: () => fetchWizforms({data: variables})
-})
+});
+
+export const fetchWizformsOptionsClient = (variables: WizformsQueryVariables) => queryOptions({
+    queryKey: ['wizforms_client'],
+    queryFn: async() => request<WizformsModel | undefined, WizformsQueryVariables>({
+        url: 'https://zz-webapi-cv7m.shuttle.app/', 
+        document: query,
+        variables: variables
+    })
+}) 
