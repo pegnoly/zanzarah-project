@@ -1,9 +1,9 @@
-use sea_orm::{prelude::Expr, sea_query::{OnConflict, SimpleExpr}, ActiveValue::Set, ColumnTrait, Condition, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, TransactionTrait};
+use sea_orm::{prelude::Expr, sea_query::{OnConflict, SimpleExpr}, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, IntoActiveModel, QueryFilter, QueryOrder, TransactionTrait};
 use uuid::Uuid;
 
 use crate::error::ZZApiError;
 
-use super::models::{book::{self, BookModel}, element::{self, ElementModel}, wizform::{self, WizformElementType, WizformModel}};
+use super::models::{book::{self, BookModel}, element::{self, ElementModel}, wizform::{self, WizformElementType, WizformModel, WizformUpdateModel}};
 
 pub struct BookRepository;
 
@@ -151,5 +151,31 @@ impl BookRepository {
         }
         transaction.commit().await?;
         Ok(())
+    }
+
+    pub async fn update_wizform(
+        &self,
+        db: &DatabaseConnection,
+        update_model: WizformUpdateModel
+    ) -> Result<(), ZZApiError> {
+        if let Some(existing_model) = wizform::Entity::find_by_id(update_model.id.parse::<Uuid>()?).one(db).await? {
+            let mut model_to_update = existing_model.into_active_model();
+            if let Some(element) = update_model.element {
+                model_to_update.element = Set(element);
+            }
+            if let Some(enabled) = update_model.enabled {
+                model_to_update.enabled = Set(enabled);
+            }
+            if let Some(name) = update_model.name {
+                model_to_update.name = Set(name);
+            }
+            if let Some(desc) = update_model.description {
+                model_to_update.description = Set(desc);
+            }
+            model_to_update.update(db).await?;
+            Ok(())
+        } else {
+            Err(ZZApiError::SeaOrmError(DbErr::RecordNotFound("No record for wizform supposed to be updated".to_string())))
+        }
     }
 }

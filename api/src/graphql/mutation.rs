@@ -2,7 +2,7 @@ use async_graphql::Context;
 use itertools::Itertools;
 use sea_orm::DatabaseConnection;
 
-use crate::{error::ZZApiError, services::{auth::prelude::AuthRepository, book::{models::wizform::{WizformInputModel, WizformModel}, repo::BookRepository}}};
+use crate::{error::ZZApiError, services::{auth::prelude::AuthRepository, book::{models::wizform::{WizformInputModel, WizformModel, WizformUpdateModel}, repo::BookRepository}}};
 
 pub struct Mutation;
 
@@ -18,6 +18,11 @@ pub struct RegisterUserResponse {
 
 #[derive(async_graphql::SimpleObject)]
 pub struct EmailConfirmationResponse {
+    pub message: String
+}
+
+#[derive(async_graphql::SimpleObject)]
+pub struct UpdateWizformResponse {
     pub message: String
 }
 
@@ -104,6 +109,38 @@ impl Mutation {
         match repo.confirm_email(db, email, code).await {
             Ok(()) => {
                 Ok(EmailConfirmationResponse { message: "Email successfully confirmed".to_string() })
+            },
+            Err(error) => {
+                tracing::info!("{}. Error: {:#?}.", &error_params, &error);
+                Err(error)
+            }
+        }
+    }
+
+    async fn update_wizform(
+        &self,
+        context: &Context<'_>,
+        update_model: WizformUpdateModel,
+    ) -> Result<UpdateWizformResponse, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!("Failed to get wizform service from context. {}", &error.message);
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!("Failed to get database connection from context. {}", &error.message);
+            ZZApiError::Empty
+        })?;
+
+        let error_params = format!("
+            Failed to update wizforms.
+            Params: update model: {:#?}
+        ", &update_model);
+
+        let success_message = format!("Wizform {:?} updated successfully", &update_model.id);
+
+        match service.update_wizform(db, update_model).await {
+            Ok(()) => {
+                Ok(UpdateWizformResponse { message: success_message })
             },
             Err(error) => {
                 tracing::info!("{}. Error: {:#?}.", &error_params, &error);

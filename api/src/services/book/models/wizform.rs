@@ -201,3 +201,12 @@ impl TryFrom<WizformInputModel> for WizformModel {
         })
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, async_graphql::InputObject)]
+pub struct WizformUpdateModel {
+    pub id: async_graphql::ID,
+    pub enabled: Option<bool>,
+    pub element: Option<WizformElementType>,
+    pub name: Option<String>,
+    pub description: Option<String>
+}

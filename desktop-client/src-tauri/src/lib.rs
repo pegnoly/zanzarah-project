@@ -1,4 +1,4 @@
-use app::prelude::{try_register_user, try_confirm_email, load_books, load_current_book, start_parsing, test, AppConfig};
+use app::prelude::{load_books, load_current_book, load_elements, load_wizform_for_edit, load_wizforms, start_parsing, test, try_confirm_email, try_register_user, AppConfig};
 use reqwest::Client;
 use services::prelude::ZanzarahApiService;
 
@@ -23,7 +23,10 @@ pub async fn run() {
             try_confirm_email,
             load_books,
             load_current_book,
-            start_parsing
+            start_parsing,
+            load_wizforms,
+            load_wizform_for_edit,
+            load_elements
             // parser::commands::try_pick_directory,
             // parser::commands::try_create_book,
             // parser::commands::try_load_book,

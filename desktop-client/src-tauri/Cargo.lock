@@ -749,6 +749,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "desktop-client"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "base64 0.22.1",
+ "binary-reader",
+ "bmp",
+ "chrono",
+ "cynic",
+ "cynic-codegen",
+ "encoding_rs",
+ "human_regex",
+ "itertools",
+ "log",
+ "log4rs",
+ "machine-uid",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "strum",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-shell",
+ "thiserror 2.0.12",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "destructure_traitobject"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5925,34 +5955,4 @@ dependencies = [
  "static_assertions",
  "syn 2.0.100",
  "winnow 0.7.4",
-]
-
-[[package]]
-name = "zz-parser"
-version = "0.1.0"
-dependencies = [
- "argon2",
- "base64 0.22.1",
- "binary-reader",
- "bmp",
- "chrono",
- "cynic",
- "cynic-codegen",
- "encoding_rs",
- "human_regex",
- "itertools",
- "log",
- "log4rs",
- "machine-uid",
- "reqwest",
- "serde",
- "serde_json",
- "strum",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-shell",
- "thiserror 2.0.12",
- "tokio",
- "uuid",
 ]

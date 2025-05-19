@@ -6,7 +6,7 @@ use serde::de;
 use tauri::State;
 use uuid::Uuid;
 
-use crate::{error::ZZParserError, services::prelude::{BookFullModel, ConfirmEmailPayload, ParseProcessor, RegisterUserPayload, ZanzarahApiService}};
+use crate::{error::ZZParserError, services::prelude::{BookFullModel, ConfirmEmailPayload, ElementModel, ElementsPayload, FilterWizformsPayload, ParseProcessor, RegisterUserPayload, WizformEditableModel, WizformElementType, WizformSimpleModel, ZanzarahApiService}};
 
 use super::{config::{AppConfig, BookConfigSchema}, types::BookFrontendModel, utils::check_local_book};
 
@@ -37,8 +37,18 @@ pub async fn load_books(
 
 #[tauri::command]
 pub async fn load_current_book(
+    //zanzarah_service: State<'_, ZanzarahApiService>,
     app_config: State<'_, AppConfig>,
 ) -> Result<Uuid, ZZParserError> {
+    // if let Some(books) = zanzarah_service.get_books().await? {
+    //     if let Some(book) = books.into_iter().find(|b| Uuid::from_str(b.id.inner()).unwrap() == app_config.current_book) {
+    //         Ok(Some(BookFrontendModel::try_from(book).unwrap()))
+    //     } else {
+    //         Ok(None)
+    //     }
+    // } else {
+    //     Ok(None)
+    // }
     Ok(app_config.current_book)
 }
 
@@ -126,5 +136,36 @@ pub async fn start_parsing(
             log::error!("Failed to upload wizforms: {:#?}", &error);
             Err(error)
         }
+    }
+}
+
+#[tauri::command]
+pub async fn load_elements(
+    zanzarah_service: State<'_, ZanzarahApiService>,
+    book_id: Uuid
+) -> Result<Vec<ElementModel>, ZZParserError> {
+    zanzarah_service.load_elements(ElementsPayload::new(book_id)).await
+}
+
+#[tauri::command]
+pub async fn load_wizforms(
+    zanzarah_service: State<'_, ZanzarahApiService>,
+    book_id: Uuid,
+    element: WizformElementType,
+    name: String
+) -> Result<Vec<WizformSimpleModel>, ZZParserError> {
+    let payload = FilterWizformsPayload {book_id, element, name};
+    zanzarah_service.get_wizforms(payload).await
+}
+
+#[tauri::command]
+pub async fn load_wizform_for_edit(
+    zanzarah_service: State<'_, ZanzarahApiService>,
+    id: Uuid
+) -> Result<Option<WizformEditableModel>, ZZParserError> {
+    if let Some(wizform) = zanzarah_service.get_wizform(id).await? {
+        Ok(Some(wizform))
+    } else {
+        Ok(None)
     }
 }

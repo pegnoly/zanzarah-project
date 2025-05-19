@@ -5,15 +5,15 @@ edition = "2024"
 
 [dependencies]
 axum = "0.8.1"
-shuttle-axum = "0.53.0"
-shuttle-runtime = "0.53.0"
+shuttle-axum = "0.54.0"
+shuttle-runtime = "0.54.0"
 tokio = "1.28.2"
 sqlx = {version = "0.8.3", features = ["runtime-tokio-rustls", "postgres", "uuid", "json"]}
 serde = { version = "1.0.209", features = ["derive"] }
 uuid = { version = "1.10.0", features = ["v4"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-shuttle-shared-db = { version = "0.53.0", features = ["postgres", "sqlx"] }
+shuttle-shared-db = { version = "0.54.0", features = ["postgres", "sqlx"] }
 strum = { version = "0.26.3", features = ["derive"] }
 async-graphql = {version = "7.0.13", features = ["uuid", "chrono"]}
 async-graphql-axum = "7.0.13"

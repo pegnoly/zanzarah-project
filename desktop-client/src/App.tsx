@@ -1,22 +1,12 @@
-import { invoke } from "@tauri-apps/api/core";
-import { Button, MantineProvider } from "@mantine/core";
-import BooksMain from "./components/Book/main";
-import AuthMain from "./components/auth/main";
+import { MantineProvider } from "@mantine/core";
+import Header from "./components/layout/header";
+import Body from "./components/layout/body";
 
 function App() {
-
-    async function test() {
-        await invoke("test");
-    }
-
     return (
         <MantineProvider>
-            {/* <AppStateProvider>
-                <BooksFacade/>
-            </AppStateProvider> */}
-            <Button onClick={() => test()}>123</Button>
-            <AuthMain/>
-            <BooksMain/>
+            <Header/>
+            <Body/>
         </MantineProvider>
     );
 }

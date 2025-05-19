@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use strum::{Display, EnumIter, EnumString, FromRepr};
 
 use crate::services::zanzarah_api::schema;
@@ -74,4 +75,48 @@ pub struct InsertWizformsResponse {
 pub struct WizformsBulkInsertMutation {
     #[arguments(wizforms: $wizforms)]
     pub insert_wizforms_bulk: InsertWizformsResponse
+}
+
+#[derive(Debug, cynic::QueryFragment, Serialize, Clone)]
+#[cynic(graphql_type = "WizformModel")]
+pub struct WizformSimpleModel {
+    pub id: cynic::Id,
+    pub name: String,
+    pub icon64: String
+}
+
+#[derive(Debug, cynic::QueryVariables)]
+pub struct WizformsQueryVariables {
+    pub book_id: cynic::Id,
+    pub element: WizformElementType,
+    pub name: String
+}
+
+#[derive(Debug, cynic::QueryFragment)]
+#[cynic(graphql_type = "Query", variables = "WizformsQueryVariables")]
+pub struct WizformsQuery {
+    #[arguments(bookId: $book_id, elementFilter: $element, nameFilter: $name)]
+    pub wizforms: Vec<WizformSimpleModel>
+}
+
+#[derive(Debug, cynic::QueryFragment, Serialize, Clone)]
+#[cynic(graphql_type = "WizformModel")]
+pub struct WizformEditableModel {
+    pub id: cynic::Id,
+    pub enabled: bool,
+    pub element: WizformElementType,
+    pub name: String,
+    pub description: String
+}
+
+#[derive(Debug, cynic::QueryVariables)]
+pub struct WizformQueryVariables {
+    pub id: cynic::Id
+}
+
+#[derive(Debug, cynic::QueryFragment)]
+#[cynic(graphql_type = "Query", variables = "WizformQueryVariables")]
+pub struct WizformQuery {
+    #[arguments(id: $id)]
+    pub wizform: Option<WizformEditableModel>
 }

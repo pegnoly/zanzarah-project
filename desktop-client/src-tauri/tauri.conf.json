@@ -1,7 +1,7 @@
 {
-  "productName": "zz-parser",
+  "productName": "desktop-client",
   "version": "0.1.0",
-  "identifier": "com.zz-parser.app",
+  "identifier": "com.desktop-client.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "zz-parser",
+        "title": "desktop-client",
         "width": 1020,
         "height": 740
       }

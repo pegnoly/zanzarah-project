@@ -1,20 +1,11 @@
 import { useEffect, useState } from "react";
 import { Book } from "./types";
-import { createStyles } from "antd-style";
 import { invoke } from "@tauri-apps/api/core";
 import booksStore from "./store";
 import { UUID } from "crypto";
 import BooksSelector from "./selector";
-import CurrentBook from "./current";
+import CurrentBook from "./currentBook";
 import { useShallow } from "zustand/shallow";
-
-const booksMainStyles = createStyles(({}) => ({
-    header: {
-        width: '99vw',
-        height: '15vh'
-    }
-}))
-
 
 function BooksMain() {
     const [books, setBooks] = useState<Book[]>([]);
@@ -37,10 +28,10 @@ function BooksMain() {
             .then((value) => setCurrentBookId(value));
     }
 
-    const styles = booksMainStyles();
-
-    return <div className={styles.styles.header}>
-        <CurrentBook book={books.find((b) => b.id == currentBookId)}/>
+    return <div style={{width: '100%', height: '100%'}}>
+        <div style={{width: '33%', height: '100%'}}>
+            <CurrentBook book={books.find((b) => b.id == currentBookId)}/>
+        </div>
         <BooksSelector books={books}/>
     </div>
 }

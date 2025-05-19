@@ -4,7 +4,18 @@ pub use super::wizform::{
     WizformInputModel, 
     InsertWizformsResponse, 
     WizformsBulkInsertMutation, 
-    WizformsBulkInsertMutationArguments
+    WizformsBulkInsertMutationArguments,
+    WizformSimpleModel,
+    WizformsQueryVariables,
+    WizformsQuery,
+    WizformEditableModel,
+    WizformQueryVariables,
+    WizformQuery
+};
+pub use super::element:: {
+    ElementModel,
+    ElementsQueryVariables,
+    ElementsQuery
 };
 pub use super::book::{BookFullModel, BooksQuery, BooksQueryArguments};
 pub use super::user::{RegisterUserMutation, RegisterUserMutationVariables, RegisterUserResponse, ConfirmEmailMutation, ConfirmEmailMutationVariables, EmailConfirmationResponse};
