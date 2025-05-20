@@ -9,7 +9,7 @@ pub struct Model {
     pub name: String,
     pub directory: String,
     pub initialized: bool,
-    pub downloadable: bool,
+    pub available: bool,
     pub major_version: i16,
     pub minor_version: i16,
     pub patch_version: i16
@@ -36,7 +36,7 @@ impl BookModel {
     }
     
     async fn available(&self) -> bool {
-        self.downloadable
+        self.available
     }
     
     async fn major_version(&self) -> i16 {

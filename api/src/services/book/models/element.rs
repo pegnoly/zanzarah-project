@@ -7,7 +7,7 @@ use super::wizform::WizformElementType;
 #[sea_orm(table_name = "elements")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
+    pub id: i32,
     pub book_id: Uuid,
     pub name: String,
     pub element: WizformElementType,

@@ -76,7 +76,7 @@ impl BookRepository {
     ) -> Result<Vec<BookModel>, ZZApiError> {
         let condition = Condition::all()
         .add_option(
-            available.map(|available| Expr::col(book::Column::Downloadable).eq(available))
+            available.map(|available| Expr::col(book::Column::Available).eq(available))
         );
 
         Ok(book::Entity::find()

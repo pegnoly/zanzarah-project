@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use crate::services::prelude::{ConfirmEmailMutationVariables, ElementsQueryVariables, RegisterUserMutationVariables, WizformElementType, WizformsQueryVariables};
+use crate::services::prelude::{ConfirmEmailMutationVariables, ElementsQueryVariables, RegisterUserMutationVariables, WizformElementType, WizformUpdateModel, WizformUpdateMutationArguments, WizformsQueryVariables};
 
 pub struct RegisterUserPayload {
     pub email: String,
@@ -62,5 +62,55 @@ impl From<ElementsPayload> for ElementsQueryVariables {
             book_id: value.book_id.into(),
             enabled: value.enabled
         }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct UpdateWizformPayload {
+    pub id: Uuid,
+    pub enabled: Option<bool>,
+    pub element: Option<WizformElementType>,
+    pub name: Option<String>,
+    pub description: Option<String>
+}
+
+impl UpdateWizformPayload {
+    pub fn new(id: Uuid) -> Self {
+        UpdateWizformPayload {
+            id,
+            ..Default::default()
+        }
+    }
+
+    pub fn enabled(mut self, enabled: bool) -> Self {
+        self.enabled = Some(enabled);
+        self
+    }
+
+    pub fn with_element(mut self, element: WizformElementType) -> Self {
+        self.element = Some(element);
+        self
+    }
+
+    pub fn with_name(mut self, name: String) -> Self {
+        self.name = Some(name);
+        self
+    }
+
+    pub fn with_description(mut self, decription: String) -> Self {
+        self.description = Some(decription);
+        self
+    }
+}
+
+impl From<UpdateWizformPayload> for WizformUpdateMutationArguments {
+    fn from(value: UpdateWizformPayload) -> Self {
+        WizformUpdateMutationArguments { update_model: WizformUpdateModel {
+            id: value.id.into(),
+            enabled: value.enabled,
+            element: value.element,
+            name: value.name,
+            description: value.description,
+        } }
     }
 }

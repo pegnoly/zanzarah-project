@@ -34,7 +34,7 @@ pub enum WizformElementType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel, async_graphql::InputObject)]
-#[sea_orm(table_name = "wizforms_new")]
+#[sea_orm(table_name = "wizforms")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,

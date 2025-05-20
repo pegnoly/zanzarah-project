@@ -3,16 +3,16 @@ pub mod prelude;
 
 use cynic::{http::ReqwestExt, MutationBuilder, QueryBuilder};
 use payloads::RegisterUserPayload;
-use prelude::{ConfirmEmailPayload, ElementsPayload, FilterWizformsPayload};
+use prelude::{ConfirmEmailPayload, ElementsPayload, FilterWizformsPayload, UpdateWizformPayload};
 use reqwest::Client;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::error::ZZParserError;
 
-use super::prelude::{BookFullModel, BooksQuery, BooksQueryArguments, ConfirmEmailMutation, ConfirmEmailMutationVariables, ElementModel, ElementsQuery, ElementsQueryVariables, EmailConfirmationResponse, InsertWizformsResponse, RegisterUserMutation, RegisterUserMutationVariables, RegisterUserResponse, WizformEditableModel, WizformInputModel, WizformQuery, WizformQueryVariables, WizformSimpleModel, WizformsBulkInsertMutation, WizformsBulkInsertMutationArguments, WizformsQuery, WizformsQueryVariables};
+use super::prelude::{BookFullModel, BooksQuery, BooksQueryArguments, ConfirmEmailMutation, ConfirmEmailMutationVariables, ElementModel, ElementsQuery, ElementsQueryVariables, EmailConfirmationResponse, InsertWizformsResponse, RegisterUserMutation, RegisterUserMutationVariables, RegisterUserResponse, UpdateWizformResponse, WizformEditableModel, WizformInputModel, WizformQuery, WizformQueryVariables, WizformSimpleModel, WizformUpdateMutation, WizformUpdateMutationArguments, WizformsBulkInsertMutation, WizformsBulkInsertMutationArguments, WizformsQuery, WizformsQueryVariables};
 
-const ZANZARAH_API_URL: &str = "https://zz-webapi-cv7m.shuttle.app/";
+const ZANZARAH_API_URL: &str = "https://zanzarah-project-api-lyaq.shuttle.app/";
 
 pub struct ZanzarahApiService {
     client: RwLock<Client>
@@ -134,5 +134,22 @@ impl ZanzarahApiService {
         } else {
             Err(ZZParserError::UnknownGraphQLError)
         }         
+    }
+
+    pub async fn update_wizform(&self, payload: UpdateWizformPayload) -> Result<UpdateWizformResponse, ZZParserError> {
+        let client = self.client.read().await;
+        let query = WizformUpdateMutation::build(
+            WizformUpdateMutationArguments::from(payload)
+        );
+        let response = client.post(ZANZARAH_API_URL)
+            .run_graphql(query)
+            .await?;
+        if let Some(data) = response.data {
+            Ok(data.update_wizform)
+        } else if let Some(errors) = response.errors {
+            Err(ZZParserError::GraphQLErrorsArray { route: "Update wizform".to_string(), errors })
+        } else {
+            Err(ZZParserError::UnknownGraphQLError)
+        }   
     }
 }

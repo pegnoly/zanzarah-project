@@ -1,5 +1,6 @@
 import { Button, Space, Stack, Text, Tooltip } from "@mantine/core";
 import { Book } from "./types";
+import { invoke } from "@tauri-apps/api/core";
 
 function CurrentBook(params: {book: Book | undefined}) {
     
@@ -15,7 +16,7 @@ function CurrentBook(params: {book: Book | undefined}) {
                     <Text size="md" lineClamp={1}>{`${params.book.directory}`}</Text>
                 </Tooltip>
             </div>
-            <Button>Parse files</Button>
+            <Button onClick={() => invoke("start_parsing")}>Parse files</Button>
         </Stack>
     }</div>
 }

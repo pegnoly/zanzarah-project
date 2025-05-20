@@ -10,7 +10,11 @@ pub use super::wizform::{
     WizformsQuery,
     WizformEditableModel,
     WizformQueryVariables,
-    WizformQuery
+    WizformQuery,
+    WizformUpdateModel,
+    WizformUpdateMutationArguments,
+    WizformUpdateMutation,
+    UpdateWizformResponse
 };
 pub use super::element:: {
     ElementModel,

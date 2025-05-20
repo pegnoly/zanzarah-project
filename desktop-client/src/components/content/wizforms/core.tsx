@@ -11,7 +11,8 @@ import WizformFocused from "./focused";
 export type WizformSimple = {
     id: UUID,
     name: string,
-    icon64: string
+    icon64: string,
+    enabled: boolean
 }
 
 function WizformsCore() {

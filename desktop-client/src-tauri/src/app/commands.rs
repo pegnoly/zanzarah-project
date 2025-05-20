@@ -6,7 +6,7 @@ use serde::de;
 use tauri::State;
 use uuid::Uuid;
 
-use crate::{error::ZZParserError, services::prelude::{BookFullModel, ConfirmEmailPayload, ElementModel, ElementsPayload, FilterWizformsPayload, ParseProcessor, RegisterUserPayload, WizformEditableModel, WizformElementType, WizformSimpleModel, ZanzarahApiService}};
+use crate::{error::ZZParserError, services::prelude::{BookFullModel, ConfirmEmailPayload, ElementModel, ElementsPayload, FilterWizformsPayload, ParseProcessor, RegisterUserPayload, UpdateWizformPayload, WizformEditableModel, WizformElementType, WizformSimpleModel, ZanzarahApiService}};
 
 use super::{config::{AppConfig, BookConfigSchema}, types::BookFrontendModel, utils::check_local_book};
 
@@ -168,4 +168,28 @@ pub async fn load_wizform_for_edit(
     } else {
         Ok(None)
     }
+}
+
+#[tauri::command]
+pub async fn update_wizform_display_status(
+    zanzarah_service: State<'_, ZanzarahApiService>,
+    id: Uuid,
+    enabled: bool
+) -> Result<(), ZZParserError> {
+    let payload = UpdateWizformPayload::new(id).enabled(enabled);
+    let message = zanzarah_service.update_wizform(payload).await?;
+    log::info!("Wizform display status updated: {:#?}", &message.message);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_wizform_element(
+    zanzarah_service: State<'_, ZanzarahApiService>,
+    id: Uuid,
+    element: WizformElementType
+) -> Result<(), ZZParserError> {
+    let payload = UpdateWizformPayload::new(id).with_element(element);
+    let message = zanzarah_service.update_wizform(payload).await?;
+    log::info!("Wizform element updated: {:#?}", &message.message);
+    Ok(())
 }

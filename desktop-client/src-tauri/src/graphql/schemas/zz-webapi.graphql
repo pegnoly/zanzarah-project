@@ -110,6 +110,7 @@ type Mutation {
   insertWizformsBulk(wizforms: [WizformInputModel!]!): InsertWizformsResponse!
   tryRegisterUser(email: String!, password: String!): RegisterUserResponse!
   confirmEmail(email: String!, code: String!): EmailConfirmationResponse!
+  updateWizform(updateModel: WizformUpdateModel!): UpdateWizformResponse!
 }
 
 enum PermissionType {
@@ -168,6 +169,10 @@ type Query {
 }
 
 type RegisterUserResponse {
+  message: String!
+}
+
+type UpdateWizformResponse {
   message: String!
 }
 
@@ -238,5 +243,13 @@ type WizformModel {
   description: String!
   icon64: String!
   name: String!
+}
+
+input WizformUpdateModel {
+  id: ID!
+  enabled: Boolean
+  element: WizformElementType
+  name: String
+  description: String
 }
 

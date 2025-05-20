@@ -1,5 +1,4 @@
+
 /target
-.shuttle-storage
-Secrets*.toml
-ServiceAccount*.toml
 .shuttle*
+Secrets*.toml

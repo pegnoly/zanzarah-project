@@ -20,29 +20,3 @@ export enum WizformElementType {
     Custom4 = "CUSTOM_4",
     Custom5 = "CUSTOM_5"
 }
-
-export type Wizform = {
-    id: string,
-    name: string,
-    element: number,
-    desc: string,
-    enabled: boolean,
-    filters: number[],
-    spawn_points: string[],
-    icon: string,
-    number: number
-}
-
-export type Filter = {
-    id: string,
-    book_id: string,
-    name: string,
-    filter_type: number,
-    enabled: boolean
-}
- 
-export type SpawnPoint = {
-    id: string,
-    book_id: string,
-    name: string
-}

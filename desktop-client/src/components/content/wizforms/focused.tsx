@@ -1,10 +1,11 @@
 import { Checkbox, Skeleton, Stack, Text } from "@mantine/core"
 import { UUID } from "crypto"
 import { useParams } from "react-router-dom"
-import { WizformElementType } from "../../types"
 import { useEffect, useState } from "react"
 import { invoke } from "@tauri-apps/api/core"
 import ElementsSelector from "../elements/selector"
+import useWizformsStore from "./store"
+import { WizformElementType } from "./types"
 
 export type WizformEditableModel = {
     id: UUID,
@@ -17,10 +18,12 @@ export type WizformEditableModel = {
 function WizformFocused() {
     const {id} = useParams()
     const [wizform, setWizform] = useState<WizformEditableModel | null>(null);
+    const setSelectedWizform = useWizformsStore(state => state.setCurrentId)
 
     useEffect(() => {
         if (id != undefined) {
             loadWizform();
+            setSelectedWizform(id);
         }
     }, [id]);
 
@@ -31,10 +34,12 @@ function WizformFocused() {
 
     async function updateEnabled(value: boolean) {
         setWizform({...wizform!, enabled: value});
+        await invoke("update_wizform_display_status", {id: wizform?.id, enabled: value});
     }
 
     async function updateElement(value: WizformElementType) {
         setWizform({...wizform!, element: value});
+        await invoke("update_wizform_element", {id: wizform?.id, element: value});
     }
 
     return <div style={{width: '65%', height: '100%', display: 'flex', flexDirection: 'column', paddingLeft: '3%', alignItems: 'center'}}>{
@@ -61,54 +66,12 @@ function WizformFocused() {
                         <ElementsSelector
                             current={wizform.element}
                             disabled={false}
+                            label="Magic element of wizform"
                             selectedCallback={updateElement}
                         />
                     </Stack>
                 </div>
             </div>
-{/*                 
-                <Typography.Text 
-                    style={{fontFamily: 'monospace', fontSize: 17, textAlign: 'center', paddingBottom: 5}}
-                >Основные параметры</Typography.Text>
-
-                <Row>
-                    <Col style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}  span={12}>
-                        <Typography.Text style={{fontFamily: 'cursive', fontSize: 14, paddingRight: 15}}>Имя:</Typography.Text>
-                        <Typography.Text style={{fontSize: 14, width: '70%', textAlign: 'center'}} editable={{
-                            onChange: (newText) => {handleNameUpdate(newText)}
-                        }}>{name}</Typography.Text>
-                    </Col>
-                    <Col style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}  span={12}>
-                            <Typography.Text style={{fontFamily: 'cursive'}}>Стихия:</Typography.Text>
-                            <Select
-                                style={{width: '50%', paddingLeft: 15}}
-                                disabled={!elementSelectionEnabled} 
-                                defaultValue={currentElement}
-                                value={currentElement}
-                                onChange={(e) => handleElementUpdate(e)}
-                            >
-                            {schema.elements.filter((e) => e.enabled).map((e, index) => (
-                                <Select.Option key={index} value={e.element}>{e.name}</Select.Option>
-                            ))}</Select>
-                            <Button
-                                type="link"
-                                style={{
-                                    color: elementSelectionEnabled ? "red" : "blue"
-                                }}
-                                shape="default"
-                                icon={<EditOutlined/>}
-                                onClick={() => setElementSelectionEnabled(!elementSelectionEnabled)}
-                            />
-                    </Col>
-                </Row>
-
-                <Typography.Text 
-                    style={{fontFamily: 'monospace', fontSize: 17, textAlign: 'center', paddingBottom: 5}}
-                >Описание</Typography.Text>
-
-                <Typography.Text editable={{
-                        onChange: (newText) => {handleDescUpdate(newText)}
-                    }}>{desc}</Typography.Text> */}
         </>
     }</div>
 }

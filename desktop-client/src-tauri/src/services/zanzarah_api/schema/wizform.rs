@@ -82,7 +82,8 @@ pub struct WizformsBulkInsertMutation {
 pub struct WizformSimpleModel {
     pub id: cynic::Id,
     pub name: String,
-    pub icon64: String
+    pub icon64: String,
+    pub enabled: bool
 }
 
 #[derive(Debug, cynic::QueryVariables)]
@@ -119,4 +120,30 @@ pub struct WizformQueryVariables {
 pub struct WizformQuery {
     #[arguments(id: $id)]
     pub wizform: Option<WizformEditableModel>
+}
+
+#[derive(Debug, cynic::QueryFragment)]
+pub struct UpdateWizformResponse {
+    pub message: String
+}
+
+#[derive(Debug, cynic::InputObject, Clone)]
+pub struct WizformUpdateModel {
+    pub id: cynic::Id,
+    pub enabled: Option<bool>,
+    pub element: Option<WizformElementType>,
+    pub name: Option<String>,
+    pub description: Option<String>
+}
+
+#[derive(Debug, cynic::QueryVariables)]
+pub struct WizformUpdateMutationArguments {
+    pub update_model: WizformUpdateModel
+}
+
+#[derive(Debug, cynic::QueryFragment)]
+#[cynic(graphql_type = "Mutation", variables = "WizformUpdateMutationArguments")]
+pub struct WizformUpdateMutation {
+    #[arguments(updateModel: $update_model)]
+    pub update_wizform: UpdateWizformResponse
 }
