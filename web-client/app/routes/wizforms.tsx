@@ -1,17 +1,17 @@
-import { createFileRoute, createRoute, Link, Outlet } from '@tanstack/react-router'
+import { createFileRoute, createRoute, Link, Outlet, useNavigate } from '@tanstack/react-router'
 import { WizformElementType, WizformModel } from '../graphql/graphql'
 import { fetchWizformsOptions, fetchWizformsOptionsClient, WizformSimpleModel, WizformsModel } from '../utils/queries/wizforms'
-import { Button, Card, Dialog, Image, Modal, Select, SimpleGrid, Stack, Text, TextInput } from '@mantine/core';
+import { Button, ButtonGroup, Card, Dialog, Image, Modal, Select, SimpleGrid, Stack, Text, TextInput } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
 import { useCommonStore } from '../stores/common';
 import { useShallow } from 'zustand/shallow'
+import ElementsSelector from '../components/utils/elementsSelector';
 
 export const Route = createFileRoute('/wizforms')({
     component: RouteComponent,
     loader: async ({context}) => {
         const queryData = context.queryClient.getQueryData<WizformsModel>(['wizforms']);
-        //console.log("Query data: ", queryData);
         if (queryData != undefined) {
             return queryData;
         } else {
@@ -24,7 +24,7 @@ export const Route = createFileRoute('/wizforms')({
             return data;
         }
     }
-})
+});
 
 function RouteComponent() {
     const wizformsData = Route.useLoaderData();
@@ -57,7 +57,6 @@ function RouteComponent() {
 function WizformsList(params: {
     models: WizformSimpleModel[] | undefined
 }) {
-  console.log("Rerendered with: ", params.models);
   const wizformsDisabled = useCommonStore(state => state.wizformsDisabled);
   return <SimpleGrid
         style={{padding: '3%'}}
@@ -79,6 +78,7 @@ function WizformsList(params: {
 function WizformsFilter(params: {
   filtersUpdatedCallback: () => void
 }) {
+  const navigate = useNavigate();
   const [opened, {open, close}] = useDisclosure(false);
   const [wizformsDisabled, setWizformsDisabled, elementFilter, nameFilter, setElementFilter, setNameFilter] = useCommonStore(useShallow((state) => [
     state.wizformsDisabled, 
@@ -90,33 +90,33 @@ function WizformsFilter(params: {
   ]));
 
   return <>
-    <Button disabled={wizformsDisabled} onClick={() => {
-        setWizformsDisabled(true);
-        open()
-      }}
-      size='lg' radius='xs' style={{position: 'sticky', bottom: '95%', left: '1%'}}>
-      Фильтры
-    </Button>
+    <ButtonGroup flex={1} style={{position: 'sticky', bottom: '95%', left: '1%'}}>
+      <Button disabled={wizformsDisabled} onClick={() => {
+          setWizformsDisabled(true);
+          open()
+        }}
+        size='lg' radius='xs' color='teal'>
+        Фильтры
+      </Button>
+      <Button color='grey' disabled={wizformsDisabled} onClick={() => navigate({to: "/"})} size='lg' radius='xs'>На главную</Button>
+    </ButtonGroup>
     <Dialog
       opened={opened}
       withBorder
       withCloseButton
       size='lg'
       radius='xs'
+      onClose={() => {
+        setWizformsDisabled(false);
+        close();
+      }}
     >
       <Stack>
-        <Select
-          value={elementFilter}
-          onChange={(value) => setElementFilter(value as WizformElementType)}
-          placeholder='Сортировать фей по стихии'
-          data={[
-            {label: 'Хаос', value: WizformElementType.Chaos},
-            {label: 'Воздух', value: WizformElementType.Air},
-            {label: 'Природа', value: WizformElementType.Nature},
-            {label: 'Вода', value: WizformElementType.Water},
-            {label: 'Тьма', value: WizformElementType.Dark},
-            {label: 'Свет', value: WizformElementType.Light}
-          ]}
+        <ElementsSelector 
+          label='Сортировать фей по стихии'
+          disabled={false}
+          current={elementFilter}
+          selectedCallback={setElementFilter}
         />
         <TextInput
           value={nameFilter} 

@@ -6,7 +6,7 @@ import { UUID } from "crypto";
 import { invoke } from "@tauri-apps/api/core";
 import booksStore from "../../header/store";
 import { Route, Routes } from "react-router-dom";
-import WizformFocused from "./focused";
+import WizformFocused, { WizformEditableModel } from "./focused";
 
 export type WizformSimple = {
     id: UUID,
@@ -31,11 +31,25 @@ function WizformsCore() {
             .then((values) => setWizforms(values));
     }
 
+    async function updateWizforms(value: WizformEditableModel) {
+        let updatedWizforms = wizforms.map((w) => {
+            if (w.id == value.id) {
+                return {...w, enabled: value.enabled}
+            } else {
+                return w
+            }
+        });
+        if (value.element != elementFilter) {
+            updatedWizforms = updatedWizforms.filter(w => w.id != value.id);
+        }
+        setWizforms(updatedWizforms);
+    }
+
     return <>
         <div style={{width: '100%', height: '100%', display: 'flex', flexDirection: 'row'}}>
             <WizformsList models={wizforms}/>
             <Routes>
-                <Route path="focused/:id" element={<WizformFocused/>}/>
+                <Route path="focused/:id" element={<WizformFocused updateCallback={updateWizforms}/>}/>
             </Routes>
         </div>
     </>

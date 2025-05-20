@@ -121,7 +121,7 @@ impl BookRepository {
                     wizform::Column::Element, wizform::Column::Magics, wizform::Column::Name, wizform::Column::Hitpoints, 
                     wizform::Column::Agility, wizform::Column::JumpAbility, wizform::Column::Precision, wizform::Column::EvolutionForm, 
                     wizform::Column::EvolutionName, wizform::Column::PreviousForm, wizform::Column::PreviousFormName, wizform::Column::EvolutionLevel, 
-                    wizform::Column::ExpModifier, wizform::Column::Enabled, wizform::Column::Description, wizform::Column::Icon64
+                    wizform::Column::ExpModifier, wizform::Column::Description, wizform::Column::Icon64
                 ])
                 .to_owned();
             let model_to_insert = wizform::ActiveModel {

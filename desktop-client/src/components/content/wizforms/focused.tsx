@@ -15,7 +15,9 @@ export type WizformEditableModel = {
     element: WizformElementType
 }
 
-function WizformFocused() {
+function WizformFocused(params: {
+    updateCallback: (value: WizformEditableModel) => void
+}) {
     const {id} = useParams()
     const [wizform, setWizform] = useState<WizformEditableModel | null>(null);
     const setSelectedWizform = useWizformsStore(state => state.setCurrentId)
@@ -34,11 +36,13 @@ function WizformFocused() {
 
     async function updateEnabled(value: boolean) {
         setWizform({...wizform!, enabled: value});
+        params.updateCallback({...wizform!, enabled: value});
         await invoke("update_wizform_display_status", {id: wizform?.id, enabled: value});
     }
 
     async function updateElement(value: WizformElementType) {
         setWizform({...wizform!, element: value});
+        params.updateCallback({...wizform!, element: value});
         await invoke("update_wizform_element", {id: wizform?.id, element: value});
     }
 

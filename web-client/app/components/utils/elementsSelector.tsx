@@ -1,0 +1,25 @@
+import { Select } from "@mantine/core";
+import { WizformElementType } from "../../graphql/graphql";
+import { useCommonStore } from "../../stores/common";
+
+function ElementsSelector(params: {
+    current: WizformElementType,
+    disabled: boolean,
+    label: string,
+    selectedCallback: (value: WizformElementType) => void
+}) {
+    const elements = useCommonStore(state => state.elements);
+    return <>
+        <Select
+            disabled={params.disabled} 
+            label={params.label}
+            value={params.current}
+            onChange={(value) => params.selectedCallback(value as WizformElementType)}
+            data={elements?.filter(element => element.enabled).map((element, _index) => ({
+                label: element.name, value: element.element
+            }))}
+        />
+    </>
+}
+
+export default ElementsSelector;

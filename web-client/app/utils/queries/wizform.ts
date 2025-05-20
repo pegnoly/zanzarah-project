@@ -66,7 +66,7 @@ const fetchWizform = createServerFn({method: 'POST'})
     async ({data}) => {
         console.info(`Fetching wizform ${data}`);
         const wizform = await request<WizformFullModel | undefined, WizformNameQueryVariables>(
-            'https://zz-webapi-cv7m.shuttle.app/', 
+            'https://zanzarah-project-api-lyaq.shuttle.app/', 
             wizformQueryDocument,
             {id: data}
         );

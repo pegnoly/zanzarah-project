@@ -1,9 +1,8 @@
-import { Button, Space, Stack, Text, Tooltip } from "@mantine/core";
+import { Button, Stack, Text, Tooltip } from "@mantine/core";
 import { Book } from "./types";
 import { invoke } from "@tauri-apps/api/core";
 
 function CurrentBook(params: {book: Book | undefined}) {
-    
     
     return <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>{
         params.book == undefined ?

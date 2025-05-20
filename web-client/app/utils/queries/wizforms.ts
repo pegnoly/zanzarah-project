@@ -38,7 +38,7 @@ const fetchWizforms = createServerFn({method: 'POST'})
     .handler(
         async ({data}) => {
             const wizforms = await request<WizformsModel | undefined, WizformsQueryVariables>(
-                'https://zz-webapi-cv7m.shuttle.app/', 
+                'https://zanzarah-project-api-lyaq.shuttle.app/', 
                 query,
                 data
             );
@@ -53,7 +53,7 @@ export const fetchWizformsOptions = (variables: WizformsQueryVariables) => query
 export const fetchWizformsOptionsClient = (variables: WizformsQueryVariables) => queryOptions({
     queryKey: ['wizforms_client'],
     queryFn: async() => request<WizformsModel | undefined, WizformsQueryVariables>({
-        url: 'https://zz-webapi-cv7m.shuttle.app/', 
+        url: 'https://zanzarah-project-api-lyaq.shuttle.app/', 
         document: query,
         variables: variables
     })

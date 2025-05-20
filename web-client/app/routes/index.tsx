@@ -1,23 +1,61 @@
 // app/routes/index.tsx
 
-import { Box, Grid, GridCol, NumberInput, PasswordInput } from "@mantine/core"
+import { Box, Card, CardSection, Grid, GridCol, NumberInput, PasswordInput, SimpleGrid } from "@mantine/core"
 import { createFileRoute } from "@tanstack/react-router"
 import WizformsPreview from "../components/home/wizformsPreview"
 import classes from "../styles/main.module.css"
-import BooksPreview from "../components/home/booksPreview"
+import BooksPreview, { getBook } from "../components/home/booksPreview"
 import CollectionsPreview from "../components/home/collectionsPreview"
 import MapPreview from "../components/home/mapPreview"
+import { useCommonStore } from "../stores/common"
+import { useShallow } from "zustand/shallow"
+import { useEffect, useState } from "react"
+import { fetchElementsOptions } from "../utils/queries/elements"
+import { getCookie, setCookie } from "@tanstack/react-start/server"
 
 export const Route = createFileRoute('/')({
-  component: Home
+  component: Home,
+  beforeLoad: async({cause}) => {
+    console.log("before load.... ", cause);
+  },
+  loader: async({}) => {
+    return getBook();
+  }
 })
 
 function Home() {
-  const state = Route.useLoaderData()
+  const setCurrentBook = useCommonStore(state => state.setCurrentBook);
+  const data = Route.useLoaderData();
+
+  if (data != null) {
+    setCurrentBook(data);
+  }
 
   return (
-    <Box style={{height: '100vh', paddingTop: '20%', paddingLeft: '5%', paddingRight: '5%'}}>
-      <Grid
+    <Box 
+      className={classes.root}
+    // style={{height: '100vh', paddingTop: '20%', paddingLeft: '5%', paddingRight: '5%'}}
+    >
+      <SimpleGrid 
+        // style={{padding: '3%'}}
+        cols={{ base: 1, sm: 2}} 
+        spacing="xl" 
+        verticalSpacing="xl"
+      >
+          <Box bg="blue">
+              <BooksPreview/>
+          </Box>
+          <Box>
+              <WizformsPreview/>
+          </Box>        
+          <Box bg="yellow">
+            <CollectionsPreview/>
+          </Box>
+          <Box bg="green">
+            <MapPreview/>
+          </Box>
+      </SimpleGrid>
+      {/* <Grid
         style={{height: '100%'}}
         type="container"
         breakpoints={{xs: '100px', sm: '200px', md: '300px', lg: '400px', xl: '500px'}}
@@ -42,7 +80,7 @@ function Home() {
               <MapPreview/>
             </Box>
           </GridCol>
-      </Grid>
+      </Grid> */}
     </Box>
   )
 }
