@@ -1,4 +1,5 @@
 use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel)]
@@ -57,3 +58,45 @@ impl BookModel {
 pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BookFullModel {
+    pub id: Uuid,
+    pub name: String,
+    pub major_version: i32,
+    pub minor_version: i32,
+    pub patch_version: i32,
+    pub wizforms_count: i32,
+    pub active_wizforms_count: i32
+}
+
+#[async_graphql::Object]
+impl BookFullModel {
+    async fn id(&self) -> async_graphql::ID {
+        self.id.into()
+    }
+
+    async fn name(&self) -> &String {
+        &self.name
+    }
+
+    async fn major_version(&self) -> i32 {
+        self.major_version
+    }
+
+    async fn minor_version(&self) -> i32 {
+        self.minor_version
+    }
+
+    async fn patch_version(&self) -> i32 {
+        self.patch_version
+    }
+
+    async fn wizforms_count(&self) -> i32 {
+        self.wizforms_count
+    }
+
+    async fn active_wizforms_count(&self) -> i32 {
+        self.active_wizforms_count
+    }
+}

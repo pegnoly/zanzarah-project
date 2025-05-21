@@ -27,7 +27,12 @@ export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
         title: 'TanStack Start Starter',
       },
     ],
-    links: [{ rel: 'stylesheet', href: mantineCssUrl }]
+    links: [
+      { rel: 'stylesheet', href: mantineCssUrl },
+      { rel: 'preconnect', href: "https://fonts.googleapis.com"},
+      { rel: 'preconnect', href: "https://fonts.gstatic.com", crossOrigin: true},
+      { rel: 'stylesheet', href: "https://fonts.googleapis.com/css2?family=Yanone+Kaffeesatz:wght@200..700&display=swap"}
+    ]
   }),
   component: RootComponent,
 })

@@ -14,7 +14,7 @@ type Action = {
     setWizformsDisabled: (value: boolean) => void,
     setCurrentBook: (value: string) => void,
     setElementFilter: (value: WizformElementType) => void,
-    setNameFilter: (value: string) => void,
+    setNameFilter: (value: string | undefined) => void,
     setElements: (value: WizformElement [] | undefined) => void
 }
 

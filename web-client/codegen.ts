@@ -1,7 +1,7 @@
 import type { CodegenConfig } from '@graphql-codegen/cli'
  
 const config: CodegenConfig = {
-  schema: 'https://zz-webapi-cv7m.shuttle.app/',
+  schema: 'https://zanzarah-project-api-lyaq.shuttle.app/',
   documents: ['src/**/*.tsx'],
   ignoreNoDocuments: true,
   generates: {

@@ -1,7 +1,6 @@
 import { queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
-import { graphql } from "../../graphql"
 import { WizformElementType } from "../../graphql/graphql"
 
 const wizformQueryDocument = gql`
@@ -64,7 +63,7 @@ const fetchWizform = createServerFn({method: 'POST'})
     .validator((id: string) => id)
     .handler(
     async ({data}) => {
-        console.info(`Fetching wizform ${data}`);
+        //console.info(`Fetching wizform ${data}`);
         const wizform = await request<WizformFullModel | undefined, WizformNameQueryVariables>(
             'https://zanzarah-project-api-lyaq.shuttle.app/', 
             wizformQueryDocument,

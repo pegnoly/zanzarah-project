@@ -1,9 +1,9 @@
-use sea_orm::{prelude::Expr, sea_query::{OnConflict, SimpleExpr}, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, IntoActiveModel, QueryFilter, QueryOrder, TransactionTrait};
+use sea_orm::{prelude::Expr, sea_query::{OnConflict, SimpleExpr}, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, TransactionTrait};
 use uuid::Uuid;
 
 use crate::error::ZZApiError;
 
-use super::models::{book::{self, BookModel}, element::{self, ElementModel}, wizform::{self, WizformElementType, WizformModel, WizformUpdateModel}};
+use super::models::{book::{self, BookFullModel, BookModel}, element::{self, ElementModel}, wizform::{self, WizformElementType, WizformModel, WizformUpdateModel}};
 
 pub struct BookRepository;
 
@@ -83,6 +83,35 @@ impl BookRepository {
             .filter(condition)
             .all(db)
             .await?)
+    }
+
+    pub async fn get_current_book(
+        &self,
+        db: &DatabaseConnection,
+        id: Uuid
+    ) -> Result<Option<BookFullModel>, ZZApiError> {
+        if let Some(book) = book::Entity::find_by_id(id).one(db).await? {
+            let wizforms_count = wizform::Entity::find()
+                .filter(wizform::Column::BookId.eq(id))
+                .count(db)
+                .await?;
+            let active_wizforms_count = wizform::Entity::find()
+                .filter(wizform::Column::BookId.eq(id))
+                .filter(wizform::Column::Enabled.eq(true))
+                .count(db)
+                .await?;
+            Ok(Some(BookFullModel {
+                id: book.id,
+                name: book.name,
+                major_version: book.major_version as i32,
+                minor_version: book.minor_version as i32,
+                patch_version: book.patch_version as i32,
+                wizforms_count: wizforms_count as i32,
+                active_wizforms_count: active_wizforms_count as i32
+            }))
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn insert_wizforms_bulk(

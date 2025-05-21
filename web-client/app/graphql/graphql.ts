@@ -13,6 +13,28 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  /**
+   * Implement the DateTime<Local> scalar
+   *
+   * The input/output is a string in RFC3339 format.
+   */
+  DateTime: { input: any; output: any; }
+};
+
+export type ActiveConfirmationInfo = {
+  __typename?: 'ActiveConfirmationInfo';
+  activatedAt: Scalars['DateTime']['output'];
+};
+
+export type BookFullModel = {
+  __typename?: 'BookFullModel';
+  activeWizformsCount: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  majorVersion: Scalars['Int']['output'];
+  minorVersion: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  patchVersion: Scalars['Int']['output'];
+  wizformsCount: Scalars['Int']['output'];
 };
 
 export type BookModel = {
@@ -27,6 +49,14 @@ export type BookModel = {
   patchVersion: Scalars['Int']['output'];
 };
 
+export type ConfirmationCodeInfo = {
+  __typename?: 'ConfirmationCodeInfo';
+  exprirationTime: Scalars['DateTime']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type ConfirmationState = ActiveConfirmationInfo | ConfirmationCodeInfo;
+
 export type ElementModel = {
   __typename?: 'ElementModel';
   bookId: Scalars['ID']['output'];
@@ -34,6 +64,11 @@ export type ElementModel = {
   enabled: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+};
+
+export type EmailConfirmationResponse = {
+  __typename?: 'EmailConfirmationResponse';
+  message: Scalars['String']['output'];
 };
 
 export type InsertWizformsResponse = {
@@ -98,9 +133,28 @@ export type MagicsInputModel = {
   types: Array<MagicInputModel>;
 };
 
+export type Model = {
+  __typename?: 'Model';
+  confirmationState: ConfirmationState;
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  password: Scalars['String']['output'];
+  permissions: Permissions;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
+  confirmEmail: EmailConfirmationResponse;
   insertWizformsBulk: InsertWizformsResponse;
+  tryRegisterUser: RegisterUserResponse;
+  updateWizform: UpdateWizformResponse;
+};
+
+
+export type MutationConfirmEmailArgs = {
+  code: Scalars['String']['input'];
+  email: Scalars['String']['input'];
 };
 
 
@@ -108,10 +162,35 @@ export type MutationInsertWizformsBulkArgs = {
   wizforms: Array<WizformInputModel>;
 };
 
+
+export type MutationTryRegisterUserArgs = {
+  email: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateWizformArgs = {
+  updateModel: WizformUpdateModel;
+};
+
+export enum PermissionType {
+  ConfirmedUser = 'CONFIRMED_USER',
+  ModAdmin = 'MOD_ADMIN',
+  SuperAdmin = 'SUPER_ADMIN',
+  UnconfirmedUser = 'UNCONFIRMED_USER'
+}
+
+export type Permissions = {
+  __typename?: 'Permissions';
+  types: Array<PermissionType>;
+};
+
 export type Query = {
   __typename?: 'Query';
   books: Array<BookModel>;
+  currentBook?: Maybe<BookFullModel>;
   elements: Array<ElementModel>;
+  userByEmail?: Maybe<Model>;
   wizform?: Maybe<WizformModel>;
   wizforms: Array<WizformModel>;
 };
@@ -122,9 +201,19 @@ export type QueryBooksArgs = {
 };
 
 
+export type QueryCurrentBookArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryElementsArgs = {
   bookId: Scalars['ID']['input'];
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryUserByEmailArgs = {
+  email: Scalars['String']['input'];
 };
 
 
@@ -138,6 +227,16 @@ export type QueryWizformsArgs = {
   elementFilter?: InputMaybe<WizformElementType>;
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
   nameFilter?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RegisterUserResponse = {
+  __typename?: 'RegisterUserResponse';
+  message: Scalars['String']['output'];
+};
+
+export type UpdateWizformResponse = {
+  __typename?: 'UpdateWizformResponse';
+  message: Scalars['String']['output'];
 };
 
 export enum WizformElementType {
@@ -208,6 +307,14 @@ export type WizformModel = {
   precision: Scalars['Int']['output'];
   previousForm?: Maybe<Scalars['Int']['output']>;
   previousFormName?: Maybe<Scalars['String']['output']>;
+};
+
+export type WizformUpdateModel = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  element?: InputMaybe<WizformElementType>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export class TypedDocumentString<TResult, TVariables>

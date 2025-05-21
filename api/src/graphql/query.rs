@@ -1,8 +1,10 @@
+use std::str::FromStr;
+
 use async_graphql::Context;
 use sea_orm::DatabaseConnection;
 use uuid::Uuid;
 
-use crate::{error::ZZApiError, services::{auth::prelude::{AuthRepository, UserModel}, book::{models::{book::BookModel, element::ElementModel, wizform::{WizformElementType, WizformModel}}, repo::BookRepository}}};
+use crate::{error::ZZApiError, services::{auth::prelude::{AuthRepository, UserModel}, book::{models::{book::{BookFullModel, BookModel}, element::ElementModel, wizform::{WizformElementType, WizformModel}}, repo::BookRepository}}};
 
 pub struct Query;
 
@@ -156,6 +158,30 @@ impl Query {
         match books {
             Ok(books) => {
                 Ok(books)
+            },
+            Err(error) => {
+                Err(error)
+            }
+        }
+    }
+
+    async fn current_book(
+        &self,
+        context: &Context<'_>,
+        id: async_graphql::ID
+    ) -> Result<Option<BookFullModel>, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!("Failed to get wizform service from context. {}", &error.message);
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!("Failed to get database connection from context. {}", &error.message);
+            ZZApiError::Empty
+        })?;
+        let book = service.get_current_book(db, Uuid::from_str(&id.0)?).await;
+        match book {
+            Ok(book) => {
+                Ok(book)
             },
             Err(error) => {
                 Err(error)

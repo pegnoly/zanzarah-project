@@ -3,6 +3,20 @@ schema {
   mutation: Mutation
 }
 
+type ActiveConfirmationInfo {
+  activatedAt: DateTime!
+}
+
+type BookFullModel {
+  activeWizformsCount: Int!
+  id: ID!
+  majorVersion: Int!
+  minorVersion: Int!
+  name: String!
+  patchVersion: Int!
+  wizformsCount: Int!
+}
+
 type BookModel {
   available: Boolean!
   directory: String!
@@ -14,12 +28,30 @@ type BookModel {
   patchVersion: Int!
 }
 
+type ConfirmationCodeInfo {
+  exprirationTime: DateTime!
+  value: String!
+}
+
+union ConfirmationState = ActiveConfirmationInfo | ConfirmationCodeInfo
+
+"""
+Implement the DateTime<Local> scalar
+
+The input/output is a string in RFC3339 format.
+"""
+scalar DateTime
+
 type ElementModel {
   bookId: ID!
   element: WizformElementType!
   enabled: Boolean!
   id: ID!
   name: String!
+}
+
+type EmailConfirmationResponse {
+  message: String!
 }
 
 type InsertWizformsResponse {
@@ -80,8 +112,31 @@ input MagicsInputModel {
   types: [MagicInputModel!]!
 }
 
+type Model {
+  confirmationState: ConfirmationState!
+  email: String!
+  id: ID!
+  name: String!
+  password: String!
+  permissions: Permissions!
+}
+
 type Mutation {
+  confirmEmail(code: String!, email: String!): EmailConfirmationResponse!
   insertWizformsBulk(wizforms: [WizformInputModel!]!): InsertWizformsResponse!
+  tryRegisterUser(email: String!, password: String!): RegisterUserResponse!
+  updateWizform(updateModel: WizformUpdateModel!): UpdateWizformResponse!
+}
+
+enum PermissionType {
+  CONFIRMED_USER
+  MOD_ADMIN
+  SUPER_ADMIN
+  UNCONFIRMED_USER
+}
+
+type Permissions {
+  types: [PermissionType!]!
 }
 
 type Query {
@@ -89,12 +144,14 @@ type Query {
     """Query only available for user books"""
     available: Boolean
   ): [BookModel!]!
+  currentBook(id: ID!): BookFullModel
   elements(
     """Book this element belongs to"""
     bookId: ID!
     """Select all or only enabled elements"""
     enabled: Boolean
   ): [ElementModel!]!
+  userByEmail(email: String!): Model
   wizform(
     """Id of wizform to focus"""
     id: ID!
@@ -109,6 +166,14 @@ type Query {
     """Optional name filter"""
     nameFilter: String
   ): [WizformModel!]!
+}
+
+type RegisterUserResponse {
+  message: String!
+}
+
+type UpdateWizformResponse {
+  message: String!
 }
 
 enum WizformElementType {
@@ -178,4 +243,12 @@ type WizformModel {
   precision: Int!
   previousForm: Int
   previousFormName: String
+}
+
+input WizformUpdateModel {
+  description: String
+  element: WizformElementType
+  enabled: Boolean
+  id: ID!
+  name: String
 }

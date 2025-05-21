@@ -11,18 +11,12 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as WizformsImport } from './routes/wizforms'
 import { Route as BooksImport } from './routes/books'
 import { Route as IndexImport } from './routes/index'
-import { Route as WizformsFocusedIdImport } from './routes/wizforms/focused.$id'
+import { Route as WizformsBookIdImport } from './routes/wizforms.$bookId'
+import { Route as WizformsBookIdFocusedIdImport } from './routes/wizforms.$bookId/focused.$id'
 
 // Create/Update Routes
-
-const WizformsRoute = WizformsImport.update({
-  id: '/wizforms',
-  path: '/wizforms',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const BooksRoute = BooksImport.update({
   id: '/books',
@@ -36,10 +30,16 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const WizformsFocusedIdRoute = WizformsFocusedIdImport.update({
+const WizformsBookIdRoute = WizformsBookIdImport.update({
+  id: '/wizforms/$bookId',
+  path: '/wizforms/$bookId',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const WizformsBookIdFocusedIdRoute = WizformsBookIdFocusedIdImport.update({
   id: '/focused/$id',
   path: '/focused/$id',
-  getParentRoute: () => WizformsRoute,
+  getParentRoute: () => WizformsBookIdRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -60,78 +60,87 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BooksImport
       parentRoute: typeof rootRoute
     }
-    '/wizforms': {
-      id: '/wizforms'
-      path: '/wizforms'
-      fullPath: '/wizforms'
-      preLoaderRoute: typeof WizformsImport
+    '/wizforms/$bookId': {
+      id: '/wizforms/$bookId'
+      path: '/wizforms/$bookId'
+      fullPath: '/wizforms/$bookId'
+      preLoaderRoute: typeof WizformsBookIdImport
       parentRoute: typeof rootRoute
     }
-    '/wizforms/focused/$id': {
-      id: '/wizforms/focused/$id'
+    '/wizforms/$bookId/focused/$id': {
+      id: '/wizforms/$bookId/focused/$id'
       path: '/focused/$id'
-      fullPath: '/wizforms/focused/$id'
-      preLoaderRoute: typeof WizformsFocusedIdImport
-      parentRoute: typeof WizformsImport
+      fullPath: '/wizforms/$bookId/focused/$id'
+      preLoaderRoute: typeof WizformsBookIdFocusedIdImport
+      parentRoute: typeof WizformsBookIdImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface WizformsRouteChildren {
-  WizformsFocusedIdRoute: typeof WizformsFocusedIdRoute
+interface WizformsBookIdRouteChildren {
+  WizformsBookIdFocusedIdRoute: typeof WizformsBookIdFocusedIdRoute
 }
 
-const WizformsRouteChildren: WizformsRouteChildren = {
-  WizformsFocusedIdRoute: WizformsFocusedIdRoute,
+const WizformsBookIdRouteChildren: WizformsBookIdRouteChildren = {
+  WizformsBookIdFocusedIdRoute: WizformsBookIdFocusedIdRoute,
 }
 
-const WizformsRouteWithChildren = WizformsRoute._addFileChildren(
-  WizformsRouteChildren,
+const WizformsBookIdRouteWithChildren = WizformsBookIdRoute._addFileChildren(
+  WizformsBookIdRouteChildren,
 )
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/books': typeof BooksRoute
-  '/wizforms': typeof WizformsRouteWithChildren
-  '/wizforms/focused/$id': typeof WizformsFocusedIdRoute
+  '/wizforms/$bookId': typeof WizformsBookIdRouteWithChildren
+  '/wizforms/$bookId/focused/$id': typeof WizformsBookIdFocusedIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/books': typeof BooksRoute
-  '/wizforms': typeof WizformsRouteWithChildren
-  '/wizforms/focused/$id': typeof WizformsFocusedIdRoute
+  '/wizforms/$bookId': typeof WizformsBookIdRouteWithChildren
+  '/wizforms/$bookId/focused/$id': typeof WizformsBookIdFocusedIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/books': typeof BooksRoute
-  '/wizforms': typeof WizformsRouteWithChildren
-  '/wizforms/focused/$id': typeof WizformsFocusedIdRoute
+  '/wizforms/$bookId': typeof WizformsBookIdRouteWithChildren
+  '/wizforms/$bookId/focused/$id': typeof WizformsBookIdFocusedIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/books' | '/wizforms' | '/wizforms/focused/$id'
+  fullPaths:
+    | '/'
+    | '/books'
+    | '/wizforms/$bookId'
+    | '/wizforms/$bookId/focused/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/books' | '/wizforms' | '/wizforms/focused/$id'
-  id: '__root__' | '/' | '/books' | '/wizforms' | '/wizforms/focused/$id'
+  to: '/' | '/books' | '/wizforms/$bookId' | '/wizforms/$bookId/focused/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/books'
+    | '/wizforms/$bookId'
+    | '/wizforms/$bookId/focused/$id'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BooksRoute: typeof BooksRoute
-  WizformsRoute: typeof WizformsRouteWithChildren
+  WizformsBookIdRoute: typeof WizformsBookIdRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BooksRoute: BooksRoute,
-  WizformsRoute: WizformsRouteWithChildren,
+  WizformsBookIdRoute: WizformsBookIdRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -146,7 +155,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/books",
-        "/wizforms"
+        "/wizforms/$bookId"
       ]
     },
     "/": {
@@ -155,15 +164,15 @@ export const routeTree = rootRoute
     "/books": {
       "filePath": "books.tsx"
     },
-    "/wizforms": {
-      "filePath": "wizforms.tsx",
+    "/wizforms/$bookId": {
+      "filePath": "wizforms.$bookId.tsx",
       "children": [
-        "/wizforms/focused/$id"
+        "/wizforms/$bookId/focused/$id"
       ]
     },
-    "/wizforms/focused/$id": {
-      "filePath": "wizforms/focused.$id.tsx",
-      "parent": "/wizforms"
+    "/wizforms/$bookId/focused/$id": {
+      "filePath": "wizforms.$bookId/focused.$id.tsx",
+      "parent": "/wizforms/$bookId"
     }
   }
 }
