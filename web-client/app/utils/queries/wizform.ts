@@ -20,10 +20,72 @@ const wizformQueryDocument = gql`
             evolutionLevel,
             expModifier,
             evolutionForm,
-            previousForm
+            previousForm,
+            magics {
+                types {
+                    level,
+                    firstActiveSlot {
+                        firstElement,
+                        secondElement,
+                        thirdElement
+                    },
+                    secondActiveSlot {
+                        firstElement,
+                        secondElement,
+                        thirdElement
+                    },
+                    firstPassiveSlot {
+                        firstElement,
+                        secondElement,
+                        thirdElement
+                    },
+                    secondPassiveSlot {
+                        firstElement,
+                        secondElement,
+                        thirdElement
+                    }
+                }
+            }
         }
     }
 `
+
+export enum MagicElementType {
+    Air = 'AIR',
+    Chaos = 'CHAOS',
+    Dark = 'DARK',
+    Energy = 'ENERGY',
+    Error = 'ERROR',
+    Fire = 'FIRE',
+    Ice = 'ICE',
+    Joker = 'JOKER',
+    Light = 'LIGHT',
+    Metall = 'METALL',
+    Nature = 'NATURE',
+    None = 'NONE',
+    Psi = 'PSI',
+    Stone = 'STONE',
+    Water = 'WATER'
+}
+
+export type MagicSlot = {
+    firstElement: MagicElementType,
+    secondElement: MagicElementType,
+    thirdElement: MagicElementType
+}
+
+export type Magic = {
+  firstActiveSlot: MagicSlot,
+  firstPassiveSlot: MagicSlot,
+  level: number,
+  secondActiveSlot: MagicSlot,
+  secondPassiveSlot: MagicSlot,
+}
+
+type Magics = {
+    types: Magic[]
+}
+
 
 type WizformFull = {
     id: string,
@@ -40,7 +102,8 @@ type WizformFull = {
     evolutionLevel: number,
     expModifier: number,
     evolutionForm: number,
-    previousForm: number
+    previousForm: number,
+    magics: Magics
 }
 
 type WizformName = {

@@ -1,0 +1,4 @@
+.slide {
+    outline: 2px solid chocolate;
+    outline-offset: -2px;
+}
