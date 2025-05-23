@@ -87,7 +87,7 @@ type Magics = {
 }
 
 
-type WizformFull = {
+export type WizformFull = {
     id: string,
     name: string,
     bookId: string,
