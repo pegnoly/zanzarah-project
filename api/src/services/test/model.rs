@@ -6,7 +6,7 @@ use crate::Query;
 pub struct Graph {
     id: i32,
     name: String,
-    count: i32
+    count: i32,
 }
 
 #[Object]

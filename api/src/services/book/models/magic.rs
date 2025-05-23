@@ -1,7 +1,9 @@
 use sea_orm::{DeriveActiveEnum, EnumIter, FromJsonQueryResult};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Clone, Copy, DeriveActiveEnum, EnumIter, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(
+    Debug, Default, Clone, Copy, DeriveActiveEnum, EnumIter, Serialize, Deserialize, PartialEq, Eq,
+)]
 #[sea_orm(rs_type = "i16", db_type = "Integer")]
 #[derive(async_graphql::Enum)]
 pub enum MagicElementType {
@@ -16,18 +18,27 @@ pub enum MagicElementType {
     Stone = 7,
     Ice = 8,
     Fire = 9,
-    Dark = 10, 
+    Dark = 10,
     Chaos = 11,
     Metall = 12,
     Joker = 13,
-    Error = 14
+    Error = 14,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, FromJsonQueryResult, async_graphql::InputObject)]
+#[derive(
+    Debug,
+    Serialize,
+    Deserialize,
+    Clone,
+    PartialEq,
+    Eq,
+    FromJsonQueryResult,
+    async_graphql::InputObject,
+)]
 pub struct MagicSlotModel {
     pub first_element: MagicElementType,
     pub second_element: MagicElementType,
-    pub third_element: MagicElementType
+    pub third_element: MagicElementType,
 }
 
 #[async_graphql::Object]
@@ -45,13 +56,22 @@ impl MagicSlotModel {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, FromJsonQueryResult, async_graphql::InputObject)]
+#[derive(
+    Debug,
+    Serialize,
+    Deserialize,
+    Clone,
+    PartialEq,
+    Eq,
+    FromJsonQueryResult,
+    async_graphql::InputObject,
+)]
 pub struct Magic {
     pub level: u16,
     pub first_active_slot: MagicSlotModel,
     pub first_passive_slot: MagicSlotModel,
     pub second_active_slot: MagicSlotModel,
-    pub second_passive_slot: MagicSlotModel
+    pub second_passive_slot: MagicSlotModel,
 }
 
 #[async_graphql::Object]
@@ -77,9 +97,18 @@ impl Magic {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, FromJsonQueryResult, async_graphql::InputObject)]
+#[derive(
+    Debug,
+    Serialize,
+    Deserialize,
+    Clone,
+    PartialEq,
+    Eq,
+    FromJsonQueryResult,
+    async_graphql::InputObject,
+)]
 pub struct Magics {
-    pub types: Vec<Magic>
+    pub types: Vec<Magic>,
 }
 
 #[async_graphql::Object]
@@ -93,15 +122,15 @@ impl Magics {
 pub struct MagicSlotInputModel {
     pub first_element: MagicElementType,
     pub second_element: MagicElementType,
-    pub third_element: MagicElementType
+    pub third_element: MagicElementType,
 }
 
 impl Into<MagicSlotModel> for MagicSlotInputModel {
     fn into(self) -> MagicSlotModel {
-        MagicSlotModel { 
-            first_element: self.first_element, 
-            second_element: self.second_element, 
-            third_element: self.third_element 
+        MagicSlotModel {
+            first_element: self.first_element,
+            second_element: self.second_element,
+            third_element: self.third_element,
         }
     }
 }
@@ -112,28 +141,34 @@ pub struct MagicInputModel {
     pub first_active_slot: MagicSlotInputModel,
     pub first_passive_slot: MagicSlotInputModel,
     pub second_active_slot: MagicSlotInputModel,
-    pub second_passive_slot: MagicSlotInputModel
+    pub second_passive_slot: MagicSlotInputModel,
 }
 
 impl Into<Magic> for MagicInputModel {
     fn into(self) -> Magic {
-        Magic { 
-            level: self.level, 
-            first_active_slot: self.first_active_slot.into(), 
-            first_passive_slot: self.first_passive_slot.into(), 
-            second_active_slot: self.second_active_slot.into(), 
-            second_passive_slot: self.second_passive_slot.into() 
+        Magic {
+            level: self.level,
+            first_active_slot: self.first_active_slot.into(),
+            first_passive_slot: self.first_passive_slot.into(),
+            second_active_slot: self.second_active_slot.into(),
+            second_passive_slot: self.second_passive_slot.into(),
         }
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, async_graphql::InputObject)]
 pub struct MagicsInputModel {
-    pub types: Vec<MagicInputModel>
+    pub types: Vec<MagicInputModel>,
 }
 
 impl Into<Magics> for MagicsInputModel {
     fn into(self) -> Magics {
-        Magics { types: self.types.into_iter().map(|m| m.into()).collect::<Vec<Magic>>() }
+        Magics {
+            types: self
+                .types
+                .into_iter()
+                .map(|m| m.into())
+                .collect::<Vec<Magic>>(),
+        }
     }
 }

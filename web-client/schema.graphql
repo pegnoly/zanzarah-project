@@ -7,25 +7,65 @@ type ActiveConfirmationInfo {
   activatedAt: DateTime!
 }
 
+type AddCollectionItemResponse {
+  createdId: ID!
+}
+
 type BookFullModel {
   activeWizformsCount: Int!
+  compatibleWith: CompatibleVersions!
   id: ID!
-  majorVersion: Int!
-  minorVersion: Int!
   name: String!
-  patchVersion: Int!
+  version: String!
   wizformsCount: Int!
 }
 
 type BookModel {
   available: Boolean!
+  compatibleWith: CompatibleVersions!
   directory: String!
   id: ID!
   initialized: Boolean!
-  majorVersion: Int!
-  minorVersion: Int!
   name: String!
-  patchVersion: Int!
+  version: String!
+}
+
+type CollectionModel {
+  active: Boolean!
+  bookId: ID!
+  createdOnVersion: String!
+  description: String!
+  id: ID!
+  name: String!
+  userId: Int!
+}
+
+type CollectionWizform {
+  agility: Int!
+  bookId: ID!
+  description: String!
+  element: WizformElementType!
+  enabled: Boolean!
+  evolutionForm: Int!
+  evolutionLevel: Int!
+  evolutionName: String
+  expModifier: Int!
+  gameId: String!
+  hitpoints: Int!
+  icon64: String!
+  id: ID!
+  inCollectionId: UUID
+  jumpAbility: Int!
+  magics: Magics!
+  name: String!
+  number: Int!
+  precision: Int!
+  previousForm: Int
+  previousFormName: String
+}
+
+type CompatibleVersions {
+  versions: [String!]!
 }
 
 type ConfirmationCodeInfo {
@@ -112,18 +152,11 @@ input MagicsInputModel {
   types: [MagicInputModel!]!
 }
 
-type Model {
-  confirmationState: ConfirmationState!
-  email: String!
-  id: ID!
-  name: String!
-  password: String!
-  permissions: Permissions!
-}
-
 type Mutation {
+  addCollectionItem(collectionId: ID!, wizformId: ID!): AddCollectionItemResponse!
   confirmEmail(code: String!, email: String!): EmailConfirmationResponse!
   insertWizformsBulk(wizforms: [WizformInputModel!]!): InsertWizformsResponse!
+  removeCollectionItem(id: ID!): String!
   tryRegisterUser(email: String!, password: String!): RegisterUserResponse!
   updateWizform(updateModel: WizformUpdateModel!): UpdateWizformResponse!
 }
@@ -144,6 +177,7 @@ type Query {
     """Query only available for user books"""
     available: Boolean
   ): [BookModel!]!
+  collections(bookId: ID!, userId: ID!): [CollectionModel!]!
   currentBook(id: ID!): BookFullModel
   elements(
     """Book this element belongs to"""
@@ -151,7 +185,7 @@ type Query {
     """Select all or only enabled elements"""
     enabled: Boolean
   ): [ElementModel!]!
-  userByEmail(email: String!): Model
+  userByEmail(email: String!): UserModel
   wizform(
     """Id of wizform to focus"""
     id: ID!
@@ -159,21 +193,44 @@ type Query {
   wizforms(
     """Book this wizform belongs to"""
     bookId: ID!
+    """Optional active collection"""
+    collection: UUID
     """Optional element of wizform"""
     elementFilter: WizformElementType
     """Select all or only enabled wizforms"""
     enabled: Boolean
     """Optional name filter"""
     nameFilter: String
-  ): [WizformModel!]!
+  ): [CollectionWizform!]!
 }
 
 type RegisterUserResponse {
   message: String!
 }
 
+"""
+A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
+Strings within GraphQL. UUIDs are used to assign unique identifiers to
+entities without requiring a central allocating authority.
+
+# References
+
+* [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+* [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
+"""
+scalar UUID
+
 type UpdateWizformResponse {
   message: String!
+}
+
+type UserModel {
+  confirmationState: ConfirmationState!
+  email: String!
+  id: ID!
+  name: String!
+  password: String!
+  permissions: Permissions!
 }
 
 enum WizformElementType {

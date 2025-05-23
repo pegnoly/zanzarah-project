@@ -1,3 +1,3 @@
-mod models;
-mod repo;
+pub mod models;
 pub mod prelude;
+mod repo;

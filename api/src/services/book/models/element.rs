@@ -11,7 +11,7 @@ pub struct Model {
     pub book_id: Uuid,
     pub name: String,
     pub element: WizformElementType,
-    pub enabled: bool
+    pub enabled: bool,
 }
 
 pub type ElementModel = Model;

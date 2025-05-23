@@ -5,12 +5,13 @@ import { WizformElementType } from "../../graphql/graphql"
 import request from "graphql-request";
 
 const query = `
-    query wizformsQuery($bookId: ID!, $enabled: Boolean, $elementFilter: WizformElementType, $nameFilter: String) {
-        wizforms(bookId: $bookId, enabled: $enabled, elementFilter: $elementFilter, nameFilter: $nameFilter) {
+    query wizformsQuery($bookId: ID!, $enabled: Boolean, $elementFilter: WizformElementType, $nameFilter: String, $collection: String) {
+        wizforms(bookId: $bookId, enabled: $enabled, elementFilter: $elementFilter, nameFilter: $nameFilter, collection: $collection) {
             name,
             icon64,
             id,
-            number
+            number,
+            inCollectionId
         }
     }    
 `
@@ -19,7 +20,8 @@ export type WizformSimpleModel = {
     id: string,
     name: string,
     icon64: string,
-    number: number
+    number: number,
+    inCollectionId: string | null
 }
 
 export type WizformsModel = {
@@ -30,7 +32,8 @@ export type WizformsQueryVariables = {
     bookId: string,
     enabled?: boolean,
     elementFilter?: WizformElementType,
-    nameFilter?: string
+    nameFilter?: string,
+    collection: string | null
 }
 
 const fetchWizforms = createServerFn({method: 'POST'})

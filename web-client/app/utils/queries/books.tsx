@@ -7,9 +7,7 @@ const currentBookQuery = gql`
         currentBook(id: $id) {
             id,
             name,
-            majorVersion,
-            minorVersion,
-            patchVersion,
+            version,
             wizformsCount,
             activeWizformsCount
         }
@@ -19,9 +17,7 @@ const currentBookQuery = gql`
 export type BookFullModel = {
     id: string,
     name: string,
-    majorVersion: number,
-    minorVersion: number,
-    patchVersion: number,
+    version: string,
     wizformsCount: number,
     activeWizformsCount: number
 }

@@ -1,7 +1,7 @@
 import { createFileRoute, createRoute, Link, Outlet, useNavigate } from '@tanstack/react-router'
 import { WizformElementType, WizformModel } from '../graphql/graphql'
 import { fetchWizformsOptions, fetchWizformsOptionsClient, WizformSimpleModel, WizformsModel } from '../utils/queries/wizforms'
-import { Button, ButtonGroup, Card, Dialog, filterProps, Image, Modal, Select, SimpleGrid, Stack, Text, TextInput } from '@mantine/core';
+import { Badge, Button, ButtonGroup, Card, Dialog, filterProps, Image, Modal, Select, SimpleGrid, Stack, Text, TextInput } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
 import { useCommonStore } from '../stores/common';
@@ -38,12 +38,7 @@ const getLastElementFilterCookie = createServerFn({method: 'GET'})
 
 export const Route = createFileRoute('/wizforms/$bookId')({
     component: RouteComponent,
-    // validateSearch: (search: Record<string, unknown>): {bookId: string} => {
-    //   return {
-    //     bookId: search.bookId as string
-    //   }
-    // },
-    // loaderDeps: ({search: {bookId}}) => ({bookId}),
+
     loader: async ({context, params}) => {
       const nameFilterCookie = await getLastNameFilterCookie();
       const elementFilterCookie = await getLastElementFilterCookie();
@@ -51,7 +46,8 @@ export const Route = createFileRoute('/wizforms/$bookId')({
         bookId: params.bookId,
         enabled: true,
         elementFilter: elementFilterCookie == undefined ? WizformElementType.Nature : elementFilterCookie as WizformElementType,
-        nameFilter: nameFilterCookie
+        nameFilter: nameFilterCookie,
+        collection: "48702911-4bfa-47a5-a3ae-e73db300be15"
       }));
       await context.queryClient.ensureQueryData(fetchElementsOptions({bookId: params.bookId}));
       return {
@@ -67,16 +63,19 @@ function RouteComponent() {
     const context = Route.useRouteContext();
 
     const queriesData = useSuspenseQueries({queries: [
-      fetchWizformsOptions({bookId: params.bookId, enabled: true, elementFilter: loaderData.elementFilter, nameFilter: loaderData.nameFilter}),
+      fetchWizformsOptions({
+        bookId: params.bookId, 
+        enabled: true, 
+        elementFilter: loaderData.elementFilter, 
+        nameFilter: loaderData.nameFilter,
+        collection: "48702911-4bfa-47a5-a3ae-e73db300be15"
+      }),
       fetchElementsOptions({bookId: params.bookId})
     ]});
 
-    const [wizforms, setWizforms] = useState<WizformSimpleModel[] | undefined>(queriesData?.[0].data?.wizforms);
-    const setElements = useCommonStore(state => state.setElements);
-
+    const [setWizforms, setElements] = useCommonStore(useShallow((state) => [state.setWizforms, state.setElements]));
+    setWizforms(queriesData[0].data?.wizforms);
     setElements(queriesData[1].data?.elements);
-    // setNameFilter(loaderData.nameFilter);
-    // setElementFilter(loaderData.elementFilter);
 
     async function onFiltersChanged(element: WizformElementType, name: string) {
       //console.log("Filters updated with: ", elementFilter, ", ", nameFilter);
@@ -84,7 +83,8 @@ function RouteComponent() {
         bookId: params.bookId,
         enabled: true,
         elementFilter: element,
-        nameFilter: name
+        nameFilter: name,
+        collection: "48702911-4bfa-47a5-a3ae-e73db300be15"
       }))
       .then((data) => {
         //console.log("Wizforms data: ", data);
@@ -95,7 +95,7 @@ function RouteComponent() {
     return <div>
       <WizformsList 
         bookId={params.bookId}
-        models={wizforms}/>  
+      />
       <WizformsFilter 
         currentElementFilter={loaderData.elementFilter} 
         currentNameFilter={loaderData.nameFilter} 
@@ -106,22 +106,29 @@ function RouteComponent() {
 }
 
 function WizformsList(params: {
-  bookId: string,
-  models: WizformSimpleModel[] | undefined
+  bookId: string
 }) {
-  const wizformsDisabled = useCommonStore(state => state.wizformsDisabled);
+  const [wizforms, wizformsDisabled] = useCommonStore(useShallow((state) => [state.wizforms, state.wizformsDisabled]));
+
   return <SimpleGrid
         style={{padding: '3%'}}
         cols={{ base: 1, sm: 2, md: 3, lg: 4 }} 
-    >{params.models!.map((w, _i) => (
+    >{wizforms!.map((w, _i) => (
       <Link key={w.id} disabled={wizformsDisabled} to={`/wizforms/$bookId/focused/$id`} params={{id: w.id, bookId: params.bookId}} style={{textDecoration: 'none'}}>
-          <Card shadow='sm' padding='lg' withBorder style={{height: '100%'}}>
+          <Card shadow='sm' padding='lg' withBorder style={{height: '100%', backgroundColor: w.inCollectionId ? "gold" : "white"}}>
               <Card.Section w={40} h={40} style={{position: 'absolute', top: '50%', right: '8%'}}>
                   <Image width={40} height={40} src={`data:image/bmp;base64,${w.icon64}`}></Image>
               </Card.Section>
               <div style={{width: '80%'}}>
                   <Text size='md' lineClamp={1}>{w.name}</Text>
               </div>
+              {/* {
+                w.inCollectionId == null ?
+                null :
+                <Badge radius={0}>
+                  В текущей коллекции!
+                </Badge>
+              } */}
           </Card>
       </Link>
     ))}</SimpleGrid>

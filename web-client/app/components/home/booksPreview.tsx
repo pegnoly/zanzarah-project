@@ -20,9 +20,7 @@ export const getBookCookie = createServerFn({method: 'GET'})
 function BooksPreview(params: {
     currentBookId: string | undefined,
     currentBookName: string | undefined,
-    currentBookMajorVersion: number | undefined,
-    currentBookMinorVersion: number | undefined,
-    currentBookPatchVersion: number | undefined,
+    currentBookVersion: string | undefined,
     
     books: {
         id: string;
@@ -60,7 +58,7 @@ function BooksPreview(params: {
                     <Text 
                         style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem', color: 'green'}}
                     >
-                        {`${params.currentBookMajorVersion}.${params.currentBookMinorVersion}.${params.currentBookPatchVersion}`}
+                        {`${params.currentBookVersion}`}
                     </Text>
                 }
             </div>

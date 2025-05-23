@@ -1,7 +1,16 @@
-use axum::{extract::{Path, Query, State}, http::StatusCode, response::IntoResponse, routing::{get, patch, post}, Json, Router};
+use axum::{
+    Json, Router,
+    extract::{Path, Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+    routing::{get, patch, post},
+};
 use strum::IntoEnumIterator;
 use uuid::Uuid;
-use zz_data::{book::base::BookDBModel, core::wizform::{ElementDBModel, WizformElementType}};
+use zz_data::{
+    book::base::BookDBModel,
+    core::wizform::{ElementDBModel, WizformElementType},
+};
 
 use super::{queries::BookCreationQuery, utils::ApiManager};
 
@@ -11,17 +20,17 @@ pub(crate) fn book_routes() -> Router<ApiManager> {
         .route("/book/{book_id}", get(get_book))
         .route("/book/all", get(get_existing_books))
         .route("/book/initialize/{book_id}", patch(initialize_book))
-        // .route("/book/filters", get(get_filters))
-        // .route("/book/filters", patch(update_filter))
-        // .route("/book/points/:book_id", get(get_spawn_points))
-        // .route("/book/point", post(create_spawn_point))
-        // .route("/book/point/remove/:point_id", delete(remove_spawn_point))
+    // .route("/book/filters", get(get_filters))
+    // .route("/book/filters", patch(update_filter))
+    // .route("/book/points/:book_id", get(get_spawn_points))
+    // .route("/book/point", post(create_spawn_point))
+    // .route("/book/point/remove/:point_id", delete(remove_spawn_point))
 }
 
 /// Writes book with given id, name and directory into db. Also default set of elements will be written for this book.
 async fn create_book(
-    State(api_manager) : State<ApiManager>,
-    Query(book_creation_query) : Query<BookCreationQuery>
+    State(api_manager): State<ApiManager>,
+    Query(book_creation_query): Query<BookCreationQuery>,
 ) -> impl IntoResponse {
     let pool_cloned = api_manager.pool.clone();
     let mut tx = pool_cloned.begin().await.unwrap();
@@ -30,35 +39,39 @@ async fn create_book(
             INSERT INTO books 
             (id, name, directory)
             VALUES($1, $2, $3);
-        "#)
-        .bind(&book_creation_query.id)
-        .bind(&book_creation_query.name)
-        .bind(&book_creation_query.directory)
-        .execute(&mut *tx)
-        .await
-        .unwrap();
-    
+        "#,
+    )
+    .bind(&book_creation_query.id)
+    .bind(&book_creation_query.name)
+    .bind(&book_creation_query.directory)
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+
     let element_models = WizformElementType::iter()
-        .map(|element| {
-            ElementDBModel {
-                id: Uuid::new_v4(),
-                book_id: book_creation_query.id,
-                element: element.clone(),
-                name: element.to_string(),
-                enabled: !matches!(element, WizformElementType::Custom1 | WizformElementType::Custom2 | 
-                    WizformElementType::Custom3 | WizformElementType::Custom4 |
-                    WizformElementType::Custom5)
-            }
+        .map(|element| ElementDBModel {
+            id: Uuid::new_v4(),
+            book_id: book_creation_query.id,
+            element: element.clone(),
+            name: element.to_string(),
+            enabled: !matches!(
+                element,
+                WizformElementType::Custom1
+                    | WizformElementType::Custom2
+                    | WizformElementType::Custom3
+                    | WizformElementType::Custom4
+                    | WizformElementType::Custom5
+            ),
         })
         .collect::<Vec<ElementDBModel>>();
-        
+
     for element_model in element_models {
         sqlx::query(
-        r#"
+            r#"
                 INSERT INTO elements
                 (id, name, element, enabled, book_id)
                 VALUES($1, $2, $3, $4, $5);
-            "#
+            "#,
         )
         .bind(element_model.id)
         .bind(element_model.name)
@@ -73,64 +86,62 @@ async fn create_book(
     StatusCode::CREATED
 }
 
-
 async fn get_book(
-    State(api_manager) : State<ApiManager>,
-    Path(id): Path<Uuid>
+    State(api_manager): State<ApiManager>,
+    Path(id): Path<Uuid>,
 ) -> Result<Json<BookDBModel>, ()> {
     let res: Result<BookDBModel, sqlx::Error> = sqlx::query_as("SELECT * FROM books WHERE id=$1;")
         .bind(&id)
         .fetch_one(&api_manager.pool)
         .await;
     match res {
-        Ok(book) => {
-            Ok(Json(book))
-        },
+        Ok(book) => Ok(Json(book)),
         Err(failure) => {
-            tracing::error!("Failed to get book with id {}: {}", &id, failure.to_string());
-            Err(())
-        }
-    } 
-}
-
-
-async fn get_existing_books(
-    State(api_manager) : State<ApiManager>
-) -> Result<Json<Vec<BookDBModel>>, String> {
-    let res: Result<Vec<BookDBModel>, sqlx::Error> = sqlx::query_as("SELECT * FROM books WHERE initialized=true AND downloadable=true;")
-        .fetch_all(&api_manager.pool)
-        .await;
-    match res {
-        Ok(b) => {
-            tracing::info!("Got books from db: {:?}", &b);
-            Ok(Json(b))
-        },
-        Err(e) => {
-            tracing::info!("Error trying to get all books {}", &e.to_string());
-            Err(format!("Error trying to get all books {}", e.to_string()))
-        }
-    } 
-}
-
-async fn initialize_book(
-    State(api_manager): State<ApiManager>,
-    Path(book_id): Path<Uuid>
-) -> Result<(), ()> {
-    //tracing::info!("Got payload: {:?}", &book_id);
-    let update_res: Result<BookDBModel, _> = sqlx::query_as("UPDATE books SET initialized=true WHERE id=$1 RETURNING *;")
-        .bind(&book_id)
-        .fetch_one(&api_manager.pool)
-        .await;
-    match update_res {
-        Ok(_success) => {
-            Ok(())
-        },
-        Err(_e) => {
+            tracing::error!(
+                "Failed to get book with id {}: {}",
+                &id,
+                failure.to_string()
+            );
             Err(())
         }
     }
 }
- 
+
+async fn get_existing_books(
+    State(api_manager): State<ApiManager>,
+) -> Result<Json<Vec<BookDBModel>>, String> {
+    let res: Result<Vec<BookDBModel>, sqlx::Error> =
+        sqlx::query_as("SELECT * FROM books WHERE initialized=true AND downloadable=true;")
+            .fetch_all(&api_manager.pool)
+            .await;
+    match res {
+        Ok(b) => {
+            tracing::info!("Got books from db: {:?}", &b);
+            Ok(Json(b))
+        }
+        Err(e) => {
+            tracing::info!("Error trying to get all books {}", &e.to_string());
+            Err(format!("Error trying to get all books {}", e.to_string()))
+        }
+    }
+}
+
+async fn initialize_book(
+    State(api_manager): State<ApiManager>,
+    Path(book_id): Path<Uuid>,
+) -> Result<(), ()> {
+    //tracing::info!("Got payload: {:?}", &book_id);
+    let update_res: Result<BookDBModel, _> =
+        sqlx::query_as("UPDATE books SET initialized=true WHERE id=$1 RETURNING *;")
+            .bind(&book_id)
+            .fetch_one(&api_manager.pool)
+            .await;
+    match update_res {
+        Ok(_success) => Ok(()),
+        Err(_e) => Err(()),
+    }
+}
+
 // async fn get_filters(
 //     State(api_manager): State<ApiManager>,
 //     Json(book_id): Json<StringOptionPayload>
@@ -157,7 +168,7 @@ async fn initialize_book(
 //     let res: Result<WizformFilterDBModel, sqlx::Error> = sqlx::query_as(r#"
 //             UPDATE wizforms_filters SET name=$1, enabled=$2
 //             WHERE book_id=$3 AND filter_type=$4
-//             RETURNING *; 
+//             RETURNING *;
 //         "#)
 //         .bind(filter.name)
 //         .bind(filter.enabled)
@@ -194,7 +205,7 @@ async fn initialize_book(
 //         },
 //         Err(failure) => {
 //             tracing::info!("Failed to insert spawn point: {}", failure.to_string());
-//             Err(()) 
+//             Err(())
 //         }
 //     }
 // }
@@ -214,7 +225,7 @@ async fn initialize_book(
 //         },
 //         Err(failure) => {
 //             tracing::info!("Failed to delete spawn point: {}", failure.to_string());
-//             Err(()) 
+//             Err(())
 //         }
 //     }
 // }
@@ -234,7 +245,7 @@ async fn initialize_book(
 //         },
 //         Err(failure) => {
 //             tracing::info!("Failed to fetch spawn points: {}", failure.to_string());
-//             Err(()) 
+//             Err(())
 //         }
 //     }
 // }

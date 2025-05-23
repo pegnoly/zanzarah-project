@@ -1,12 +1,17 @@
-use sea_orm::entity::prelude::*;
+use sea_orm::{FromQueryResult, entity::prelude::*};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::error::ZZApiError;
 
-use super::magic::{Magics, MagicsInputModel};
+use super::{
+    collection_entry,
+    magic::{Magics, MagicsInputModel},
+};
 
-#[derive(Debug, Default, Clone, Copy, EnumIter, DeriveActiveEnum, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug, Default, Clone, Copy, EnumIter, DeriveActiveEnum, PartialEq, Eq, Serialize, Deserialize,
+)]
 #[sea_orm(rs_type = "i16", db_type = "Integer")]
 #[derive(async_graphql::Enum)]
 pub enum WizformElementType {
@@ -30,7 +35,7 @@ pub enum WizformElementType {
     Custom2 = 15,
     Custom3 = 16,
     Custom4 = 17,
-    Custom5 = 18
+    Custom5 = 18,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel, async_graphql::InputObject)]
@@ -56,9 +61,8 @@ pub struct Model {
     pub enabled: bool,
     pub description: String,
     pub icon64: String,
-    pub name: String
+    pub name: String,
 }
-
 
 pub type WizformModel = Model;
 
@@ -71,7 +75,7 @@ impl WizformModel {
     async fn book_id(&self) -> async_graphql::ID {
         self.book_id.into()
     }
-    
+
     async fn game_id(&self) -> String {
         self.game_id.clone()
     }
@@ -135,7 +139,7 @@ impl WizformModel {
         self.description.clone()
     }
 
-    async fn icon64(&self) -> String {          
+    async fn icon64(&self) -> String {
         self.icon64.clone()
     }
 
@@ -144,8 +148,24 @@ impl WizformModel {
     }
 }
 
-#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+#[derive(Copy, Clone, Debug, EnumIter)]
+pub enum Relation {
+    CollectionEntry,
+}
+
+impl RelationTrait for Relation {
+    fn def(&self) -> RelationDef {
+        match self {
+            Self::CollectionEntry => Entity::has_many(collection_entry::Entity).into(),
+        }
+    }
+}
+
+impl Related<collection_entry::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::CollectionEntry.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}
 
@@ -170,12 +190,12 @@ pub struct WizformInputModel {
     pub enabled: bool,
     pub description: String,
     pub icon64: String,
-    pub name: String
+    pub name: String,
 }
 
 impl TryFrom<WizformInputModel> for WizformModel {
     type Error = ZZApiError;
-    
+
     fn try_from(value: WizformInputModel) -> Result<Self, Self::Error> {
         Ok(WizformModel {
             id: Uuid::try_from(value.id)?,
@@ -197,7 +217,7 @@ impl TryFrom<WizformInputModel> for WizformModel {
             enabled: value.enabled,
             description: value.description,
             icon64: value.icon64,
-            name: value.name
+            name: value.name,
         })
     }
 }
@@ -208,5 +228,116 @@ pub struct WizformUpdateModel {
     pub enabled: Option<bool>,
     pub element: Option<WizformElementType>,
     pub name: Option<String>,
-    pub description: Option<String>
+    pub description: Option<String>,
+}
+
+#[derive(Debug, FromQueryResult, Serialize, Deserialize)]
+pub struct CollectionWizform {
+    pub id: Uuid,
+    pub book_id: Uuid,
+    pub game_id: String,
+    pub element: WizformElementType,
+    pub magics: Magics,
+    pub number: i16,
+    pub hitpoints: i16,
+    pub agility: i16,
+    pub jump_ability: i16,
+    pub precision: i16,
+    pub evolution_form: i32,
+    pub evolution_name: Option<String>,
+    pub previous_form: Option<i32>,
+    pub previous_form_name: Option<String>,
+    pub evolution_level: i16,
+    pub exp_modifier: i16,
+    pub enabled: bool,
+    pub description: String,
+    pub icon64: String,
+    pub name: String,
+    pub in_collection_id: Option<Uuid>,
+}
+
+#[async_graphql::Object]
+impl CollectionWizform {
+    async fn id(&self) -> async_graphql::ID {
+        self.id.into()
+    }
+
+    async fn book_id(&self) -> async_graphql::ID {
+        self.book_id.into()
+    }
+
+    async fn game_id(&self) -> String {
+        self.game_id.clone()
+    }
+
+    async fn element(&self) -> WizformElementType {
+        self.element
+    }
+
+    async fn magics(&self) -> Magics {
+        self.magics.clone()
+    }
+    async fn number(&self) -> i16 {
+        self.number
+    }
+
+    async fn hitpoints(&self) -> i16 {
+        self.hitpoints
+    }
+
+    async fn agility(&self) -> i16 {
+        self.agility
+    }
+
+    async fn jump_ability(&self) -> i16 {
+        self.jump_ability
+    }
+
+    async fn precision(&self) -> i16 {
+        self.precision
+    }
+
+    async fn evolution_form(&self) -> i32 {
+        self.evolution_form
+    }
+
+    async fn evolution_name(&self) -> Option<String> {
+        self.evolution_name.clone()
+    }
+
+    async fn previous_form(&self) -> Option<i32> {
+        self.previous_form
+    }
+
+    async fn previous_form_name(&self) -> Option<String> {
+        self.previous_form_name.clone()
+    }
+
+    async fn evolution_level(&self) -> i16 {
+        self.evolution_level
+    }
+
+    async fn exp_modifier(&self) -> i16 {
+        self.exp_modifier
+    }
+
+    async fn enabled(&self) -> bool {
+        self.enabled
+    }
+
+    async fn description(&self) -> String {
+        self.description.clone()
+    }
+
+    async fn icon64(&self) -> String {
+        self.icon64.clone()
+    }
+
+    async fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    async fn in_collection_id(&self) -> Option<Uuid> {
+        self.in_collection_id
+    }
 }

@@ -19,6 +19,17 @@ export type Scalars = {
    * The input/output is a string in RFC3339 format.
    */
   DateTime: { input: any; output: any; }
+  /**
+   * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
+   * Strings within GraphQL. UUIDs are used to assign unique identifiers to
+   * entities without requiring a central allocating authority.
+   *
+   * # References
+   *
+   * * [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+   * * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
+   */
+  UUID: { input: any; output: any; }
 };
 
 export type ActiveConfirmationInfo = {
@@ -26,27 +37,71 @@ export type ActiveConfirmationInfo = {
   activatedAt: Scalars['DateTime']['output'];
 };
 
+export type AddCollectionItemResponse = {
+  __typename?: 'AddCollectionItemResponse';
+  createdId: Scalars['ID']['output'];
+};
+
 export type BookFullModel = {
   __typename?: 'BookFullModel';
   activeWizformsCount: Scalars['Int']['output'];
+  compatibleWith: CompatibleVersions;
   id: Scalars['ID']['output'];
-  majorVersion: Scalars['Int']['output'];
-  minorVersion: Scalars['Int']['output'];
   name: Scalars['String']['output'];
-  patchVersion: Scalars['Int']['output'];
+  version: Scalars['String']['output'];
   wizformsCount: Scalars['Int']['output'];
 };
 
 export type BookModel = {
   __typename?: 'BookModel';
   available: Scalars['Boolean']['output'];
+  compatibleWith: CompatibleVersions;
   directory: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   initialized: Scalars['Boolean']['output'];
-  majorVersion: Scalars['Int']['output'];
-  minorVersion: Scalars['Int']['output'];
   name: Scalars['String']['output'];
-  patchVersion: Scalars['Int']['output'];
+  version: Scalars['String']['output'];
+};
+
+export type CollectionModel = {
+  __typename?: 'CollectionModel';
+  active: Scalars['Boolean']['output'];
+  bookId: Scalars['ID']['output'];
+  createdOnVersion: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  userId: Scalars['Int']['output'];
+};
+
+export type CollectionWizform = {
+  __typename?: 'CollectionWizform';
+  agility: Scalars['Int']['output'];
+  bookId: Scalars['ID']['output'];
+  description: Scalars['String']['output'];
+  element: WizformElementType;
+  enabled: Scalars['Boolean']['output'];
+  evolutionForm: Scalars['Int']['output'];
+  evolutionLevel: Scalars['Int']['output'];
+  evolutionName?: Maybe<Scalars['String']['output']>;
+  expModifier: Scalars['Int']['output'];
+  gameId: Scalars['String']['output'];
+  hitpoints: Scalars['Int']['output'];
+  icon64: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  inCollectionId?: Maybe<Scalars['UUID']['output']>;
+  jumpAbility: Scalars['Int']['output'];
+  magics: Magics;
+  name: Scalars['String']['output'];
+  number: Scalars['Int']['output'];
+  precision: Scalars['Int']['output'];
+  previousForm?: Maybe<Scalars['Int']['output']>;
+  previousFormName?: Maybe<Scalars['String']['output']>;
+};
+
+export type CompatibleVersions = {
+  __typename?: 'CompatibleVersions';
+  versions: Array<Scalars['String']['output']>;
 };
 
 export type ConfirmationCodeInfo = {
@@ -133,22 +188,20 @@ export type MagicsInputModel = {
   types: Array<MagicInputModel>;
 };
 
-export type Model = {
-  __typename?: 'Model';
-  confirmationState: ConfirmationState;
-  email: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  password: Scalars['String']['output'];
-  permissions: Permissions;
-};
-
 export type Mutation = {
   __typename?: 'Mutation';
+  addCollectionItem: AddCollectionItemResponse;
   confirmEmail: EmailConfirmationResponse;
   insertWizformsBulk: InsertWizformsResponse;
+  removeCollectionItem: Scalars['String']['output'];
   tryRegisterUser: RegisterUserResponse;
   updateWizform: UpdateWizformResponse;
+};
+
+
+export type MutationAddCollectionItemArgs = {
+  collectionId: Scalars['ID']['input'];
+  wizformId: Scalars['ID']['input'];
 };
 
 
@@ -160,6 +213,11 @@ export type MutationConfirmEmailArgs = {
 
 export type MutationInsertWizformsBulkArgs = {
   wizforms: Array<WizformInputModel>;
+};
+
+
+export type MutationRemoveCollectionItemArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -188,16 +246,23 @@ export type Permissions = {
 export type Query = {
   __typename?: 'Query';
   books: Array<BookModel>;
+  collections: Array<CollectionModel>;
   currentBook?: Maybe<BookFullModel>;
   elements: Array<ElementModel>;
-  userByEmail?: Maybe<Model>;
+  userByEmail?: Maybe<UserModel>;
   wizform?: Maybe<WizformModel>;
-  wizforms: Array<WizformModel>;
+  wizforms: Array<CollectionWizform>;
 };
 
 
 export type QueryBooksArgs = {
   available?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryCollectionsArgs = {
+  bookId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 
@@ -224,6 +289,7 @@ export type QueryWizformArgs = {
 
 export type QueryWizformsArgs = {
   bookId: Scalars['ID']['input'];
+  collection?: InputMaybe<Scalars['UUID']['input']>;
   elementFilter?: InputMaybe<WizformElementType>;
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
   nameFilter?: InputMaybe<Scalars['String']['input']>;
@@ -237,6 +303,16 @@ export type RegisterUserResponse = {
 export type UpdateWizformResponse = {
   __typename?: 'UpdateWizformResponse';
   message: Scalars['String']['output'];
+};
+
+export type UserModel = {
+  __typename?: 'UserModel';
+  confirmationState: ConfirmationState;
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  password: Scalars['String']['output'];
+  permissions: Permissions;
 };
 
 export enum WizformElementType {

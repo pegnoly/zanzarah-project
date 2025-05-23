@@ -35,7 +35,7 @@ export function ActiveMagicSlot(schema: MagicSlotSchema) {
     function getIcon(e: MagicElementType | undefined) {
 
         if (e == undefined) {
-            return "";
+            return undefined;
         }
         switch(e) {
             case MagicElementType.None: return blankIcon; break

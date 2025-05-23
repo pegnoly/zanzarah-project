@@ -5,32 +5,32 @@ use zz_data::core::wizform::WizformElementType;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WizformUpdateQuery {
     pub enabled: Option<bool>,
-    pub element: Option<i16>
+    pub element: Option<i16>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BookCreationQuery {
     pub id: Uuid,
     pub name: String,
-    pub directory: String
+    pub directory: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DefaultFetchQuery {
-    pub id: Uuid
+    pub id: Uuid,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ElementUpdateQuery {
     pub id: Uuid,
     pub name: String,
-    pub enabled: bool
+    pub enabled: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WizformFilterQuery {
     pub element: i16,
-    pub name: String
+    pub name: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
@@ -38,7 +38,7 @@ pub struct WizformFilteredModel {
     pub id: Uuid,
     pub cleared_name: String,
     pub icon: String,
-    pub number: i16
+    pub number: i16,
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]

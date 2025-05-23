@@ -2,15 +2,15 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StringPayload {
-    pub value: String
+    pub value: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StringOptionPayload {
-    pub value: Option<String>
+    pub value: Option<String>,
 }
 
 #[derive(Clone)]
 pub struct ApiManager {
-    pub pool: sqlx::PgPool
+    pub pool: sqlx::PgPool,
 }

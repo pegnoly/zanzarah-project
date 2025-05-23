@@ -1,4 +1,4 @@
-use sea_orm::entity::prelude::*;
+use sea_orm::{FromJsonQueryResult, entity::prelude::*};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -11,9 +11,22 @@ pub struct Model {
     pub directory: String,
     pub initialized: bool,
     pub available: bool,
-    pub major_version: i16,
-    pub minor_version: i16,
-    pub patch_version: i16
+    pub version: String,
+    pub compatible_with: CompatibleVersions,
+}
+
+#[derive(
+    Debug,
+    Serialize,
+    Deserialize,
+    Clone,
+    PartialEq,
+    Eq,
+    FromJsonQueryResult,
+    async_graphql::SimpleObject,
+)]
+pub struct CompatibleVersions {
+    pub versions: Vec<String>,
 }
 
 pub type BookModel = Model;
@@ -31,31 +44,42 @@ impl BookModel {
     async fn directory(&self) -> String {
         self.directory.clone()
     }
-    
+
     async fn initialized(&self) -> bool {
         self.initialized
     }
-    
+
     async fn available(&self) -> bool {
         self.available
     }
-    
-    async fn major_version(&self) -> i16 {
-        self.major_version
+
+    async fn version(&self) -> &String {
+        &self.version
     }
 
-    async fn minor_version(&self) -> i16 {
-        self.minor_version
+    async fn compatible_with(&self) -> &CompatibleVersions {
+        &self.compatible_with
     }
-
-    async fn patch_version(&self) -> i16 {
-        self.patch_version
-    }
-
 }
 
-#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+#[derive(Copy, Clone, Debug, EnumIter)]
+pub enum Relation {
+    Collection,
+}
+
+impl RelationTrait for Relation {
+    fn def(&self) -> RelationDef {
+        match self {
+            Self::Collection => Entity::has_many(super::collection::Entity).into(),
+        }
+    }
+}
+
+impl Related<super::collection::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Collection.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}
 
@@ -63,11 +87,10 @@ impl ActiveModelBehavior for ActiveModel {}
 pub struct BookFullModel {
     pub id: Uuid,
     pub name: String,
-    pub major_version: i32,
-    pub minor_version: i32,
-    pub patch_version: i32,
+    pub version: String,
+    pub compatible_with: CompatibleVersions,
     pub wizforms_count: i32,
-    pub active_wizforms_count: i32
+    pub active_wizforms_count: i32,
 }
 
 #[async_graphql::Object]
@@ -80,16 +103,12 @@ impl BookFullModel {
         &self.name
     }
 
-    async fn major_version(&self) -> i32 {
-        self.major_version
+    async fn version(&self) -> &String {
+        &self.version
     }
 
-    async fn minor_version(&self) -> i32 {
-        self.minor_version
-    }
-
-    async fn patch_version(&self) -> i32 {
-        self.patch_version
+    async fn compatible_with(&self) -> &CompatibleVersions {
+        &self.compatible_with
     }
 
     async fn wizforms_count(&self) -> i32 {

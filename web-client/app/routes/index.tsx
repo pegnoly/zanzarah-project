@@ -13,30 +13,36 @@ import { useEffect, useState } from "react"
 import { fetchElementsOptions } from "../utils/queries/elements"
 import { getCookie, setCookie } from "@tanstack/react-start/server"
 import { BookFullModel, BookQueryResult, BooksQueryResult, fetchBookOptions, fetchBooksOptions } from "../utils/queries/books"
+import { fetchCollectionsOptions } from "../utils/queries/collections"
 
 export const Route = createFileRoute('/')({
   component: Home,
   loader: async({context}) => {
     const currentBookCookie = await getBookCookie();
     const booksData = await context.queryClient.ensureQueryData(fetchBooksOptions(true));
+    const collectionsData = await context.queryClient.ensureQueryData(fetchCollectionsOptions({userId: 1, bookId: currentBookCookie!}));
+    console.log("Collections data on servere")
     if (currentBookCookie != undefined) {
       try {
         const book = await context.queryClient.ensureQueryData(fetchBookOptions(currentBookCookie));
         //const elements = await context.queryClient.ensureQueryData(fetchElementsOptions({bookId: currentBookCookie}));
         return {
           books: booksData?.books,
-          currentBook: book?.currentBook
+          currentBook: book?.currentBook,
+          collections: collectionsData?.collections
         }
       } catch {
         return {
           books: booksData?.books,
-          currentBook: null
+          currentBook: null,
+          collections: collectionsData?.collections
         }
       }
     } else {
       return {
         books: booksData?.books,
-        currentBook: null
+        currentBook: null,
+        collections: collectionsData?.collections
       }
     }
   }
@@ -44,6 +50,8 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const data = Route.useLoaderData();
+  
+  console.log("Collections: ", data.collections);
 
   return (
     <Box 
@@ -58,9 +66,7 @@ function Home() {
               <BooksPreview 
                 currentBookId={data.currentBook?.id} 
                 currentBookName={data.currentBook?.name} 
-                currentBookMajorVersion={data.currentBook?.majorVersion}
-                currentBookMinorVersion={data.currentBook?.minorVersion}
-                currentBookPatchVersion={data.currentBook?.patchVersion} 
+                currentBookVersion={data.currentBook?.version}
                 books={data.books}
               />
           </Box>
@@ -72,7 +78,7 @@ function Home() {
             />
           </Box>        
           <Box bg="yellow">
-            <CollectionsPreview/>
+            <CollectionsPreview currentCollections={data.collections}/>
           </Box>
           <Box bg="green">
             <MapPreview/>

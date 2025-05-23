@@ -1,51 +1,78 @@
-use sea_orm::{prelude::Expr, sea_query::{OnConflict, SimpleExpr}, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, TransactionTrait};
+use super::models::{
+    book::{self, BookFullModel, BookModel},
+    collection, collection_entry,
+    element::{self, ElementModel},
+    wizform::{self, WizformElementType, WizformModel, WizformUpdateModel},
+};
+use crate::{error::ZZApiError, services::book::models::wizform::CollectionWizform};
+use sea_orm::{
+    ActiveModelTrait,
+    ActiveValue::Set,
+    ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, IntoActiveModel, ModelTrait,
+    PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related, TransactionTrait,
+    prelude::Expr,
+    sea_query::{OnConflict, SimpleExpr},
+};
 use uuid::Uuid;
-
-use crate::error::ZZApiError;
-
-use super::models::{book::{self, BookFullModel, BookModel}, element::{self, ElementModel}, wizform::{self, WizformElementType, WizformModel, WizformUpdateModel}};
 
 pub struct BookRepository;
 
 impl BookRepository {
-
     pub async fn get_wizforms(
-        &self, 
-        book_id: Uuid, 
+        &self,
+        book_id: Uuid,
         enabled: Option<bool>,
         element: Option<WizformElementType>,
-        name: &Option<String>,  
-        db: &DatabaseConnection
-    ) -> Result<Vec<WizformModel>, ZZApiError> {
+        name: &Option<String>,
+        collection: Option<Uuid>,
+        db: &DatabaseConnection,
+    ) -> Result<Vec<CollectionWizform>, ZZApiError> {
         let condition = Condition::all()
-            .add_option(
-                enabled.map(|enabled| Expr::col(wizform::Column::Enabled).eq(enabled))
-            )
-            .add_option(
-                if let Some(element) = element {
-                    if element != WizformElementType::None {
-                        Some(Expr::col(wizform::Column::Element).eq(element)) 
-                    } else {
-                        None::<SimpleExpr>
-                    }
+            .add_option(enabled.map(|enabled| Expr::col(wizform::Column::Enabled).eq(enabled)))
+            .add_option(if let Some(element) = element {
+                if element != WizformElementType::None {
+                    Some(Expr::col(wizform::Column::Element).eq(element))
                 } else {
-                    None::<SimpleExpr> 
+                    None::<SimpleExpr>
                 }
-            );
+            } else {
+                None::<SimpleExpr>
+            });
 
-        Ok(wizform::Entity::find()
+        let collection_condition = Condition::all().add_option(collection.map(|collection| {
+            Expr::col(collection_entry::Column::CollectionId)
+                .eq(collection)
+                .or(collection_entry::Column::CollectionId.is_null())
+        }));
+
+        tracing::info!("Collection specified: {:?}", &collection);
+        let result = wizform::Entity::find()
+            .left_join(collection_entry::Entity)
+            .column_as(collection_entry::Column::WizformId, "in_collection_id")
+            .filter(collection_condition)
             .filter(wizform::Column::BookId.eq(book_id))
             .filter(condition)
             .filter(wizform::Column::Name.contains(name.clone().unwrap_or("".to_string())))
             .order_by(wizform::Column::Number, sea_orm::Order::Asc)
+            .into_model::<CollectionWizform>()
             .all(db)
-            .await?)
+            .await;
+        match result {
+            Ok(res) => {
+                tracing::info!("Found models: {:#?}", &res);
+                Ok(res)
+            }
+            Err(error) => {
+                tracing::error!("Error: {}", &error);
+                Err(ZZApiError::SeaOrmError(error))
+            }
+        }
     }
 
     pub async fn get_wizform(
         &self,
         id: Uuid,
-        db: &DatabaseConnection
+        db: &DatabaseConnection,
     ) -> Result<Option<WizformModel>, ZZApiError> {
         Ok(wizform::Entity::find()
             .filter(wizform::Column::Id.eq(id))
@@ -57,11 +84,11 @@ impl BookRepository {
         &self,
         book_id: Uuid,
         enabled: Option<bool>,
-        db: &DatabaseConnection
+        db: &DatabaseConnection,
     ) -> Result<Vec<ElementModel>, ZZApiError> {
         let condition = Condition::all()
             .add_option(enabled.map(|enabled| Expr::col(element::Column::Enabled).eq(enabled)));
-        
+
         Ok(element::Entity::find()
             .filter(element::Column::BookId.eq(book_id))
             .filter(condition)
@@ -70,25 +97,21 @@ impl BookRepository {
     }
 
     pub async fn get_books(
-        &self, 
+        &self,
         db: &DatabaseConnection,
-        available: Option<bool>
+        available: Option<bool>,
     ) -> Result<Vec<BookModel>, ZZApiError> {
-        let condition = Condition::all()
-        .add_option(
-            available.map(|available| Expr::col(book::Column::Available).eq(available))
+        let condition = Condition::all().add_option(
+            available.map(|available| Expr::col(book::Column::Available).eq(available)),
         );
 
-        Ok(book::Entity::find()
-            .filter(condition)
-            .all(db)
-            .await?)
+        Ok(book::Entity::find().filter(condition).all(db).await?)
     }
 
     pub async fn get_current_book(
         &self,
         db: &DatabaseConnection,
-        id: Uuid
+        id: Uuid,
     ) -> Result<Option<BookFullModel>, ZZApiError> {
         if let Some(book) = book::Entity::find_by_id(id).one(db).await? {
             let wizforms_count = wizform::Entity::find()
@@ -103,11 +126,10 @@ impl BookRepository {
             Ok(Some(BookFullModel {
                 id: book.id,
                 name: book.name,
-                major_version: book.major_version as i32,
-                minor_version: book.minor_version as i32,
-                patch_version: book.patch_version as i32,
+                version: book.version,
+                compatible_with: book.compatible_with,
                 wizforms_count: wizforms_count as i32,
-                active_wizforms_count: active_wizforms_count as i32
+                active_wizforms_count: active_wizforms_count as i32,
             }))
         } else {
             Ok(None)
@@ -117,40 +139,31 @@ impl BookRepository {
     pub async fn insert_wizforms_bulk(
         &self,
         db: &DatabaseConnection,
-        wizforms: Vec<WizformModel>
+        wizforms: Vec<WizformModel>,
     ) -> Result<(), ZZApiError> {
         let transaction = db.begin().await?;
         for wizform in wizforms {
-            // if let Some(existing_model) = wizform::Entity::find_by_id(wizform.id).one(db).await? {
-            //     let mut model_to_update: wizform::ActiveModel = existing_model.into();
-            //     model_to_update.element = Set(wizform.element);
-            //     model_to_update.magics = Set(wizform.magics);
-            //     model_to_update.name = Set(wizform.name);
-            //     model_to_update.hitpoints = Set(wizform.hitpoints);
-            //     model_to_update.agility = Set(wizform.agility);
-            //     model_to_update.jump_ability = Set(wizform.jump_ability);
-            //     model_to_update.precision = Set(wizform.precision);
-            //     model_to_update.evolution_form = Set(wizform.evolution_form);
-            //     model_to_update.evolution_name = Set(wizform.evolution_name);
-            //     model_to_update.previous_form = Set(wizform.previous_form);
-            //     model_to_update.previous_form_name = Set(wizform.previous_form_name);
-            //     model_to_update.evolution_level = Set(wizform.evolution_level);
-            //     model_to_update.exp_modifier = Set(wizform.exp_modifier);
-            //     model_to_update.enabled = Set(wizform.enabled);
-            //     model_to_update.description = Set(wizform.description);
-            //     model_to_update.icon64 = Set(wizform.icon64);
-            //     model_to_update.update(db).await?;
-            // } else {
             let on_conflict = OnConflict::new()
                 .exprs([
                     Expr::column(wizform::Column::BookId),
-                    Expr::column(wizform::Column::Number)
+                    Expr::column(wizform::Column::Number),
                 ])
                 .update_columns([
-                    wizform::Column::Element, wizform::Column::Magics, wizform::Column::Name, wizform::Column::Hitpoints, 
-                    wizform::Column::Agility, wizform::Column::JumpAbility, wizform::Column::Precision, wizform::Column::EvolutionForm, 
-                    wizform::Column::EvolutionName, wizform::Column::PreviousForm, wizform::Column::PreviousFormName, wizform::Column::EvolutionLevel, 
-                    wizform::Column::ExpModifier, wizform::Column::Description, wizform::Column::Icon64
+                    wizform::Column::Element,
+                    wizform::Column::Magics,
+                    wizform::Column::Name,
+                    wizform::Column::Hitpoints,
+                    wizform::Column::Agility,
+                    wizform::Column::JumpAbility,
+                    wizform::Column::Precision,
+                    wizform::Column::EvolutionForm,
+                    wizform::Column::EvolutionName,
+                    wizform::Column::PreviousForm,
+                    wizform::Column::PreviousFormName,
+                    wizform::Column::EvolutionLevel,
+                    wizform::Column::ExpModifier,
+                    wizform::Column::Description,
+                    wizform::Column::Icon64,
                 ])
                 .to_owned();
             let model_to_insert = wizform::ActiveModel {
@@ -173,9 +186,12 @@ impl BookRepository {
                 exp_modifier: Set(wizform.exp_modifier),
                 enabled: Set(wizform.enabled),
                 description: Set(wizform.description),
-                icon64: Set(wizform.icon64)
+                icon64: Set(wizform.icon64),
             };
-            wizform::Entity::insert(model_to_insert).on_conflict(on_conflict).exec(db).await?;
+            wizform::Entity::insert(model_to_insert)
+                .on_conflict(on_conflict)
+                .exec(db)
+                .await?;
             //}
         }
         transaction.commit().await?;
@@ -185,9 +201,12 @@ impl BookRepository {
     pub async fn update_wizform(
         &self,
         db: &DatabaseConnection,
-        update_model: WizformUpdateModel
+        update_model: WizformUpdateModel,
     ) -> Result<(), ZZApiError> {
-        if let Some(existing_model) = wizform::Entity::find_by_id(update_model.id.parse::<Uuid>()?).one(db).await? {
+        if let Some(existing_model) = wizform::Entity::find_by_id(update_model.id.parse::<Uuid>()?)
+            .one(db)
+            .await?
+        {
             let mut model_to_update = existing_model.into_active_model();
             if let Some(element) = update_model.element {
                 model_to_update.element = Set(element);
@@ -204,7 +223,112 @@ impl BookRepository {
             model_to_update.update(db).await?;
             Ok(())
         } else {
-            Err(ZZApiError::SeaOrmError(DbErr::RecordNotFound("No record for wizform supposed to be updated".to_string())))
+            Err(ZZApiError::SeaOrmError(DbErr::RecordNotFound(
+                "No record for wizform supposed to be updated".to_string(),
+            )))
         }
+    }
+
+    pub async fn create_collection(
+        &self,
+        db: &DatabaseConnection,
+        user_id: i32,
+        book_id: Uuid,
+        version: String,
+        name: String,
+        description: String,
+    ) -> Result<(), ZZApiError> {
+        let model_to_insert = collection::ActiveModel {
+            id: Set(Uuid::new_v4()),
+            user_id: Set(user_id),
+            book_id: Set(book_id),
+            created_on_version: Set(version),
+            name: Set(name),
+            description: Set(description),
+            ..Default::default()
+        };
+        model_to_insert.insert(db).await?;
+        Ok(())
+    }
+
+    pub async fn get_active_collection_for_user(
+        &self,
+        db: &DatabaseConnection,
+        user_id: i32,
+        book_id: Uuid,
+    ) -> Result<Option<collection::Model>, ZZApiError> {
+        Ok(collection::Entity::find()
+            .filter(collection::Column::UserId.eq(user_id))
+            .filter(collection::Column::BookId.eq(book_id))
+            .filter(collection::Column::Active.eq(true))
+            .one(db)
+            .await?)
+    }
+
+    pub async fn get_collections_for_user(
+        &self,
+        db: &DatabaseConnection,
+        user_id: i32,
+        book_id: Uuid,
+    ) -> Result<Vec<collection::Model>, ZZApiError> {
+        Ok(collection::Entity::find()
+            .filter(collection::Column::UserId.eq(user_id))
+            .filter(collection::Column::BookId.eq(book_id))
+            .all(db)
+            .await?)
+    }
+
+    pub async fn set_active_collection(
+        &self,
+        db: &DatabaseConnection,
+        id: Uuid,
+    ) -> Result<(), ZZApiError> {
+        if let Some(existing_model) = collection::Entity::find_by_id(id).one(db).await? {
+            if let Some(current_active_model) = collection::Entity::find()
+                .filter(collection::Column::UserId.eq(existing_model.user_id))
+                .filter(collection::Column::BookId.eq(existing_model.book_id))
+                .filter(collection::Column::Active.eq(true))
+                .one(db)
+                .await?
+            {
+                let mut current_model_to_update = current_active_model.into_active_model();
+                current_model_to_update.active = Set(false);
+                current_model_to_update.update(db).await?;
+            }
+            let mut model_to_update = existing_model.into_active_model();
+            model_to_update.active = Set(true);
+            model_to_update.update(db).await?;
+        }
+        Ok(())
+    }
+
+    pub async fn add_item_to_collection(
+        &self,
+        db: &DatabaseConnection,
+        collection_id: Uuid,
+        wizform_id: Uuid,
+    ) -> Result<Uuid, ZZApiError> {
+        let id = Uuid::new_v4();
+        let model_to_insert = collection_entry::ActiveModel {
+            id: Set(id),
+            collection_id: Set(collection_id),
+            wizform_id: Set(wizform_id),
+        };
+        model_to_insert.insert(db).await?;
+        Ok(id)
+    }
+
+    pub async fn remove_item_from_collection(
+        &self,
+        db: &DatabaseConnection,
+        id: Uuid,
+    ) -> Result<(), ZZApiError> {
+        if let Some(model_to_delete) = collection_entry::Entity::find_by_id(id)
+            .one(db)
+            .await?
+        {
+            model_to_delete.delete(db).await?;
+        }
+        Ok(())
     }
 }

@@ -1,4 +1,4 @@
-import { Badge, Box, Group, Modal, SimpleGrid, Space, Stack, Text } from '@mantine/core'
+import { Badge, Box, Button, Group, Modal, SimpleGrid, Space, Stack, Text } from '@mantine/core'
 import { createFileRoute, useLoaderData, useNavigate } from '@tanstack/react-router'
 import { fetchWizformOptions } from '../../utils/queries/wizform';
 import { Carousel } from '@mantine/carousel';
@@ -7,6 +7,11 @@ import classes from "./styles.module.css";
 import { useCommonStore } from '../../stores/common';
 import { PassiveMagicSlot } from '../../components/magic/passiveSlot';
 import { ActiveMagicSlot } from '../../components/magic/activeSlot';
+import { useShallow } from 'zustand/shallow';
+import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { addCollectionItem, addCollectionItemMutation, AddCollectionItemMutationResult, AddCollectionItemMutationVariables } from '../../utils/queries/collections';
+import request from 'graphql-request';
 
 export const Route = createFileRoute('/wizforms/$bookId/focused/$id')({
   component: RouteComponent,
@@ -14,17 +19,69 @@ export const Route = createFileRoute('/wizforms/$bookId/focused/$id')({
     const data = await context.queryClient.ensureQueryData(fetchWizformOptions(params.id));
     return data;
   }
-})
+});
 
 function RouteComponent() {
   const navigate = useNavigate();
   const data = Route.useLoaderData();
   const params = Route.useParams();
 
-  const elements = useCommonStore(state => state.elements);
+  const [wizforms, setWizforms, elements, currentCollection] = useCommonStore(useShallow((state) => [
+    state.wizforms, state.setWizforms, state.elements, state.currentCollection
+  ]));
+
+  const addToCollectionMutation = useMutation({
+    mutationFn: async(data: AddCollectionItemMutationVariables) => {
+        const updatedWizforms = wizforms?.map((w) => {
+          if (w.id == params.id) {
+            w.inCollectionId = "optimistically_updated";
+            return w;
+          } else {
+            return w;
+          }
+        });
+        const collectionItemId = await request<AddCollectionItemMutationResult | null, AddCollectionItemMutationVariables>(
+            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            addCollectionItemMutation,
+            {collectionId: data.collectionId, wizformId: data.wizformId}
+        );
+        if (collectionItemId != null) {
+          setWizforms(updatedWizforms);
+        }
+    },
+    // onSuccess: (createdId) => {
+    //   console.log("Mutation finished: ", createdId?.createdId);
+    // }
+    // onSuccess: (createdId) => {
+    //   const updatedWizforms = wizforms?.map((w) => {
+    //     if (w.id == params.id) {
+    //       w.inCollectionId = createdId?.createdId!;
+    //       return w;
+    //     } else {
+    //       return w;
+    //     }
+    //   });
+    //   setWizforms(updatedWizforms);
+    // }
+  })
 
   return <Modal opened={true} onClose={() => {navigate({to: '/wizforms/$bookId', params: {bookId: params.bookId}})}}>
     <div style={{display: 'flex', flexDirection: 'column'}}>
+      <div style={{display: 'flex', alignItems: 'start'}}>
+        <Button onClick={() => {
+          // const updatedWizforms = wizforms?.map((w) => {
+          //   if (w.id == params.id) {
+          //     w.inCollectionId = "optimistically_updated";
+          //     return w;
+          //   } else {
+          //     return w;
+          //   }
+          // });
+          // setWizforms(updatedWizforms);
+          addToCollectionMutation.mutate({collectionId: currentCollection!, wizformId: data?.wizform.id!})
+        }}
+        >Добавить в текущую коллекцию</Button>
+      </div>
       <div style={{display: 'flex', flexDirection: 'column', gap: '1%', alignItems: 'end'}}>
         <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '2rem'}}>{data?.wizform.name}</Text>
         <Text 
@@ -60,10 +117,11 @@ function RouteComponent() {
         <Badge radius={0}>
           Превращения
         </Badge>
-        <Group gap="xs">
+        <Group gap="sm">
           <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Эволюция:`}</Text>
           <Text 
             size='md' 
+            lineClamp={1}
             style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
           >{data?.wizform.evolutionForm == -1 ? 'Отстуствует' : data?.wizform.evolutionName}</Text>
         </Group>
@@ -74,10 +132,11 @@ function RouteComponent() {
             style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
           >{data?.wizform.evolutionLevel == -1 ? 'Отсутствует' : data?.wizform.evolutionLevel!}</Text>
         </Group>
-        <Group gap="xs">
+        <Group gap="sm" grow>
           <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Предыдущая форма:`}</Text>
           <Text 
             size='md' 
+            lineClamp={1}
             style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
           >{data?.wizform.previousForm == undefined ? 'Отсутствует' : data?.wizform.previousFormName!}</Text>
         </Group>
@@ -87,7 +146,7 @@ function RouteComponent() {
           Уровни магии
         </Badge>
         <Carousel withControls>{data?.wizform.magics.types.map((magic, index) => (
-          <Carousel.Slide>
+          <Carousel.Slide key={index}>
             <div>
               <Text style={{fontFamily: 'Yanone Kaffeesatz', fontWeight: 'bolder', fontSize: '1.5rem'}}>{`Уровень ${magic.level}`}</Text>
               <div style={{paddingLeft: '25%'}}>
@@ -121,25 +180,4 @@ function RouteComponent() {
       </div>
     </div>
   </Modal>
-}
-
-function MagicLevel() {
-
-  return <div>
-    <Text>Level 2</Text>
-    <SimpleGrid cols={2}>
-      <Box>
-        1
-      </Box>
-      <Box>
-        2
-      </Box>
-      <Box>
-        3
-      </Box>
-      <Box>
-        4
-      </Box>
-    </SimpleGrid>
-  </div> 
 }
