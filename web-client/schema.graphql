@@ -1,14 +1,15 @@
 schema {
-  query: Query
-  mutation: Mutation
-}
-
-type ActiveConfirmationInfo {
-  activatedAt: DateTime!
+  query: QueryRoot
+  mutation: MutationRoot
 }
 
 type AddCollectionItemResponse {
   createdId: ID!
+}
+
+type AuthorizationResult {
+  permission: UserPermissionType!
+  registrationState: RegistrationState!
 }
 
 type BookFullModel {
@@ -68,30 +69,12 @@ type CompatibleVersions {
   versions: [String!]!
 }
 
-type ConfirmationCodeInfo {
-  exprirationTime: DateTime!
-  value: String!
-}
-
-union ConfirmationState = ActiveConfirmationInfo | ConfirmationCodeInfo
-
-"""
-Implement the DateTime<Local> scalar
-
-The input/output is a string in RFC3339 format.
-"""
-scalar DateTime
-
 type ElementModel {
   bookId: ID!
   element: WizformElementType!
   enabled: Boolean!
   id: ID!
   name: String!
-}
-
-type EmailConfirmationResponse {
-  message: String!
 }
 
 type InsertWizformsResponse {
@@ -152,27 +135,17 @@ input MagicsInputModel {
   types: [MagicInputModel!]!
 }
 
-type Mutation {
+type MutationRoot {
   addCollectionItem(collectionId: ID!, wizformId: ID!): AddCollectionItemResponse!
-  confirmEmail(code: String!, email: String!): EmailConfirmationResponse!
+  confirmEmail(code: String!, email: String!): AuthorizationResult!
   insertWizformsBulk(wizforms: [WizformInputModel!]!): InsertWizformsResponse!
   removeCollectionItem(id: ID!): String!
-  tryRegisterUser(email: String!, password: String!): RegisterUserResponse!
+  renewToken(email: String!, password: String!): TokenUpdateResult!
+  tryRegisterUser(email: String!, password: String!): RegistrationResult!
   updateWizform(updateModel: WizformUpdateModel!): UpdateWizformResponse!
 }
 
-enum PermissionType {
-  CONFIRMED_USER
-  MOD_ADMIN
-  SUPER_ADMIN
-  UNCONFIRMED_USER
-}
-
-type Permissions {
-  types: [PermissionType!]!
-}
-
-type Query {
+type QueryRoot {
   books(
     """Query only available for user books"""
     available: Boolean
@@ -185,6 +158,7 @@ type Query {
     """Select all or only enabled elements"""
     enabled: Boolean
   ): [ElementModel!]!
+  processToken(token: String!): AuthorizationResult!
   userByEmail(email: String!): UserModel
   wizform(
     """Id of wizform to focus"""
@@ -204,8 +178,22 @@ type Query {
   ): [CollectionWizform!]!
 }
 
-type RegisterUserResponse {
-  message: String!
+type RegistrationResult {
+  emailHash: String!
+  passwordHash: String!
+  token: String!
+}
+
+enum RegistrationState {
+  CONFIRMED
+  UNCONFIRMED
+  UNREGISTERED
+}
+
+type TokenUpdateResult {
+  newToken: String!
+  permission: UserPermissionType!
+  registrationState: RegistrationState!
 }
 
 """
@@ -225,12 +213,19 @@ type UpdateWizformResponse {
 }
 
 type UserModel {
-  confirmationState: ConfirmationState!
   email: String!
   id: ID!
   name: String!
-  password: String!
-  permissions: Permissions!
+  permission: UserPermissionType!
+  registrationState: RegistrationState!
+  salt: String!
+}
+
+enum UserPermissionType {
+  ADMIN
+  EDITOR
+  UNREGISTERED_USER
+  USER
 }
 
 enum WizformElementType {

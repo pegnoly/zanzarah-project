@@ -27,43 +27,38 @@ function BooksPreview(params: {
         name: string;
     }[] | undefined;
 }) {
-    // const current = useCommonStore(state => state.currentBook);
-    // console.log("Params: ", params);
-
-    return <Card w='100%' h='100%' withBorder>
-        <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'column'}}>
-            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                <Badge
-                    size="lg"
-                    radius={0}
-                    bg="orange"
-                >
-                    Доступные книги
-                </Badge>
-                <BookSelector books={params.books} current={params.currentBookId}/>
-            </div>
-            <div style={{display: 'flex', justifyContent: 'end', gap: '4%', paddingTop: '5%'}}>
-                <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem'}}>Активная книга: </Text>
-                {
-                    params.currentBookId == undefined ?
-                    <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem', color: 'red'}}>Не выбрана</Text> :
-                    <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem', color: 'green'}}>{params.currentBookName}</Text>
-                }
-            </div>
-            <div style={{display: 'flex', justifyContent: 'end', gap: '4%'}}>
-                <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem'}}>Текущая версия: </Text>
-                {
-                    params.currentBookId == undefined ?
-                    <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem', color: 'red'}}>Не определено</Text> :
-                    <Text 
-                        style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem', color: 'green'}}
-                    >
-                        {`${params.currentBookVersion}`}
-                    </Text>
-                }
-            </div>
+    return <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'column'}}>
+        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+            <Badge
+                size="lg"
+                radius={0}
+                bg="orange"
+            >
+                Доступные книги
+            </Badge>
+            <BookSelector books={params.books} current={params.currentBookId}/>
         </div>
-    </Card>
+        <div style={{display: 'flex', justifyContent: 'end', gap: '4%', paddingTop: '5%'}}>
+            <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem'}}>Активная книга: </Text>
+            {
+                params.currentBookId == undefined ?
+                <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem', color: 'red'}}>Не выбрана</Text> :
+                <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem', color: 'green'}}>{params.currentBookName}</Text>
+            }
+        </div>
+        <div style={{display: 'flex', justifyContent: 'end', gap: '4%'}}>
+            <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem'}}>Текущая версия: </Text>
+            {
+                params.currentBookId == undefined ?
+                <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem', color: 'red'}}>Не определено</Text> :
+                <Text 
+                    style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem', color: 'green'}}
+                >
+                    {`${params.currentBookVersion}`}
+                </Text>
+            }
+        </div>
+    </div>
 }
 
 function BookSelector(params: {

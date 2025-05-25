@@ -1,18 +1,18 @@
 use ::chrono::Local;
-use sea_orm::{FromJsonQueryResult, prelude::*};
+use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
-use sqlx::types::chrono::{self, Utc};
-
+use sqlx::types::chrono;
 #[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel)]
 #[sea_orm(table_name = "users")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i32,
+    pub id: Uuid,
     pub name: String,
     pub email: String,
-    pub password: String,
-    pub confirmation_state: ConfirmationState,
-    pub permissions: Permissions,
+    pub salt: String,
+    pub registration_state: RegistrationState,
+    pub permission: UserPermissionType,
+    pub confirmation_code: Option<String>
 }
 
 pub type UserModel = Model;
@@ -24,45 +24,28 @@ pub enum ModType {
     Redux,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Copy, async_graphql::Enum)]
-pub enum PermissionType {
-    UnconfirmedUser,
-    ConfirmedUser,
-    ModAdmin,
-    SuperAdmin,
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Copy, DeriveActiveEnum, EnumIter, async_graphql::Enum)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum UserPermissionType {
+    #[sea_orm(string_value = "UNREGISTERED_USER")]
+    UnregisteredUser,
+    #[sea_orm(string_value = "USER")]
+    User,
+    #[sea_orm(string_value = "EDITOR")]
+    Editor,
+    #[sea_orm(string_value = "ADMIN")]
+    Admin
 }
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    FromJsonQueryResult,
-    Clone,
-    PartialEq,
-    Eq,
-    async_graphql::SimpleObject,
-)]
-pub struct Permissions {
-    pub types: Vec<PermissionType>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, async_graphql::SimpleObject)]
-pub struct ConfirmationCodeInfo {
-    pub value: String,
-    pub expriration_time: chrono::DateTime<Local>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, async_graphql::SimpleObject)]
-pub struct ActiveConfirmationInfo {
-    pub activated_at: chrono::DateTime<Local>,
-}
-
-#[derive(
-    Debug, Serialize, Deserialize, FromJsonQueryResult, Clone, PartialEq, Eq, async_graphql::Union,
-)]
-pub enum ConfirmationState {
-    NotConfirmed(ConfirmationCodeInfo),
-    Confirmed(ActiveConfirmationInfo),
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Copy, DeriveActiveEnum, EnumIter, async_graphql::Enum)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum RegistrationState {
+    #[sea_orm(string_value = "UNREGISTERED")]
+    Unregistered,
+    #[sea_orm(string_value = "UNCONFIRMED")]
+    Unconfirmed,
+    #[sea_orm(string_value = "CONFIRMED")]
+    Confirmed,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]
@@ -102,15 +85,15 @@ impl UserModel {
         &self.email
     }
 
-    async fn password(&self) -> &String {
-        &self.password
+    async fn salt(&self) -> &String {
+        &self.salt
     }
 
-    async fn confirmation_state(&self) -> &ConfirmationState {
-        &self.confirmation_state
+    async fn registration_state(&self) -> RegistrationState{
+        self.registration_state
     }
 
-    async fn permissions(&self) -> &Permissions {
-        &self.permissions
+    async fn permission(&self) -> UserPermissionType {
+        self.permission
     }
 }

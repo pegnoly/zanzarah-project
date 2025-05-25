@@ -15,5 +15,17 @@ pub enum ZZApiError {
     #[error("Custom ZZApi error: `{0}`")]
     Custom(String),
     #[error(transparent)]
-    ParseInt(#[from] ParseIntError)
+    ParseInt(#[from] ParseIntError),
+    #[error(transparent)]
+    JWT(#[from] jsonwebtoken::errors::Error),
+    #[error("Failed to generate hash: {0:?}")]
+    Argon2Hash(argon2::password_hash::Error),
+    #[error(transparent)]
+    TOTP(#[from] totp_rs::TotpUrlError)
+}
+
+impl From<argon2::password_hash::Error> for ZZApiError {
+    fn from(value: argon2::password_hash::Error) -> Self {
+        ZZApiError::Argon2Hash(value)
+    }
 }

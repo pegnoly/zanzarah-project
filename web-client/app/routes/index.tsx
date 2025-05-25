@@ -7,51 +7,101 @@ import classes from "../styles/main.module.css"
 import BooksPreview, { getBookCookie } from "../components/home/booksPreview"
 import CollectionsPreview from "../components/home/collectionsPreview"
 import MapPreview from "../components/home/mapPreview"
+import { BookFullModel, BookSimpleModel, fetchBookOptions, fetchBooksOptions } from "../utils/queries/books"
+import { CollectionModel, fetchCollectionsOptions } from "../utils/queries/collections"
+import { createServerFn } from "@tanstack/react-start"
+import { getCookie, setCookie } from "@tanstack/react-start/server"
+import axios from 'axios';
+import { AuthProps, processAuth, UserPermissionType, RegistrationState } from "../utils/auth/helpers"
 import { useCommonStore } from "../stores/common"
 import { useShallow } from "zustand/shallow"
-import { useEffect, useState } from "react"
-import { fetchElementsOptions } from "../utils/queries/elements"
-import { getCookie, setCookie } from "@tanstack/react-start/server"
-import { BookFullModel, BookQueryResult, BooksQueryResult, fetchBookOptions, fetchBooksOptions } from "../utils/queries/books"
-import { fetchCollectionsOptions } from "../utils/queries/collections"
+
+type UserClaims = {
+  email: string,
+  password: string
+}
+
+const getUserDataCookies = createServerFn({method: 'GET'})
+  .handler(async(): Promise<{email: string | undefined, password: string | undefined}> => {
+    return {
+      email: getCookie('zanzarah-project-user-email'),
+      password: getCookie('zanzarah-project-user-password')
+    }
+  });
+
+const getTokenCookie = createServerFn({method: 'GET'})
+  .handler(async(): Promise<string | undefined> => {
+    return getCookie('zanzarah-project-auth-token');
+  });
+
+const setTokenCookie = createServerFn({method: 'POST'})
+  .validator((value: string) => value)
+  .handler(async({data}) => {
+    setCookie('zanzarah-project-auth-token', data, {maxAge: 86400});
+  })
+
+function checkForExistingUserClaims(input: {email: string | undefined, password: string | undefined}): UserClaims | null {
+  if (input.email != undefined && input.password != undefined) {
+    return {
+      email: input.email!,
+      password: input.password!
+    }
+  } else {
+    return null;
+  }
+}
+
+const authorizeUser = createServerFn({method: 'POST'})
+  .validator((data: UserClaims) => data)
+  .handler(async({data}): Promise<string> => {
+    const newToken = await axios.post<string, string, UserClaims>('https://zanzarah-project-api-lyaq.shuttle.app/authorize', data);
+    return newToken;
+  })
+
+type LoaderData = {
+  auth: AuthProps,
+  books: BookSimpleModel [] | undefined,
+  currentBook: BookFullModel | null | undefined,
+  collections: CollectionModel [] | undefined
+}
 
 export const Route = createFileRoute('/')({
   component: Home,
-  loader: async({context}) => {
+  loader: async({context, cause}): Promise<LoaderData> => {
+    var loaderData: LoaderData = {
+      auth: {userState: RegistrationState.Unregistered, userPermission: UserPermissionType.UnregisteredUser},
+      books: undefined,
+      currentBook: undefined,
+      collections: undefined
+    }
+    if (cause == "stay") {
+      console.log("Page was reloaded")
+      loaderData = {...loaderData, auth: {...loaderData.auth, userState: RegistrationState.Unchanged}};
+    } else {
+      console.log("Page was restarted")
+      const authData = await processAuth(); 
+      
+      loaderData = {...loaderData, auth: authData};
+    }
+    // load books data
     const currentBookCookie = await getBookCookie();
     const booksData = await context.queryClient.ensureQueryData(fetchBooksOptions(true));
-    const collectionsData = await context.queryClient.ensureQueryData(fetchCollectionsOptions({userId: 1, bookId: currentBookCookie!}));
-    console.log("Collections data on servere")
+    loaderData = {...loaderData, books: booksData?.books}
     if (currentBookCookie != undefined) {
-      try {
-        const book = await context.queryClient.ensureQueryData(fetchBookOptions(currentBookCookie));
-        //const elements = await context.queryClient.ensureQueryData(fetchElementsOptions({bookId: currentBookCookie}));
-        return {
-          books: booksData?.books,
-          currentBook: book?.currentBook,
-          collections: collectionsData?.collections
-        }
-      } catch {
-        return {
-          books: booksData?.books,
-          currentBook: null,
-          collections: collectionsData?.collections
-        }
-      }
-    } else {
-      return {
-        books: booksData?.books,
-        currentBook: null,
-        collections: collectionsData?.collections
-      }
+      const book = await context.queryClient.ensureQueryData(fetchBookOptions(currentBookCookie));
+      loaderData = {...loaderData, currentBook: book?.currentBook}
     }
-  }
+
+    return loaderData;
+  } 
 })
 
 function Home() {
   const data = Route.useLoaderData();
-  
-  console.log("Collections: ", data.collections);
+  const [setRegistrationState, setPermission] = useCommonStore(useShallow((state) => [state.setRegistrationState, state.setPermission]));
+
+  setRegistrationState(data.auth.userState);
+  setPermission(data.auth.userPermission!);
 
   return (
     <Box 
@@ -62,13 +112,15 @@ function Home() {
         spacing="xl" 
         verticalSpacing="xl"
       >
-          <Box bg="blue">
-              <BooksPreview 
-                currentBookId={data.currentBook?.id} 
-                currentBookName={data.currentBook?.name} 
-                currentBookVersion={data.currentBook?.version}
-                books={data.books}
-              />
+          <Box>
+              <Card w="100%" h="100%" withBorder radius={0}>
+                <BooksPreview 
+                  currentBookId={data.currentBook?.id} 
+                  currentBookName={data.currentBook?.name} 
+                  currentBookVersion={data.currentBook?.version}
+                  books={data.books}
+                />
+              </Card>
           </Box>
           <Box>
             <WizformsPreview
@@ -78,7 +130,7 @@ function Home() {
             />
           </Box>        
           <Box bg="yellow">
-            <CollectionsPreview currentCollections={data.collections}/>
+            <CollectionsPreview authProps={data.auth} currentCollections={data.collections}/>
           </Box>
           <Box bg="green">
             <MapPreview/>

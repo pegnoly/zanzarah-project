@@ -1,13 +1,13 @@
 use std::str::FromStr;
 
 use async_graphql::Context;
-use sea_orm::DatabaseConnection;
+use sea_orm::{sea_query::token, DatabaseConnection};
 use uuid::Uuid;
 
 use crate::{
     error::ZZApiError,
     services::{
-        auth::prelude::{AuthRepository, UserModel},
+        auth::{prelude::{AuthRepository, UserModel}, utils::AuthorizationResult},
         book::{
             models::{
                 book::{BookFullModel, BookModel}, collection::{self, CollectionModel}, element::ElementModel, wizform::{CollectionWizform, WizformElementType, WizformModel}
@@ -17,6 +17,7 @@ use crate::{
     },
 };
 
+#[derive(Default)]
 pub struct Query;
 
 #[async_graphql::Object]
@@ -237,13 +238,12 @@ impl Query {
         }
     }
 
-    async fn collections(
+    async fn process_token(
         &self,
         context: &Context<'_>,
-        user_id: async_graphql::ID,
-        book_id: async_graphql::ID,
-    ) -> Result<Vec<CollectionModel>, ZZApiError> {
-        let service = context.data::<BookRepository>().map_err(|error| {
+        token: String
+    ) -> Result<AuthorizationResult, ZZApiError> {
+        let service = context.data::<AuthRepository>().map_err(|error| {
             tracing::error!(
                 "Failed to get wizform service from context. {}",
                 &error.message
@@ -257,14 +257,7 @@ impl Query {
             );
             ZZApiError::Empty
         })?;
-        let collections = service.get_collections_for_user(db, user_id.parse::<i32>()?, Uuid::from_str(&book_id)?).await;
-        match collections {
-            Ok(collections) => {
-                Ok(collections)
-            },
-            Err(error) => {
-                Err(error)
-            }
-        }
+        let result = service.get_user_data_from_token(db, token).await?;
+        Ok(result)
     }
 }

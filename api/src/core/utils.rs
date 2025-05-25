@@ -1,3 +1,4 @@
+use jsonwebtoken::{DecodingKey, EncodingKey};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -13,4 +14,6 @@ pub struct StringOptionPayload {
 #[derive(Clone)]
 pub struct ApiManager {
     pub pool: sqlx::PgPool,
+    pub encoding_key: EncodingKey,
+    pub decoding_key: DecodingKey
 }

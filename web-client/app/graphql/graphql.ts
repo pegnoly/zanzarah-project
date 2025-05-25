@@ -14,12 +14,6 @@ export type Scalars = {
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   /**
-   * Implement the DateTime<Local> scalar
-   *
-   * The input/output is a string in RFC3339 format.
-   */
-  DateTime: { input: any; output: any; }
-  /**
    * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
    * Strings within GraphQL. UUIDs are used to assign unique identifiers to
    * entities without requiring a central allocating authority.
@@ -32,14 +26,15 @@ export type Scalars = {
   UUID: { input: any; output: any; }
 };
 
-export type ActiveConfirmationInfo = {
-  __typename?: 'ActiveConfirmationInfo';
-  activatedAt: Scalars['DateTime']['output'];
-};
-
 export type AddCollectionItemResponse = {
   __typename?: 'AddCollectionItemResponse';
   createdId: Scalars['ID']['output'];
+};
+
+export type AuthorizationResult = {
+  __typename?: 'AuthorizationResult';
+  permission: UserPermissionType;
+  registrationState: RegistrationState;
 };
 
 export type BookFullModel = {
@@ -104,14 +99,6 @@ export type CompatibleVersions = {
   versions: Array<Scalars['String']['output']>;
 };
 
-export type ConfirmationCodeInfo = {
-  __typename?: 'ConfirmationCodeInfo';
-  exprirationTime: Scalars['DateTime']['output'];
-  value: Scalars['String']['output'];
-};
-
-export type ConfirmationState = ActiveConfirmationInfo | ConfirmationCodeInfo;
-
 export type ElementModel = {
   __typename?: 'ElementModel';
   bookId: Scalars['ID']['output'];
@@ -119,11 +106,6 @@ export type ElementModel = {
   enabled: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-};
-
-export type EmailConfirmationResponse = {
-  __typename?: 'EmailConfirmationResponse';
-  message: Scalars['String']['output'];
 };
 
 export type InsertWizformsResponse = {
@@ -188,106 +170,107 @@ export type MagicsInputModel = {
   types: Array<MagicInputModel>;
 };
 
-export type Mutation = {
-  __typename?: 'Mutation';
+export type MutationRoot = {
+  __typename?: 'MutationRoot';
   addCollectionItem: AddCollectionItemResponse;
-  confirmEmail: EmailConfirmationResponse;
+  confirmEmail: AuthorizationResult;
   insertWizformsBulk: InsertWizformsResponse;
   removeCollectionItem: Scalars['String']['output'];
-  tryRegisterUser: RegisterUserResponse;
+  renewToken: TokenUpdateResult;
+  tryRegisterUser: RegistrationResult;
   updateWizform: UpdateWizformResponse;
 };
 
 
-export type MutationAddCollectionItemArgs = {
+export type MutationRootAddCollectionItemArgs = {
   collectionId: Scalars['ID']['input'];
   wizformId: Scalars['ID']['input'];
 };
 
 
-export type MutationConfirmEmailArgs = {
+export type MutationRootConfirmEmailArgs = {
   code: Scalars['String']['input'];
   email: Scalars['String']['input'];
 };
 
 
-export type MutationInsertWizformsBulkArgs = {
+export type MutationRootInsertWizformsBulkArgs = {
   wizforms: Array<WizformInputModel>;
 };
 
 
-export type MutationRemoveCollectionItemArgs = {
+export type MutationRootRemoveCollectionItemArgs = {
   id: Scalars['ID']['input'];
 };
 
 
-export type MutationTryRegisterUserArgs = {
+export type MutationRootRenewTokenArgs = {
   email: Scalars['String']['input'];
   password: Scalars['String']['input'];
 };
 
 
-export type MutationUpdateWizformArgs = {
+export type MutationRootTryRegisterUserArgs = {
+  email: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+};
+
+
+export type MutationRootUpdateWizformArgs = {
   updateModel: WizformUpdateModel;
 };
 
-export enum PermissionType {
-  ConfirmedUser = 'CONFIRMED_USER',
-  ModAdmin = 'MOD_ADMIN',
-  SuperAdmin = 'SUPER_ADMIN',
-  UnconfirmedUser = 'UNCONFIRMED_USER'
-}
-
-export type Permissions = {
-  __typename?: 'Permissions';
-  types: Array<PermissionType>;
-};
-
-export type Query = {
-  __typename?: 'Query';
+export type QueryRoot = {
+  __typename?: 'QueryRoot';
   books: Array<BookModel>;
   collections: Array<CollectionModel>;
   currentBook?: Maybe<BookFullModel>;
   elements: Array<ElementModel>;
+  processToken: AuthorizationResult;
   userByEmail?: Maybe<UserModel>;
   wizform?: Maybe<WizformModel>;
   wizforms: Array<CollectionWizform>;
 };
 
 
-export type QueryBooksArgs = {
+export type QueryRootBooksArgs = {
   available?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
-export type QueryCollectionsArgs = {
+export type QueryRootCollectionsArgs = {
   bookId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
 
 
-export type QueryCurrentBookArgs = {
+export type QueryRootCurrentBookArgs = {
   id: Scalars['ID']['input'];
 };
 
 
-export type QueryElementsArgs = {
+export type QueryRootElementsArgs = {
   bookId: Scalars['ID']['input'];
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
-export type QueryUserByEmailArgs = {
+export type QueryRootProcessTokenArgs = {
+  token: Scalars['String']['input'];
+};
+
+
+export type QueryRootUserByEmailArgs = {
   email: Scalars['String']['input'];
 };
 
 
-export type QueryWizformArgs = {
+export type QueryRootWizformArgs = {
   id: Scalars['ID']['input'];
 };
 
 
-export type QueryWizformsArgs = {
+export type QueryRootWizformsArgs = {
   bookId: Scalars['ID']['input'];
   collection?: InputMaybe<Scalars['UUID']['input']>;
   elementFilter?: InputMaybe<WizformElementType>;
@@ -295,9 +278,24 @@ export type QueryWizformsArgs = {
   nameFilter?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type RegisterUserResponse = {
-  __typename?: 'RegisterUserResponse';
-  message: Scalars['String']['output'];
+export type RegistrationResult = {
+  __typename?: 'RegistrationResult';
+  emailHash: Scalars['String']['output'];
+  passwordHash: Scalars['String']['output'];
+  token: Scalars['String']['output'];
+};
+
+export enum RegistrationState {
+  Confirmed = 'CONFIRMED',
+  Unconfirmed = 'UNCONFIRMED',
+  Unregistered = 'UNREGISTERED'
+}
+
+export type TokenUpdateResult = {
+  __typename?: 'TokenUpdateResult';
+  newToken: Scalars['String']['output'];
+  permission: UserPermissionType;
+  registrationState: RegistrationState;
 };
 
 export type UpdateWizformResponse = {
@@ -307,13 +305,20 @@ export type UpdateWizformResponse = {
 
 export type UserModel = {
   __typename?: 'UserModel';
-  confirmationState: ConfirmationState;
   email: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  password: Scalars['String']['output'];
-  permissions: Permissions;
+  permission: UserPermissionType;
+  registrationState: RegistrationState;
+  salt: Scalars['String']['output'];
 };
+
+export enum UserPermissionType {
+  Admin = 'ADMIN',
+  Editor = 'EDITOR',
+  UnregisteredUser = 'UNREGISTERED_USER',
+  User = 'USER'
+}
 
 export enum WizformElementType {
   Air = 'AIR',
