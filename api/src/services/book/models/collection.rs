@@ -6,10 +6,9 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
     pub book_id: Uuid,
-    pub user_id: i32,
+    pub user_id: Uuid,
     pub created_on_version: String,
     pub name: String,
-    pub description: String,
     pub active: bool,
 }
 
@@ -25,8 +24,8 @@ impl CollectionModel {
         self.book_id.into()
     }
 
-    async fn user_id(&self) -> i32 {
-        self.user_id
+    async fn user_id(&self) -> async_graphql::ID {
+        self.user_id.into()
     }
 
     async fn created_on_version(&self) -> &String {
@@ -35,10 +34,6 @@ impl CollectionModel {
 
     async fn name(&self) -> &String {
         &self.name
-    }
-
-    async fn description(&self) -> &String {
-        &self.description
     }
 
     async fn active(&self) -> bool {

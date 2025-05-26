@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::{
     error::ZZApiError,
     services::{
-        auth::{prelude::AuthRepository, utils::{AuthorizationResult, RegistrationResult, TokenUpdateResult}},
+        auth::{prelude::AuthRepository, utils::{AuthorizationResult, EmailConfirmationResult, RegistrationResult, TokenUpdateResult}},
         book::{
             models::wizform::{WizformInputModel, WizformModel, WizformUpdateModel},
             repo::BookRepository,
@@ -231,7 +231,7 @@ impl Mutation {
         context: &Context<'_>,
         email: String,
         code: String
-    ) -> Result<AuthorizationResult, ZZApiError> {
+    ) -> Result<EmailConfirmationResult, ZZApiError> {
         let repo = context.data::<AuthRepository>().map_err(|error| {
             tracing::error!("Failed to get auth repo from context. {}", &error.message);
             ZZApiError::Empty

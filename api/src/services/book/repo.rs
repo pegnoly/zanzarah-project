@@ -5,11 +5,12 @@ use super::models::{
     wizform::{self, WizformElementType, WizformModel, WizformUpdateModel},
 };
 use crate::{error::ZZApiError, services::book::models::wizform::CollectionWizform};
+use itertools::Itertools;
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::Set,
     ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, IntoActiveModel, ModelTrait,
-    PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related, TransactionTrait,
+    PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
     prelude::Expr,
     sea_query::{OnConflict, SimpleExpr},
 };
@@ -45,11 +46,13 @@ impl BookRepository {
                 .or(collection_entry::Column::CollectionId.is_null())
         }));
 
-        tracing::info!("Collection specified: {:?}", &collection);
-        let result = wizform::Entity::find()
-            .left_join(collection_entry::Entity)
-            .column_as(collection_entry::Column::WizformId, "in_collection_id")
-            .filter(collection_condition)
+        let mut query = wizform::Entity::find();
+        if collection.is_some() {
+            query = query.left_join(collection_entry::Entity)
+                        .column_as(collection_entry::Column::WizformId, "in_collection_id")
+                        .filter(collection_condition)
+        }
+        let result = query
             .filter(wizform::Column::BookId.eq(book_id))
             .filter(condition)
             .filter(wizform::Column::Name.contains(name.clone().unwrap_or("".to_string())))
@@ -59,7 +62,9 @@ impl BookRepository {
             .await;
         match result {
             Ok(res) => {
-                tracing::info!("Found models: {:#?}", &res);
+                tracing::info!("Found models: {:#?}", &res.iter().map(|r| {
+                    &r.name
+                }).collect_vec());
                 Ok(res)
             }
             Err(error) => {
@@ -232,43 +237,31 @@ impl BookRepository {
     pub async fn create_collection(
         &self,
         db: &DatabaseConnection,
-        user_id: i32,
+        user_id: Uuid,
         book_id: Uuid,
-        version: String,
         name: String,
-        description: String,
-    ) -> Result<(), ZZApiError> {
+    ) -> Result<collection::Model, ZZApiError> {
+        let book = book::Entity::find_by_id(book_id)
+            .one(db)
+            .await?
+            .ok_or(ZZApiError::Custom("No book found with given id".to_string()))?;
+
         let model_to_insert = collection::ActiveModel {
             id: Set(Uuid::new_v4()),
             user_id: Set(user_id),
             book_id: Set(book_id),
-            created_on_version: Set(version),
+            created_on_version: Set(book.version),
             name: Set(name),
-            description: Set(description),
             ..Default::default()
         };
-        model_to_insert.insert(db).await?;
-        Ok(())
-    }
-
-    pub async fn get_active_collection_for_user(
-        &self,
-        db: &DatabaseConnection,
-        user_id: i32,
-        book_id: Uuid,
-    ) -> Result<Option<collection::Model>, ZZApiError> {
-        Ok(collection::Entity::find()
-            .filter(collection::Column::UserId.eq(user_id))
-            .filter(collection::Column::BookId.eq(book_id))
-            .filter(collection::Column::Active.eq(true))
-            .one(db)
-            .await?)
+        let model = model_to_insert.insert(db).await?;
+        Ok(model)
     }
 
     pub async fn get_collections_for_user(
         &self,
         db: &DatabaseConnection,
-        user_id: i32,
+        user_id: Uuid,
         book_id: Uuid,
     ) -> Result<Vec<collection::Model>, ZZApiError> {
         Ok(collection::Entity::find()
@@ -300,6 +293,25 @@ impl BookRepository {
             model_to_update.update(db).await?;
         }
         Ok(())
+    }
+
+    pub async fn get_active_collection_for_user(
+        &self,
+        db: &DatabaseConnection,
+        user_id: Uuid,
+        book_id: Uuid
+    ) -> Result<Option<Uuid>, ZZApiError> {
+        if let Some(existing_collection) = collection::Entity::find()
+            .filter(collection::Column::BookId.eq(book_id))
+            .filter(collection::Column::UserId.eq(user_id))
+            .filter(collection::Column::Active.eq(true))
+            .one(db)
+            .await? 
+        {
+            Ok(Some(existing_collection.id))
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn add_item_to_collection(

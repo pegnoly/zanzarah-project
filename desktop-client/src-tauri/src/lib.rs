@@ -1,4 +1,5 @@
 use app::prelude::{load_books, load_current_book, load_elements, load_wizform_for_edit, load_wizforms, start_parsing, test, try_confirm_email, try_register_user, update_wizform_display_status, update_wizform_element, AppConfig};
+use argon2::password_hash::{rand_core::OsRng, SaltString};
 use reqwest::Client;
 use services::prelude::ZanzarahApiService;
 
@@ -8,6 +9,8 @@ mod error;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub async fn run() {
+    let salt = SaltString::generate(&mut OsRng).to_string();
+    println!("Salt: {}", salt);
     let exe_path = std::env::current_exe().unwrap();
     let exe_dir = exe_path.parent().unwrap();
     let config_data = std::fs::read_to_string(exe_dir.join("cfg/zz_cfg.json")).unwrap();

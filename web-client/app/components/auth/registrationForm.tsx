@@ -3,26 +3,33 @@ import { useForm, zodResolver } from "@mantine/form"
 import { Button, Group, Modal, PasswordInput, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useMutation } from "@tanstack/react-query";
-import { registerUser, RegisterUserMutationResponse, RegisterUserMutationVariables } from "../../utils/auth/helpers";
 import { setCookie } from "@tanstack/react-start/server";
 import { createServerFn } from "@tanstack/react-start";
 import { RegistrationResult } from "../../graphql/graphql";
+import { registerUser } from "../../utils/auth/registerUser";
+import { useCommonStore } from "../../stores/common";
+import { useShallow } from "zustand/shallow";
+import { RegistrationState, UserPermissionType } from "../../utils/auth/utils";
 
 const validationSchema = z.object({
     email: z.string().email({message: 'Некорректный формат'})
 });
 
 const saveRegisterInfoCookies = createServerFn({method: 'POST'})
-    .validator((data: RegisterUserMutationResponse) => data)
+    .validator((data: RegistrationResult) => data)
     .handler(async({data}) => {
         //console.log("Saving auth cookies, ", data);
-        setCookie('zanzarah-project-user-email', data.tryRegisterUser.emailHash, {maxAge: 10000000});
-        setCookie('zanzarah-project-user-password', data.tryRegisterUser.passwordHash, {maxAge: 10000000});
-        setCookie('zanzarah-project-auth-token', data.tryRegisterUser.token, {maxAge: 86400});
+        setCookie('zanzarah-project-user-email', data.emailHash, {maxAge: 10000000});
+        setCookie('zanzarah-project-user-password', data.passwordHash, {maxAge: 10000000});
+        setCookie('zanzarah-project-auth-token', data.token, {maxAge: 86400});
     });
 
 function RegistrationForm() {
     const [opened, {open, close}] = useDisclosure(false);
+    const [setRegistrationState, setPermission] = useCommonStore(useShallow((state) => [
+        state.setRegistrationState,
+        state.setPermission
+    ]));
 
     const form = useForm({
         mode: 'controlled',
@@ -33,8 +40,6 @@ function RegistrationForm() {
         validate: zodResolver(validationSchema)
     });
 
-    //! Registration must return hashed email, password and token. 
-    //! Token will have UserStatus info as NonConfirmedUser and UserPermission of UnregisteredUser 
     const registerUserMutation = useMutation({
         mutationFn: registerUser,
         mutationKey: ['register_user'],
@@ -44,6 +49,8 @@ function RegistrationForm() {
         onSuccess: async(data) => {
             if (data) {
                 await saveRegisterInfoCookies({data: data});
+                setRegistrationState(RegistrationState.Unconfirmed);
+                setPermission(UserPermissionType.UnregisteredUser);
             }
         }
     })
@@ -90,14 +97,3 @@ function RegistrationForm() {
 }
 
 export default RegistrationForm;
-
-// function RegistrationModal() {
-//     const [opened, {open, close}] = useDisclosure(false);
-
-//     return <>
-//         <Button onClick={open}>Зарегистрироваться</Button>
-//         <Modal>
-
-//         </Modal>
-//     </>
-// }

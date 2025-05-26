@@ -1,67 +1,155 @@
-import { Badge, Button, Card, NumberInput, Select, Text } from "@mantine/core";
+import { Badge, Button, Card, Group, Modal, NumberInput, Select, Text, TextInput } from "@mantine/core";
 import { useCommonStore } from "../../stores/common";
 import { useShallow } from "zustand/shallow";
-import { CollectionModel } from "../../utils/queries/collections";
-import { AuthProps, confirmCode, RegistrationState } from "../../utils/auth/helpers";
+import { CollectionModel, createCollection, setActiveCollection } from "../../utils/queries/collections";
+import { AuthProps, RegistrationState } from "../../utils/auth/utils";
 import RegistrationForm from "../auth/registrationForm";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { confirmCode } from "../../utils/auth/confirmCode";
+import ConfirmationForm from "../auth/confirmationForm";
+import { useDisclosure } from "@mantine/hooks";
+import { BookFullModel } from "../../utils/queries/books";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 
 function CollectionsPreview(params: {
-    authProps: AuthProps,
-    currentCollections: CollectionModel [] | undefined
+    currentCollections: CollectionModel [] | undefined,
+    currentBook: BookFullModel | null,
+    authData: AuthProps
 }) {
-    const [currentCollection, setCurrentCollection] = useCommonStore(useShallow((state) => [state.currentCollection, state.setCurrentCollection]));
-
-    if (params.currentCollections != undefined) {
-        setCurrentCollection(params.currentCollections!.find(c => c.active)?.id!);
-    }
-
     return <Card w="100%" h="100%">
         <Badge size="lg" radius={0}>
             Коллекции
         </Badge>
         <Text>Коллекции позволяют отслеживать ваш прогресс при сборе фей</Text>
-        <RegisterPreview registrationState={params.authProps.userState}/>
+        {
+            params.authData.userState != RegistrationState.Confirmed ?
+            <RegisterPreview/> :
+            <CollectionsRenderer currentBook={params.currentBook} collections={params.currentCollections} auth={params.authData}/>
+        }
     </Card>
 }
 
-export default CollectionsPreview;
-
-function RegisterPreview(params: {
-    registrationState: RegistrationState
+function CollectionsRenderer(params: {
+    collections: CollectionModel [] | undefined,
+    currentBook: BookFullModel | null,
+    auth: AuthProps
 }) {
+    const [collections, setCollections] = useState<CollectionModel []>(params.collections!);
+    async function onCollectionCreated(value: CollectionModel) {
+        setCollections([...collections, value]);
+    }
 
-    const [code, setCode] = useState<string>("");
+    return <>
+        {
+            params.currentBook == null ? 
+            <>
+                Необходимо выбрать книгу, чтобы создать коллекцию
+            </> :
+            <div style={{display: 'flex', flexDirection: 'column', justifyItems: 'center'}}>
+                <CollectionSelector models={collections}/>
+                <CollectionCreator bookData={params.currentBook} currentUser={params.auth.userId!} collectionCreatedCallback={onCollectionCreated}/>
+            </div>
+        }
+    </>
+}
 
-    // const [registrationState, setRegistrationState, setPermission] = useCommonStore((state) => [
-    //     state.registrationState,
-    //     state.setRegistrationState,
-    //     state.setPermission
-    // ])
+function CollectionSelector(params: {
+    models: CollectionModel []
+}) { 
+    const navigate = useNavigate();
+    const [currentCollection, setCurrentCollection] = useState<string | null>(params.models.find(c => c.active)?.id!)
 
-    const confirmEmailMutation = useMutation({
-        mutationFn: confirmCode,
+    const setActiveCollectionMutation = useMutation({
+        mutationFn: setActiveCollection,
         onSuccess: (data) => {
-            if (data) {
-                // setRegistrationState(data.confirmEmail.registrationState);
-                // setPermission(data.confirmEmail.permission);
+            // navigate({
+            //     to: '.',
+            //     replace: true
+            // })
+        }
+    })
+
+    async function updateCurrentCollection(value: string) {
+        setCurrentCollection(value);
+        setActiveCollectionMutation.mutate({data: {collectionId: value!}});
+    }
+
+    return <>
+        <Select
+            label="Список коллекций текущей книги"
+            placeholder="Установите активную коллекцию"
+            value={currentCollection}
+            onChange={updateCurrentCollection}
+            data={params.models.map((c) => ({
+                label: c.name, value: c.id
+            }))}
+        />
+    </>
+}
+
+function CollectionCreator(params: {
+    bookData: BookFullModel,
+    currentUser: string,
+    collectionCreatedCallback: (value: CollectionModel) => void
+}) {
+    const [opened, {open, close}] = useDisclosure(false);
+    const [name, setName] = useState<string>("");
+
+    const createCollectionMutation = useMutation({
+        mutationFn: createCollection,
+        onSuccess: (data) => {
+            if (data != undefined) {
+                params.collectionCreatedCallback(data);
             }
         }
     })
 
-    switch (params.registrationState) {
+    return <>
+        <Button onClick={open}>Создать новую коллекцию</Button>
+        <Modal.Root opened={opened} onClose={close} centered={true}>
+            <Modal.Overlay/>
+            <Modal.Content>
+                <Modal.Header>
+                    <Modal.Title style={{fontSize: 25}}>{`Создание коллекции для книги ${params.bookData.name} версии ${params.bookData.version}`}</Modal.Title>
+                    <Modal.CloseButton/>
+                </Modal.Header>
+                <Modal.Body>
+                    <TextInput 
+                        value={name} 
+                        onChange={(e) => setName(e.currentTarget.value)}
+                        placeholder="Введите имя коллекции"
+                        label="Имя новой коллекции"
+                    />
+                    <Group justify="flex-end" mt="md">
+                        <Button 
+                            onClick={
+                                () => {
+                                    createCollectionMutation.mutate({data: {bookId: params.bookData.id, userId: params.currentUser!, name: name}});
+                                    close();
+                                }
+                            } 
+                            type="submit">Создать</Button>
+                    </Group>
+                </Modal.Body>
+            </Modal.Content>
+        </Modal.Root>
+    </>
+}
+
+export default CollectionsPreview;
+
+function RegisterPreview() {
+    const registrationState = useCommonStore(state => state.registrationState);
+
+    switch (registrationState) {
         case RegistrationState.Unregistered:
             return <>
                 <Text>Необходимо зарегистрироваться, чтобы пользоваться функционалом коллекций</Text>
                 <RegistrationForm/>
             </>
         case RegistrationState.Unconfirmed:
-            return <div style={{display: 'flex', flexDirection: 'column'}}>
-                <Text>Подтвердите свой e-mail</Text>
-                <NumberInput trimLeadingZeroesOnBlur={false} value={code} onChange={(value) => setCode(value.toString())}/>
-                <Button onClick={() => confirmEmailMutation.mutate({data: code})}>Подтвердить</Button>
-            </div>
+            return <ConfirmationForm/>
         default:
             <>Коллекции</>
             // <Select

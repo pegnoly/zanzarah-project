@@ -12,51 +12,9 @@ import { CollectionModel, fetchCollectionsOptions } from "../utils/queries/colle
 import { createServerFn } from "@tanstack/react-start"
 import { getCookie, setCookie } from "@tanstack/react-start/server"
 import axios from 'axios';
-import { AuthProps, processAuth, UserPermissionType, RegistrationState } from "../utils/auth/helpers"
+import { AuthProps, processAuth, UserPermissionType, RegistrationState } from "../utils/auth/utils"
 import { useCommonStore } from "../stores/common"
 import { useShallow } from "zustand/shallow"
-
-type UserClaims = {
-  email: string,
-  password: string
-}
-
-const getUserDataCookies = createServerFn({method: 'GET'})
-  .handler(async(): Promise<{email: string | undefined, password: string | undefined}> => {
-    return {
-      email: getCookie('zanzarah-project-user-email'),
-      password: getCookie('zanzarah-project-user-password')
-    }
-  });
-
-const getTokenCookie = createServerFn({method: 'GET'})
-  .handler(async(): Promise<string | undefined> => {
-    return getCookie('zanzarah-project-auth-token');
-  });
-
-const setTokenCookie = createServerFn({method: 'POST'})
-  .validator((value: string) => value)
-  .handler(async({data}) => {
-    setCookie('zanzarah-project-auth-token', data, {maxAge: 86400});
-  })
-
-function checkForExistingUserClaims(input: {email: string | undefined, password: string | undefined}): UserClaims | null {
-  if (input.email != undefined && input.password != undefined) {
-    return {
-      email: input.email!,
-      password: input.password!
-    }
-  } else {
-    return null;
-  }
-}
-
-const authorizeUser = createServerFn({method: 'POST'})
-  .validator((data: UserClaims) => data)
-  .handler(async({data}): Promise<string> => {
-    const newToken = await axios.post<string, string, UserClaims>('https://zanzarah-project-api-lyaq.shuttle.app/authorize', data);
-    return newToken;
-  })
 
 type LoaderData = {
   auth: AuthProps,
@@ -69,7 +27,7 @@ export const Route = createFileRoute('/')({
   component: Home,
   loader: async({context, cause}): Promise<LoaderData> => {
     var loaderData: LoaderData = {
-      auth: {userState: RegistrationState.Unregistered, userPermission: UserPermissionType.UnregisteredUser},
+      auth: {userState: RegistrationState.Unregistered, userPermission: UserPermissionType.UnregisteredUser, userId: null},
       books: undefined,
       currentBook: undefined,
       collections: undefined
@@ -79,8 +37,7 @@ export const Route = createFileRoute('/')({
       loaderData = {...loaderData, auth: {...loaderData.auth, userState: RegistrationState.Unchanged}};
     } else {
       console.log("Page was restarted")
-      const authData = await processAuth(); 
-      
+      const authData = await processAuth();
       loaderData = {...loaderData, auth: authData};
     }
     // load books data
@@ -91,6 +48,10 @@ export const Route = createFileRoute('/')({
       const book = await context.queryClient.ensureQueryData(fetchBookOptions(currentBookCookie));
       loaderData = {...loaderData, currentBook: book?.currentBook}
     }
+    if (loaderData.auth.userState == RegistrationState.Confirmed && loaderData.auth.userId != null && currentBookCookie != undefined) {
+      const collectionsData = await context.queryClient.ensureQueryData(fetchCollectionsOptions({bookId: currentBookCookie, userId: loaderData.auth.userId}));
+      loaderData = {...loaderData, collections: collectionsData?.collections}
+    }
 
     return loaderData;
   } 
@@ -98,10 +59,20 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const data = Route.useLoaderData();
-  const [setRegistrationState, setPermission] = useCommonStore(useShallow((state) => [state.setRegistrationState, state.setPermission]));
 
+  const [setRegistrationState, setPermission, setCurrentUserId, setCurrentCollection] = useCommonStore(useShallow((state) => [
+    state.setRegistrationState, 
+    state.setPermission,
+    state.setCurrentUserId,
+    state.setCurrentCollection
+  ]));
   setRegistrationState(data.auth.userState);
   setPermission(data.auth.userPermission!);
+  setCurrentUserId(data.auth.userId!);
+
+  if (data.collections != undefined) {
+      setCurrentCollection(data.collections!.find(c => c.active)?.id!);
+  }
 
   return (
     <Box 
@@ -130,7 +101,7 @@ function Home() {
             />
           </Box>        
           <Box bg="yellow">
-            <CollectionsPreview authProps={data.auth} currentCollections={data.collections}/>
+            <CollectionsPreview currentBook={data.currentBook!} currentCollections={data.collections} authData={data.auth}/>
           </Box>
           <Box bg="green">
             <MapPreview/>

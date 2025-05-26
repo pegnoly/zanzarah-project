@@ -8,7 +8,6 @@ const collectionsQuery = gql`
             id,
             bookId,
             name,
-            description,
             createdOnVersion,
             active
         }
@@ -27,7 +26,7 @@ export type CollectionModel = {
     id: string,
     bookId: string,
     name: string,
-    description: string,
+    description: string | null,
     createdOnVersion: string,
     active: boolean
 }
@@ -37,12 +36,16 @@ export type CollectionsQueryResult = {
 }
 
 export type CollectionsQueryVariables = {
-    userId: number,
+    userId: string,
     bookId: string
 }
 
-export type AddCollectionItemMutationResult = {
+type AddCollectionItemResult = {
     createdId: string
+}
+
+export type AddCollectionItemMutationResult = {
+    addCollectionItem: AddCollectionItemResult
 }
 
 export type AddCollectionItemMutationVariables = {
@@ -76,3 +79,88 @@ export const addCollectionItem = createServerFn({method: 'POST'})
         );
         return collectionItemId;
     });
+
+
+type AddCollectionMutationVariables = {
+    userId: string,
+    bookId: string,
+    name: string
+}
+
+type AddCollectionMutationResult = {
+    createCollection: CollectionModel
+}
+
+const createCollectionMutation = gql`
+    mutation createCollectionMutation($userId: ID!, $bookId: ID!, $name: String!) {
+        createCollection(userId: $userId, bookId: $bookId, name: $name) {
+            id,
+            bookId,
+            name,
+            createdOnVersion,
+            active
+        }
+    }
+`
+
+export const createCollection = createServerFn({method: 'POST'})
+    .validator((data: AddCollectionMutationVariables) => data)
+    .handler(async({data}) => {
+        const collection = await request<AddCollectionMutationResult | null, AddCollectionMutationVariables>(
+            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            createCollectionMutation,
+            {bookId: data.bookId, userId: data.userId, name: data.name}
+        );
+        return collection?.createCollection
+    })
+
+type SetActiveCollectionMutationVariables = {
+    collectionId: string
+}
+
+type SetActiveCollectionMutationResult = {
+    setActiveCollection: string
+}
+
+const setActiveCollectionMutation = gql`
+    mutation setActiveCollectionMutation($collectionId: ID!) {
+        setActiveCollection(collectionId: $collectionId)
+    }
+`
+
+export const setActiveCollection = createServerFn({method: 'POST'})
+    .validator((data: SetActiveCollectionMutationVariables) => data)
+    .handler(async({data}) => {
+        const result = await request<SetActiveCollectionMutationResult | null, SetActiveCollectionMutationVariables>(
+            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            setActiveCollectionMutation,
+            {collectionId: data.collectionId}
+        );
+        return result;
+    })
+
+type GetActiveCollectionQueryVariables = {
+    userId: string,
+    bookId: string
+}
+
+type GetActiveCollectionQueryResult = {
+    activeCollection: string | null
+}
+
+const activeCollectionQuery = gql`
+    query activeCollectionQuery($bookId: ID!, $userId: ID!) {
+        activeCollection(bookId: $bookId, userId: $userId)
+    }
+`
+
+export const getActiveCollection = createServerFn({method: 'GET'})
+    .validator((data: GetActiveCollectionQueryVariables) => data)
+    .handler(async({data}) => {
+        const result = await request<GetActiveCollectionQueryResult | null, GetActiveCollectionQueryVariables>(
+            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            activeCollectionQuery,
+            {bookId: data.bookId, userId: data.userId}
+        );
+        return result?.activeCollection;
+    })

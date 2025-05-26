@@ -7,7 +7,7 @@ use uuid::Uuid;
 use crate::{
     error::ZZApiError,
     services::{
-        auth::{prelude::{AuthRepository, UserModel}, utils::AuthorizationResult},
+        auth::{prelude::{AuthRepository, UserModel}, utils::{AuthorizationResult, SignInResult}},
         book::{
             models::{
                 book::{BookFullModel, BookModel}, collection::{self, CollectionModel}, element::ElementModel, wizform::{CollectionWizform, WizformElementType, WizformModel}
@@ -258,6 +258,31 @@ impl Query {
             ZZApiError::Empty
         })?;
         let result = service.get_user_data_from_token(db, token).await?;
+        Ok(result)
+    }
+
+    async fn sign_in(
+        &self,
+        context: &Context<'_>,
+        email: String,
+        password: String
+    ) -> Result<SignInResult, ZZApiError> {
+        let service = context.data::<AuthRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        let result = service.sign_in(db, email, password).await?;
         Ok(result)
     }
 }

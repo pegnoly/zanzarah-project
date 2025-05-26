@@ -12,6 +12,8 @@ import '@mantine/core/styles.css';
 import { QueryClient } from '@tanstack/react-query'
 import { MantineProvider } from "@mantine/core"
 import mantineCssUrl from '@mantine/core/styles.css?url'
+import '@mantine/notifications/styles.css';
+import { Notifications } from '@mantine/notifications';
 
 export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
   head: () => ({
@@ -41,6 +43,7 @@ function RootComponent() {
   return (
     <RootDocument>
       <MantineProvider>
+        <Notifications/>
         <Outlet />
         <TanStackRouterDevtools/>
       </MantineProvider>

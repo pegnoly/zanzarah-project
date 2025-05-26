@@ -64,6 +64,12 @@ pub struct Model {
     pub name: String,
 }
 
+#[derive(FromQueryResult, DerivePartialModel)]
+#[sea_orm(entity = "Entity")]
+pub struct WizformNameModel {
+    pub name: String
+}
+
 pub type WizformModel = Model;
 
 #[async_graphql::Object]

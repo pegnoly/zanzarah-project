@@ -10,6 +10,7 @@ pub struct Model {
     pub name: String,
     pub email: String,
     pub salt: String,
+    pub hashed_password: String,
     pub registration_state: RegistrationState,
     pub permission: UserPermissionType,
     pub confirmation_code: Option<String>
@@ -87,6 +88,10 @@ impl UserModel {
 
     async fn salt(&self) -> &String {
         &self.salt
+    }
+
+    async fn hashed_password(&self) -> &String {
+        &self.hashed_password
     }
 
     async fn registration_state(&self) -> RegistrationState{

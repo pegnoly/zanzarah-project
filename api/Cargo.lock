@@ -4992,6 +4992,7 @@ dependencies = [
  "mail-send",
  "mailjet_api_wrapper",
  "once_cell",
+ "rand 0.9.1",
  "reqwest",
  "sea-orm",
  "serde",

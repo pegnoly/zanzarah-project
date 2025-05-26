@@ -35,6 +35,7 @@ export type AuthorizationResult = {
   __typename?: 'AuthorizationResult';
   permission: UserPermissionType;
   registrationState: RegistrationState;
+  userId: Scalars['ID']['output'];
 };
 
 export type BookFullModel = {
@@ -66,7 +67,7 @@ export type CollectionModel = {
   description: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  userId: Scalars['Int']['output'];
+  userId: Scalars['ID']['output'];
 };
 
 export type CollectionWizform = {
@@ -106,6 +107,13 @@ export type ElementModel = {
   enabled: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+};
+
+export type EmailConfirmationResult = {
+  __typename?: 'EmailConfirmationResult';
+  newToken: Scalars['String']['output'];
+  permission: UserPermissionType;
+  registrationState: RegistrationState;
 };
 
 export type InsertWizformsResponse = {
@@ -173,10 +181,12 @@ export type MagicsInputModel = {
 export type MutationRoot = {
   __typename?: 'MutationRoot';
   addCollectionItem: AddCollectionItemResponse;
-  confirmEmail: AuthorizationResult;
+  confirmEmail: EmailConfirmationResult;
+  createCollection: CollectionModel;
   insertWizformsBulk: InsertWizformsResponse;
   removeCollectionItem: Scalars['String']['output'];
   renewToken: TokenUpdateResult;
+  setActiveCollection: Scalars['String']['output'];
   tryRegisterUser: RegistrationResult;
   updateWizform: UpdateWizformResponse;
 };
@@ -194,6 +204,13 @@ export type MutationRootConfirmEmailArgs = {
 };
 
 
+export type MutationRootCreateCollectionArgs = {
+  bookId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
 export type MutationRootInsertWizformsBulkArgs = {
   wizforms: Array<WizformInputModel>;
 };
@@ -207,6 +224,11 @@ export type MutationRootRemoveCollectionItemArgs = {
 export type MutationRootRenewTokenArgs = {
   email: Scalars['String']['input'];
   password: Scalars['String']['input'];
+};
+
+
+export type MutationRootSetActiveCollectionArgs = {
+  collectionId: Scalars['ID']['input'];
 };
 
 
@@ -227,6 +249,7 @@ export type QueryRoot = {
   currentBook?: Maybe<BookFullModel>;
   elements: Array<ElementModel>;
   processToken: AuthorizationResult;
+  signIn: SignInResult;
   userByEmail?: Maybe<UserModel>;
   wizform?: Maybe<WizformModel>;
   wizforms: Array<CollectionWizform>;
@@ -260,6 +283,12 @@ export type QueryRootProcessTokenArgs = {
 };
 
 
+export type QueryRootSignInArgs = {
+  email: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+};
+
+
 export type QueryRootUserByEmailArgs = {
   email: Scalars['String']['input'];
 };
@@ -283,6 +312,7 @@ export type RegistrationResult = {
   emailHash: Scalars['String']['output'];
   passwordHash: Scalars['String']['output'];
   token: Scalars['String']['output'];
+  userId: Scalars['ID']['output'];
 };
 
 export enum RegistrationState {
@@ -291,11 +321,21 @@ export enum RegistrationState {
   Unregistered = 'UNREGISTERED'
 }
 
+export type SignInResult = {
+  __typename?: 'SignInResult';
+  emailHash: Scalars['String']['output'];
+  newToken: Scalars['String']['output'];
+  passwordHash: Scalars['String']['output'];
+  permission: UserPermissionType;
+  registrationState: RegistrationState;
+};
+
 export type TokenUpdateResult = {
   __typename?: 'TokenUpdateResult';
   newToken: Scalars['String']['output'];
   permission: UserPermissionType;
   registrationState: RegistrationState;
+  userId: Scalars['ID']['output'];
 };
 
 export type UpdateWizformResponse = {
@@ -306,6 +346,7 @@ export type UpdateWizformResponse = {
 export type UserModel = {
   __typename?: 'UserModel';
   email: Scalars['String']['output'];
+  hashedPassword: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   permission: UserPermissionType;

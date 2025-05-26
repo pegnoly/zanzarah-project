@@ -4,15 +4,70 @@ use async_graphql::Context;
 use sea_orm::DatabaseConnection;
 use uuid::Uuid;
 
-use crate::{error::ZZApiError, services::book::repo::BookRepository};
+use crate::{error::ZZApiError, services::book::{models::collection, repo::BookRepository}};
 
 use super::mutation::AddCollectionItemResponse;
+
+#[derive(async_graphql::SimpleObject)]
+pub struct CreateCollectionResponse {
+    pub created_id: async_graphql::ID
+}
 
 #[derive(Default)]
 pub struct ProtectedMutation;
 
 #[async_graphql::Object]
 impl ProtectedMutation {
+    async fn create_collection(
+        &self,
+        context: &Context<'_>,
+        user_id: async_graphql::ID,
+        book_id: async_graphql::ID,
+        name: String
+    ) -> Result<collection::Model, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        let result = service.create_collection(db, Uuid::from_str(&user_id.0)?, Uuid::from_str(&book_id.0)?, name).await?;
+        Ok(result)
+    }
+
+    async fn set_active_collection(
+        &self,
+        context: &Context<'_>,
+        collection_id: async_graphql::ID
+    ) -> Result<String, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        service.set_active_collection(db, Uuid::from_str(&collection_id.0)?).await?;
+        Ok("Collection now active".to_string())
+    }
+
     async fn add_collection_item(
         &self,
         context: &Context<'_>,
