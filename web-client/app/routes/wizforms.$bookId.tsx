@@ -13,7 +13,7 @@ import { ElementsModel, fetchElementsOptions } from '../utils/queries/elements';
 import { AuthProps, processAuth, UserPermissionType } from '../utils/auth/utils';
 import { addCollectionItemMutation, AddCollectionItemMutationResult, AddCollectionItemMutationVariables, fetchCollectionsOptions, getActiveCollection } from '../utils/queries/collections';
 import { fetchWizformOptions, WizformFull } from '../utils/queries/wizform';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import request from 'graphql-request';
 import { notifications } from '@mantine/notifications';
 import { Carousel } from '@mantine/carousel';
@@ -47,7 +47,7 @@ const getLastElementFilterCookie = createServerFn({method: 'GET'})
 type LoaderData = {
   nameFilter: string | undefined,
   elementFilter: WizformElementType,
-  wizforms: WizformsModel | undefined,
+  // wizforms: WizformsModel | undefined,
   elements: ElementsModel | undefined,
   auth: AuthProps,
   currentCollection: string | null,
@@ -56,8 +56,9 @@ type LoaderData = {
 
 export const Route = createFileRoute('/wizforms/$bookId')({
     component: RouteComponent,
-    validateSearch: (search: Record<string, unknown>): {focused: string | undefined} => {
+    validateSearch: (search: Record<string, unknown>): {element: WizformElementType | undefined, focused: string | undefined} => {
       return {
+        element: search["element"] as WizformElementType,
         focused: search["focused"] as string
       }
     },
@@ -66,7 +67,6 @@ export const Route = createFileRoute('/wizforms/$bookId')({
       var loaderData: LoaderData = {
         nameFilter: undefined,
         elementFilter: WizformElementType.Nature,
-        wizforms: undefined,
         elements: undefined,
         auth: await processAuth(),
         currentCollection: null,
@@ -79,15 +79,8 @@ export const Route = createFileRoute('/wizforms/$bookId')({
         const activeCollection = await getActiveCollection({data: {bookId: params.bookId, userId: loaderData.auth.userId}});
         loaderData = {...loaderData, currentCollection: activeCollection!}
       }
-      const wizformsData =  await context.queryClient.ensureQueryData(fetchWizformsOptions({
-        bookId: params.bookId,
-        enabled: true,
-        elementFilter: elementFilterCookie == undefined ? WizformElementType.Nature : elementFilterCookie as WizformElementType,
-        nameFilter: nameFilterCookie,
-        collection: loaderData.currentCollection
-      }));
       const elementsData = await context.queryClient.ensureQueryData(fetchElementsOptions({bookId: params.bookId}));
-      loaderData = {...loaderData, wizforms: wizformsData, elements: elementsData};
+      loaderData = {...loaderData, elements: elementsData};
       if (focused != undefined) {
         const focusedWizform = await context.queryClient.ensureQueryData(fetchWizformOptions(focused));
         loaderData = {...loaderData, focusedWizform: focusedWizform?.wizform!};
@@ -97,52 +90,61 @@ export const Route = createFileRoute('/wizforms/$bookId')({
 });
 
 function RouteComponent() {
-    const loaderData = Route.useLoaderData();
-    const params = Route.useParams();
+  const loaderData =  Route.useLoaderData();
+  const params = Route.useParams();
 
-    const setElements = useCommonStore(state => state.setElements);
-    setElements(loaderData.elements?.elements);
+  // let elementFilter = localStorage.getItem("zanzarah-project-element-filter");
+  // console.log(elementFilter);
 
-    const [wizforms, setWizforms] = useState<WizformSimpleModel [] | undefined>(loaderData.wizforms?.wizforms);
-    console.log("RERENDER?????????????", wizforms)
-    async function addWizformToCollection(wizformId: string, inCollectionId: string) {
-      const updatedWizforms = wizforms?.map((w) => {
-        if (w.id == wizformId) {
-          w.inCollectionId = inCollectionId;
-          return w;
-        }
+  const { data, status } = useSuspenseQuery(fetchWizformsOptions({
+    bookId: params.bookId, 
+    collection: loaderData.currentCollection, 
+    elementFilter: loaderData.elementFilter,
+    enabled: true,
+    nameFilter: loaderData.nameFilter 
+  }));
+
+  const setElements = useCommonStore(state => state.setElements);
+  setElements(loaderData.elements?.elements);
+
+  const [wizforms, setWizforms] = useState<WizformSimpleModel [] | undefined>(data?.wizforms);
+  async function addWizformToCollection(wizformId: string, inCollectionId: string) {
+    const updatedWizforms = wizforms?.map((w) => {
+      if (w.id == wizformId) {
+        w.inCollectionId = inCollectionId;
         return w;
-      });
-      setWizforms(updatedWizforms);
-    }
-
-    async function updatedWizformFilters(value: WizformSimpleModel[]) {
-      setWizforms(value);
-    }
-
-    return <div>
-      <WizformsList 
-        currentCollection={loaderData.currentCollection}
-        wizforms={loaderData.wizforms?.wizforms}
-        nameFilter={loaderData.nameFilter}
-        elementFilter={loaderData.elementFilter}
-        bookId={params.bookId}
-        wizformsUpdateCallback={updatedWizformFilters}
-      />
-      {
-        loaderData.focusedWizform != null ?
-        <FocusedWizform 
-          wizform={loaderData.focusedWizform} 
-          bookId={params.bookId}
-          currentCollection={loaderData.currentCollection}
-          permission={loaderData.auth.userPermission!}
-          wizformAddedToCollectionCallback={addWizformToCollection}
-          elements={loaderData.elements!}
-        /> :
-        null
       }
-      <Outlet/>
-    </div>
+      return w;
+    });
+    setWizforms(updatedWizforms);
+  }
+
+  async function updatedWizformFilters(value: WizformSimpleModel[]) {
+    setWizforms(value);
+  }
+
+  return <div>
+    <WizformsList 
+      currentCollection={loaderData.currentCollection}
+      wizforms={wizforms}
+      nameFilter={loaderData.nameFilter}
+      elementFilter={loaderData.elementFilter}
+      bookId={params.bookId}
+      wizformsUpdateCallback={updatedWizformFilters}
+    />
+    {
+      loaderData.focusedWizform != null ?
+      <FocusedWizform 
+        wizform={loaderData.focusedWizform} 
+        bookId={params.bookId}
+        currentCollection={loaderData.currentCollection}
+        permission={loaderData.auth.userPermission!}
+        wizformAddedToCollectionCallback={addWizformToCollection}
+        elements={loaderData.elements!}
+      /> :
+      null
+    }
+  </div>
 }
 
 function WizformsList(params: {
@@ -156,8 +158,7 @@ function WizformsList(params: {
   const wizformsDisabled = useCommonStore(state => state.wizformsDisabled);
   const context = Route.useRouteContext();  
   async function onFiltersChanged(element: WizformElementType, name: string) {
-    console.log("Filters updated: ", element, ", ", name);
-    context.queryClient.fetchQuery(fetchWizformsOptionsClient({
+    context.queryClient.fetchQuery(fetchWizformsOptions({
       bookId: params.bookId,
       enabled: true,
       elementFilter: element,
@@ -165,7 +166,6 @@ function WizformsList(params: {
       collection: params.currentCollection
     }))
     .then((data) => {
-      console.log("Wizforms updated: ", data?.wizforms);
       params.wizformsUpdateCallback(data?.wizforms!);
     });
   }
@@ -212,6 +212,12 @@ function WizformsFilter(params: {
     state.setWizformsDisabled,
   ]));
 
+  async function updateElementFilter(value: WizformElementType) {
+    console.log("New element filter: ", value);
+    await setLastElementFilterCookie({data: value});
+    setElementFilter(value);
+  }
+
   return <>
     <ButtonGroup flex={1} style={{position: 'sticky', bottom: '95%', left: '1%'}}>
       <Button disabled={wizformsDisabled} onClick={() => {
@@ -239,10 +245,7 @@ function WizformsFilter(params: {
           label='Сортировать фей по стихии'
           disabled={false}
           current={elementFilter}
-          selectedCallback={(value) => {
-            setLastElementFilterCookie({data: value});
-            setElementFilter(value)
-          }}
+          selectedCallback={updateElementFilter}
         />
         <TextInput
           value={nameFilter} 
