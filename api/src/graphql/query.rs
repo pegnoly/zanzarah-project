@@ -86,7 +86,7 @@ impl Query {
                 Uuid::try_from(book_id.clone())?,
                 enabled,
                 element_filter,
-                &name_filter,
+                name_filter,
                 collection,
                 db,
             )
@@ -94,17 +94,17 @@ impl Query {
         {
             Ok(wizforms) => Ok(wizforms),
             Err(error) => {
-                tracing::error!(
-                    "
-                    Failed to fetch wizforms. 
-                    Params: book id - {:?}, enabled - {:?}, element: - {:?}, name filter - {:?}. 
-                    Error message: {:?}",
-                    book_id,
-                    enabled,
-                    element_filter,
-                    name_filter,
-                    error
-                );
+                // tracing::error!(
+                //     "
+                //     Failed to fetch wizforms. 
+                //     Params: book id - {:?}, enabled - {:?}, element: - {:?}, name filter - {:?}. 
+                //     Error message: {:?}",
+                //     book_id,
+                //     enabled,
+                //     element_filter,
+                //     name_filter,
+                //     error
+                // );
                 Err(error)
             }
         }

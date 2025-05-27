@@ -49,7 +49,10 @@ export const Route = createFileRoute('/')({
       loaderData = {...loaderData, currentBook: book?.currentBook}
     }
     if (loaderData.auth.userState == RegistrationState.Confirmed && loaderData.auth.userId != null && currentBookCookie != undefined) {
-      const collectionsData = await context.queryClient.ensureQueryData(fetchCollectionsOptions({bookId: currentBookCookie, userId: loaderData.auth.userId}));
+      //await context.queryClient.invalidateQueries({ queryKey: ['collections', loaderData.auth.userId, currentBookCookie]});
+      const collectionsData = await context.queryClient.ensureQueryData(
+        fetchCollectionsOptions({bookId: currentBookCookie, userId: loaderData.auth.userId})
+      );
       loaderData = {...loaderData, collections: collectionsData?.collections}
     }
 
@@ -59,21 +62,6 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const data = Route.useLoaderData();
-
-  const [setRegistrationState, setPermission, setCurrentUserId, setCurrentCollection] = useCommonStore(useShallow((state) => [
-    state.setRegistrationState, 
-    state.setPermission,
-    state.setCurrentUserId,
-    state.setCurrentCollection
-  ]));
-  setRegistrationState(data.auth.userState);
-  setPermission(data.auth.userPermission!);
-  setCurrentUserId(data.auth.userId!);
-
-  if (data.collections != undefined) {
-      setCurrentCollection(data.collections!.find(c => c.active)?.id!);
-  }
-
   return (
     <Box 
       className={classes.root}

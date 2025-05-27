@@ -14,7 +14,8 @@ type Data = {
     currentCollection: string | null,
     registrationState: RegistrationState,
     permission: UserPermissionType,
-    currentUserId: string | null
+    currentUserId: string | null,
+    itemsInCollection: number
 }
 
 type Action = {
@@ -27,7 +28,8 @@ type Action = {
     setCurrentCollection: (value: string) => void,
     setRegistrationState: (value: RegistrationState) => void,
     setPermission: (value: UserPermissionType) => void,
-    setCurrentUserId: (value: string) => void
+    setCurrentUserId: (value: string) => void,
+    setItemsInCollection: (value: number) => void
 }
 
 export const useCommonStore = create<Data & Action>((set) => ({
@@ -41,6 +43,7 @@ export const useCommonStore = create<Data & Action>((set) => ({
     registrationState: RegistrationState.Unregistered,
     permission: UserPermissionType.UnregisteredUser,
     currentUserId: null,
+    itemsInCollection: 0,
 
     setWizformsDisabled(value) {
         set({wizformsDisabled: value});
@@ -71,5 +74,8 @@ export const useCommonStore = create<Data & Action>((set) => ({
     },
     setCurrentUserId(value) {
         set({currentUserId: value});
+    },
+    setItemsInCollection(value) {
+        set({itemsInCollection: value});
     },
 }))

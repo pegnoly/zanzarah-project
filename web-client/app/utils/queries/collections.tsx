@@ -9,7 +9,8 @@ const collectionsQuery = gql`
             bookId,
             name,
             createdOnVersion,
-            active
+            active,
+            entriesCount
         }
     }
 `
@@ -28,7 +29,8 @@ export type CollectionModel = {
     name: string,
     description: string | null,
     createdOnVersion: string,
-    active: boolean
+    active: boolean,
+    entriesCount: number
 }
 
 export type CollectionsQueryResult = {
@@ -53,7 +55,7 @@ export type AddCollectionItemMutationVariables = {
     wizformId: string
 }
 
-const fetchCollections = createServerFn({method: 'GET'})
+export const fetchCollections = createServerFn({method: 'GET'})
     .validator((data: CollectionsQueryVariables) => data)
     .handler(async({data}) => {
         const collections = await request<CollectionsQueryResult | null, CollectionsQueryVariables>(
@@ -66,7 +68,9 @@ const fetchCollections = createServerFn({method: 'GET'})
 
 export const fetchCollectionsOptions = (data: CollectionsQueryVariables) => queryOptions({
     queryKey: ['collections', data.userId, data.bookId],
-    queryFn: () => fetchCollections({data})
+    // behavior:
+    queryFn: () => fetchCollections({data}),
+    staleTime: 0
 });
 
 export const addCollectionItem = createServerFn({method: 'POST'})
@@ -163,4 +167,29 @@ export const getActiveCollection = createServerFn({method: 'GET'})
             {bookId: data.bookId, userId: data.userId}
         );
         return result?.activeCollection;
+    })
+
+type GetEntriesCountQueryVariables = {
+    collectionId: string
+}
+
+type GetEntriesCountQueryResult = {
+    entriesCount: number
+}
+
+const getEntriesCountQuery = gql`
+    query getEntriesCount($collectionId: ID!) {
+        entriesCount(collectionId: $collectionId)
+    }
+`
+
+export const getEntriesCount = createServerFn({method: 'GET'})
+    .validator((data: GetEntriesCountQueryVariables) => data)
+    .handler(async({data}) => {
+        const result = await request<GetEntriesCountQueryResult | null, GetEntriesCountQueryVariables>(
+            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            getEntriesCountQuery,
+            {collectionId: data.collectionId}
+        );
+        return result?.entriesCount;
     })

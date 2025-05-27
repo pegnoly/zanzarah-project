@@ -1,16 +1,26 @@
 import { Badge, Button, Card, Group, Modal, NumberInput, Select, Text, TextInput } from "@mantine/core";
 import { useCommonStore } from "../../stores/common";
 import { useShallow } from "zustand/shallow";
-import { CollectionModel, createCollection, setActiveCollection } from "../../utils/queries/collections";
+import { CollectionModel, createCollection, fetchCollections, setActiveCollection } from "../../utils/queries/collections";
 import { AuthProps, RegistrationState } from "../../utils/auth/utils";
 import RegistrationForm from "../auth/registrationForm";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { confirmCode } from "../../utils/auth/confirmCode";
 import ConfirmationForm from "../auth/confirmationForm";
 import { useDisclosure } from "@mantine/hooks";
 import { BookFullModel } from "../../utils/queries/books";
 import { useNavigate, useRouter } from "@tanstack/react-router";
+
+function fetchCollectionsOnClient(bookId: string, userId: string) {
+    return useQuery({
+        queryKey: ['collections'],
+        queryFn: async() => {
+            const data = await fetchCollections({data: {bookId: bookId, userId: userId}});
+            return data;
+        },
+    });
+}
 
 function CollectionsPreview(params: {
     currentCollections: CollectionModel [] | undefined,
@@ -25,7 +35,11 @@ function CollectionsPreview(params: {
         {
             params.authData.userState != RegistrationState.Confirmed ?
             <RegisterPreview/> :
-            <CollectionsRenderer currentBook={params.currentBook} collections={params.currentCollections} auth={params.authData}/>
+            <CollectionsRenderer 
+                currentBook={params.currentBook} 
+                collections={params?.currentCollections} 
+                auth={params.authData} 
+            />
         }
     </Card>
 }
@@ -33,11 +47,18 @@ function CollectionsPreview(params: {
 function CollectionsRenderer(params: {
     collections: CollectionModel [] | undefined,
     currentBook: BookFullModel | null,
-    auth: AuthProps
+    auth: AuthProps,
 }) {
     const [collections, setCollections] = useState<CollectionModel []>(params.collections!);
+    //const itemsInCollection = useCommonStore(state => state.itemsInCollection);
+
     async function onCollectionCreated(value: CollectionModel) {
         setCollections([...collections, value]);
+    }
+
+    async function onCollectionSelected() {
+        const { status, data, error, isFetching } = fetchCollectionsOnClient(params.currentBook?.id!, params.auth.userId!);
+        setCollections(data?.collections!);
     }
 
     return <>
@@ -47,7 +68,8 @@ function CollectionsRenderer(params: {
                 Необходимо выбрать книгу, чтобы создать коллекцию
             </> :
             <div style={{display: 'flex', flexDirection: 'column', justifyItems: 'center'}}>
-                <CollectionSelector models={collections}/>
+                <Text>{`В текущей коллекции ${collections.find(c => c.active)?.entriesCount}`}</Text>
+                <CollectionSelector models={collections} selectCallback={onCollectionSelected}/>
                 <CollectionCreator bookData={params.currentBook} currentUser={params.auth.userId!} collectionCreatedCallback={onCollectionCreated}/>
             </div>
         }
@@ -55,7 +77,8 @@ function CollectionsRenderer(params: {
 }
 
 function CollectionSelector(params: {
-    models: CollectionModel []
+    models: CollectionModel [],
+    selectCallback: () => void
 }) { 
     const navigate = useNavigate();
     const [currentCollection, setCurrentCollection] = useState<string | null>(params.models.find(c => c.active)?.id!)
@@ -63,10 +86,8 @@ function CollectionSelector(params: {
     const setActiveCollectionMutation = useMutation({
         mutationFn: setActiveCollection,
         onSuccess: (data) => {
-            // navigate({
-            //     to: '.',
-            //     replace: true
-            // })
+            // я ебал мать
+            navigate({to: ".", reloadDocument: true});
         }
     })
 

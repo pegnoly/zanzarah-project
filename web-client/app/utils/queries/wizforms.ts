@@ -36,7 +36,7 @@ export type WizformsQueryVariables = {
     collection: string | null
 }
 
-const fetchWizforms = createServerFn({method: 'POST'})
+export const fetchWizforms = createServerFn({method: 'GET'})
     .validator((d: WizformsQueryVariables) => d)
     .handler(
         async ({data}) => {
@@ -50,7 +50,7 @@ const fetchWizforms = createServerFn({method: 'POST'})
 
 export const fetchWizformsOptions = (variables: WizformsQueryVariables) => queryOptions({
     queryKey: ['wizforms'],
-    queryFn: () => fetchWizforms({data: variables})
+    queryFn: () => fetchWizforms({data: variables}),
 });
 
 export const fetchWizformsOptionsClient = (variables: WizformsQueryVariables) => queryOptions({

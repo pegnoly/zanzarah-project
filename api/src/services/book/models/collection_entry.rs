@@ -1,6 +1,6 @@
 use sea_orm::prelude::*;
 
-use super::wizform;
+use super::{collection, wizform};
 
 #[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel)]
 #[sea_orm(table_name = "collection_entries")]
@@ -31,6 +31,7 @@ impl CollectionEntryModel {
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
     Wizform,
+    Collection
 }
 
 impl RelationTrait for Relation {
@@ -40,6 +41,10 @@ impl RelationTrait for Relation {
                 .from(Column::WizformId)
                 .to(wizform::Column::Id)
                 .into(),
+            Self::Collection => Entity::belongs_to(collection::Entity)
+                .from(Column::CollectionId)
+                .to(collection::Column::Id)
+                .into()
         }
     }
 }
@@ -47,6 +52,12 @@ impl RelationTrait for Relation {
 impl Related<wizform::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Wizform.def()
+    }
+}
+
+impl Related<collection::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Collection.def()
     }
 }
 

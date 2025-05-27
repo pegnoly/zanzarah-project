@@ -19,7 +19,7 @@ type TokenUpdateMutationResult = {
 }
 
 const updateTokenMutation = gql`
-    updateTokenMutation($email: String!, $password: String!) {
+    mutation updateTokenMutation($email: String!, $password: String!) {
         renewToken(email: $email, password: $password) {
             userId,
             newToken,

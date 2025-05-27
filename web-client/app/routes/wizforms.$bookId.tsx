@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouteContext } from '@tanstack/react-router'
 import { WizformElementType } from '../graphql/graphql'
-import { fetchWizformsOptions, fetchWizformsOptionsClient, WizformSimpleModel, WizformsModel} from '../utils/queries/wizforms'
+import { fetchWizforms, fetchWizformsOptions, fetchWizformsOptionsClient, WizformSimpleModel, WizformsModel} from '../utils/queries/wizforms'
 import { Badge, Button, ButtonGroup, Card, Dialog, Group, Image, Modal, SegmentedControl, SimpleGrid, Stack, Text, TextInput } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
@@ -11,9 +11,9 @@ import { createServerFn } from '@tanstack/react-start';
 import { getCookie, setCookie } from '@tanstack/react-start/server';
 import { ElementsModel, fetchElementsOptions } from '../utils/queries/elements';
 import { AuthProps, processAuth, UserPermissionType } from '../utils/auth/utils';
-import { addCollectionItemMutation, AddCollectionItemMutationResult, AddCollectionItemMutationVariables, getActiveCollection } from '../utils/queries/collections';
+import { addCollectionItemMutation, AddCollectionItemMutationResult, AddCollectionItemMutationVariables, fetchCollectionsOptions, getActiveCollection } from '../utils/queries/collections';
 import { fetchWizformOptions, WizformFull } from '../utils/queries/wizform';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import request from 'graphql-request';
 import { notifications } from '@mantine/notifications';
 import { Carousel } from '@mantine/carousel';
@@ -104,7 +104,7 @@ function RouteComponent() {
     setElements(loaderData.elements?.elements);
 
     const [wizforms, setWizforms] = useState<WizformSimpleModel [] | undefined>(loaderData.wizforms?.wizforms);
-
+    console.log("RERENDER?????????????", wizforms)
     async function addWizformToCollection(wizformId: string, inCollectionId: string) {
       const updatedWizforms = wizforms?.map((w) => {
         if (w.id == wizformId) {
@@ -113,17 +113,21 @@ function RouteComponent() {
         }
         return w;
       });
-      console.log("Here???")
       setWizforms(updatedWizforms);
+    }
+
+    async function updatedWizformFilters(value: WizformSimpleModel[]) {
+      setWizforms(value);
     }
 
     return <div>
       <WizformsList 
-        wizforms={wizforms}
+        currentCollection={loaderData.currentCollection}
+        wizforms={loaderData.wizforms?.wizforms}
         nameFilter={loaderData.nameFilter}
         elementFilter={loaderData.elementFilter}
         bookId={params.bookId}
-        wizformsUpdateCallback={setWizforms}
+        wizformsUpdateCallback={updatedWizformFilters}
       />
       {
         loaderData.focusedWizform != null ?
@@ -146,21 +150,23 @@ function WizformsList(params: {
   bookId: string,
   nameFilter: string | undefined,
   elementFilter: WizformElementType,
+  currentCollection: string | null,
   wizformsUpdateCallback: (value: WizformSimpleModel []) => void
 }) {
-  const [wizformsDisabled, currentCollection] = useCommonStore(useShallow((state) => [state.wizformsDisabled, state.currentCollection]));
-  const context = Route.useRouteContext();
-  
+  const wizformsDisabled = useCommonStore(state => state.wizformsDisabled);
+  const context = Route.useRouteContext();  
   async function onFiltersChanged(element: WizformElementType, name: string) {
+    console.log("Filters updated: ", element, ", ", name);
     context.queryClient.fetchQuery(fetchWizformsOptionsClient({
       bookId: params.bookId,
       enabled: true,
       elementFilter: element,
       nameFilter: name,
-      collection: currentCollection
+      collection: params.currentCollection
     }))
     .then((data) => {
-        params.wizformsUpdateCallback(data?.wizforms!);
+      console.log("Wizforms updated: ", data?.wizforms);
+      params.wizformsUpdateCallback(data?.wizforms!);
     });
   }
 
@@ -278,23 +284,23 @@ function FocusedWizform(params: {
   elements: ElementsModel,
   wizformAddedToCollectionCallback: (wizformId: string,  inCollectionId: string) => void
 }) {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const addToCollectionMutation = useMutation({
-      mutationFn: async(data: AddCollectionItemMutationVariables) => {
-        const collectionItemId = await request<AddCollectionItemMutationResult | null, AddCollectionItemMutationVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/',
-            addCollectionItemMutation,
-            {collectionId: data.collectionId, wizformId: data.wizformId}
-        );
-        if (collectionItemId != null) {
-          params.wizformAddedToCollectionCallback(params.wizform.id, collectionItemId.addCollectionItem.createdId);
-          notifications.show({
-            message: "Фея добавлена в коллекцию",
-            color: 'green',
-            autoClose: 1000
-          })
-        }
+  const addToCollectionMutation = useMutation({
+    mutationFn: async(data: AddCollectionItemMutationVariables) => {
+      const collectionItemId = await request<AddCollectionItemMutationResult | null, AddCollectionItemMutationVariables>(
+          'https://zanzarah-project-api-lyaq.shuttle.app/',
+          addCollectionItemMutation,
+          {collectionId: data.collectionId, wizformId: data.wizformId}
+      );
+      if (collectionItemId != null) {
+        params.wizformAddedToCollectionCallback(params.wizform.id, collectionItemId.addCollectionItem.createdId);
+        notifications.show({
+          message: "Фея добавлена в коллекцию",
+          color: 'green',
+          autoClose: 5000
+        })
+      }
     },
   })
 

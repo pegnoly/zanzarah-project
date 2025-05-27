@@ -4,7 +4,7 @@ use async_graphql::Context;
 use sea_orm::DatabaseConnection;
 use uuid::Uuid;
 
-use crate::{error::ZZApiError, services::book::{models::collection::CollectionModel, repo::BookRepository}};
+use crate::{error::ZZApiError, services::book::{models::collection::{CollectionFullModel, CollectionModel}, repo::BookRepository}};
 
 #[derive(Default)]
 pub struct ProtectedQuery;
@@ -16,7 +16,7 @@ impl ProtectedQuery {
         context: &Context<'_>,
         user_id: async_graphql::ID,
         book_id: async_graphql::ID,
-    ) -> Result<Vec<CollectionModel>, ZZApiError> {
+    ) -> Result<Vec<CollectionFullModel>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
                 "Failed to get wizform service from context. {}",
@@ -67,5 +67,29 @@ impl ProtectedQuery {
         } else {
             Ok(None)
         }
+    }
+
+    async fn entries_count(
+        &self,
+        context: &Context<'_>,
+        collection_id: async_graphql::ID
+    ) -> Result<u64, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        let count = service.get_entries_count(db, Uuid::from_str(&collection_id.0)?).await?;
+        Ok(count)
     }
 }

@@ -1,18 +1,13 @@
 use super::models::{
     book::{self, BookFullModel, BookModel},
-    collection, collection_entry,
+    collection::{self, CollectionFullModel}, collection_entry,
     element::{self, ElementModel},
     wizform::{self, WizformElementType, WizformModel, WizformUpdateModel},
 };
 use crate::{error::ZZApiError, services::book::models::wizform::CollectionWizform};
 use itertools::Itertools;
 use sea_orm::{
-    ActiveModelTrait,
-    ActiveValue::Set,
-    ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, IntoActiveModel, ModelTrait,
-    PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
-    prelude::Expr,
-    sea_query::{OnConflict, SimpleExpr},
+    prelude::Expr, sea_query::{OnConflict, SimpleExpr}, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related, Statement, TransactionTrait
 };
 use uuid::Uuid;
 
@@ -24,54 +19,40 @@ impl BookRepository {
         book_id: Uuid,
         enabled: Option<bool>,
         element: Option<WizformElementType>,
-        name: &Option<String>,
+        name: Option<String>,
         collection: Option<Uuid>,
         db: &DatabaseConnection,
     ) -> Result<Vec<CollectionWizform>, ZZApiError> {
-        let condition = Condition::all()
-            .add_option(enabled.map(|enabled| Expr::col(wizform::Column::Enabled).eq(enabled)))
-            .add_option(if let Some(element) = element {
-                if element != WizformElementType::None {
-                    Some(Expr::col(wizform::Column::Element).eq(element))
+        let query = CollectionWizform::find_by_statement(Statement::from_sql_and_values(sea_orm::DatabaseBackend::Postgres,
+        r#"
+                select "w".*,
+                case 
+                    when "ce"."id" is not null and "ce"."collection_id" = $1 then "ce"."id"
+                    else null
+                end as "in_collection_id"
+                from "wizforms" "w"
+                left join "collection_entries" "ce" on ("ce"."wizform_id" = "w"."id")
+                where
+                ("ce"."collection_id" = $2 or "ce"."collection_id" is null) and
+                "book_id" = $3 and
+                "name" like $4 and
+                "element" = $5 and
+                "enabled" = true;
+            "#,
+            [collection.into(), collection.into(), book_id.into(), 
+                if name.is_some() { 
+                    format!("%{}%", name.unwrap()).into() 
                 } else {
-                    None::<SimpleExpr>
-                }
-            } else {
-                None::<SimpleExpr>
-            });
+                    '%'.into()
+                }, 
+                element.into()
+            ]
+            ));
+        //tracing::info!("{:#?}", &query.into_json());
 
-        let collection_condition = Condition::all().add_option(collection.map(|collection| {
-            Expr::col(collection_entry::Column::CollectionId)
-                .eq(collection)
-                .or(collection_entry::Column::CollectionId.is_null())
-        }));
-
-        let mut query = wizform::Entity::find();
-        if collection.is_some() {
-            query = query.left_join(collection_entry::Entity)
-                        .column_as(collection_entry::Column::WizformId, "in_collection_id")
-                        .filter(collection_condition)
-        }
-        let result = query
-            .filter(wizform::Column::BookId.eq(book_id))
-            .filter(condition)
-            .filter(wizform::Column::Name.contains(name.clone().unwrap_or("".to_string())))
-            .order_by(wizform::Column::Number, sea_orm::Order::Asc)
-            .into_model::<CollectionWizform>()
-            .all(db)
-            .await;
-        match result {
-            Ok(res) => {
-                tracing::info!("Found models: {:#?}", &res.iter().map(|r| {
-                    &r.name
-                }).collect_vec());
-                Ok(res)
-            }
-            Err(error) => {
-                tracing::error!("Error: {}", &error);
-                Err(ZZApiError::SeaOrmError(error))
-            }
-        }
+        let wizforms = query.all(db)
+            .await?;
+        Ok(wizforms)
     }
 
     pub async fn get_wizform(
@@ -263,12 +244,18 @@ impl BookRepository {
         db: &DatabaseConnection,
         user_id: Uuid,
         book_id: Uuid,
-    ) -> Result<Vec<collection::Model>, ZZApiError> {
-        Ok(collection::Entity::find()
-            .filter(collection::Column::UserId.eq(user_id))
-            .filter(collection::Column::BookId.eq(book_id))
+    ) -> Result<Vec<collection::CollectionFullModel>, ZZApiError> {
+        let collections = CollectionFullModel::find_by_statement(Statement::from_sql_and_values(
+            sea_orm::DatabaseBackend::Postgres,
+            r#"select "c".*, Count("ce"."id") as "entries_count" from "collections" "c" 
+            left join "collection_entries" "ce" on ("ce"."collection_id" = "c"."id")
+            where "book_id" = $1
+            and "user_id" = $2
+            group by "c"."id""#, [book_id.into(), user_id.into()]))
             .all(db)
-            .await?)
+            .await?;
+        tracing::info!("Collections with entries found: {:#?}", &collections);
+        Ok(collections)
     }
 
     pub async fn set_active_collection(
@@ -342,5 +329,18 @@ impl BookRepository {
             model_to_delete.delete(db).await?;
         }
         Ok(())
+    }
+
+    pub async fn get_entries_count(
+        &self,
+        db: &DatabaseConnection,
+        collection_id: Uuid
+    ) -> Result<u64, ZZApiError> {
+        let count = collection::Entity::find()
+            .left_join(collection_entry::Entity)
+            .filter(collection::Column::Id.eq(collection_id))
+            .count(db)
+            .await?;
+        Ok(count)
     }
 }
