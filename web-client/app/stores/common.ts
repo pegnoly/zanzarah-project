@@ -7,7 +7,7 @@ import { RegistrationState, UserPermissionType } from '../utils/auth/utils'
 type Data = {
     wizformsDisabled: boolean,
     currentBook: string | null,
-    currentElementFilter: WizformElementType,
+    currentElementFilter: WizformElementType | undefined,
     currentNameFilter: string | undefined,
     elements: WizformElement [] | undefined,
     wizforms: WizformSimpleModel [] | undefined,
@@ -35,7 +35,7 @@ type Action = {
 export const useCommonStore = create<Data & Action>((set) => ({
     wizformsDisabled: false,
     currentBook: null,
-    currentElementFilter: WizformElementType.Nature,
+    currentElementFilter: undefined,
     currentNameFilter: undefined,
     elements: [],
     wizforms: [],

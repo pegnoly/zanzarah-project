@@ -93,19 +93,22 @@ function RouteComponent() {
   const loaderData =  Route.useLoaderData();
   const params = Route.useParams();
 
-  // let elementFilter = localStorage.getItem("zanzarah-project-element-filter");
-  // console.log(elementFilter);
+  const [elementFilter, nameFilter, setElements] = useCommonStore(useShallow((state) => [
+    state.currentElementFilter,
+    state.currentNameFilter,
+    state.setElements
+  ]));
+
+  setElements(loaderData.elements?.elements);
 
   const { data, status } = useSuspenseQuery(fetchWizformsOptions({
     bookId: params.bookId, 
     collection: loaderData.currentCollection, 
-    elementFilter: loaderData.elementFilter,
+    elementFilter: elementFilter == undefined ? loaderData.elementFilter : elementFilter,
     enabled: true,
-    nameFilter: loaderData.nameFilter 
+    nameFilter: nameFilter == undefined ? loaderData.nameFilter : elementFilter
   }));
 
-  const setElements = useCommonStore(state => state.setElements);
-  setElements(loaderData.elements?.elements);
 
   const [wizforms, setWizforms] = useState<WizformSimpleModel [] | undefined>(data?.wizforms);
   async function addWizformToCollection(wizformId: string, inCollectionId: string) {
@@ -192,24 +195,24 @@ function WizformsList(params: {
             </Card>
         </Link>
       ))}</SimpleGrid>
-      <WizformsFilter currentNameFilter={params.nameFilter} currentElementFilter={params.elementFilter} filtersUpdatedCallback={onFiltersChanged}/>
+      <WizformsFilter filtersUpdatedCallback={onFiltersChanged}/>
   </>
 
 }
 
 function WizformsFilter(params: {
-  currentElementFilter: WizformElementType,
-  currentNameFilter: string | undefined,
   filtersUpdatedCallback: (element: WizformElementType, name: string | undefined) => void
 }) {
   const navigate = useNavigate();
   const [opened, {open, close}] = useDisclosure(false);
-  const [elementFilter, setElementFilter] = useState<WizformElementType>(params.currentElementFilter);
-  const [nameFilter, setNameFilter] = useState<string | undefined>(params.currentNameFilter);
 
-  const [wizformsDisabled, setWizformsDisabled] = useCommonStore(useShallow((state) => [
+  const [wizformsDisabled, setWizformsDisabled, nameFilter, elementFilter, setNameFilter, setElementFilter] = useCommonStore(useShallow((state) => [
     state.wizformsDisabled, 
     state.setWizformsDisabled,
+    state.currentNameFilter,
+    state.currentElementFilter,
+    state.setNameFilter,
+    state.setElementFilter
   ]));
 
   async function updateElementFilter(value: WizformElementType) {
@@ -244,7 +247,7 @@ function WizformsFilter(params: {
         <ElementsSelector 
           label='Сортировать фей по стихии'
           disabled={false}
-          current={elementFilter}
+          current={elementFilter!}
           selectedCallback={updateElementFilter}
         />
         <TextInput
@@ -272,7 +275,7 @@ function WizformsFilter(params: {
         <Button onClick={() => {
           setWizformsDisabled(false);
           close();
-          params.filtersUpdatedCallback(elementFilter, nameFilter);
+          params.filtersUpdatedCallback(elementFilter!, nameFilter);
         }}>Применить</Button>
       </Stack>
     </Dialog>
