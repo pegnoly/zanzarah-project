@@ -92,7 +92,8 @@ export const Route = createFileRoute('/wizforms/$bookId')({
 function RouteComponent() {
   const loaderData =  Route.useLoaderData();
   const params = Route.useParams();
-
+  const context = Route.useRouteContext();
+  
   const [elementFilter, nameFilter, setElements] = useCommonStore(useShallow((state) => [
     state.currentElementFilter,
     state.currentNameFilter,
@@ -101,7 +102,7 @@ function RouteComponent() {
 
   setElements(loaderData.elements?.elements);
 
-  const { data, status } = useSuspenseQuery(fetchWizformsOptions({
+  const { data, status, } = useSuspenseQuery(fetchWizformsOptions({
     bookId: params.bookId, 
     collection: loaderData.currentCollection, 
     elementFilter: elementFilter == undefined ? loaderData.elementFilter : elementFilter,
@@ -109,8 +110,10 @@ function RouteComponent() {
     nameFilter: nameFilter == undefined ? loaderData.nameFilter : elementFilter
   }));
 
-
   const [wizforms, setWizforms] = useState<WizformSimpleModel [] | undefined>(data?.wizforms);
+  const [localElementFilter, setLocalElementFilter] = useState<WizformElementType>(elementFilter != undefined ? elementFilter : loaderData.elementFilter);
+  const [localNameFilter, setLocalNameFilter] = useState<string | undefined>(nameFilter != undefined ? nameFilter : loaderData.nameFilter);
+
   async function addWizformToCollection(wizformId: string, inCollectionId: string) {
     const updatedWizforms = wizforms?.map((w) => {
       if (w.id == wizformId) {
@@ -122,18 +125,29 @@ function RouteComponent() {
     setWizforms(updatedWizforms);
   }
 
-  async function updatedWizformFilters(value: WizformSimpleModel[]) {
-    setWizforms(value);
+  async function onFiltersChanged() {
+    context.queryClient.fetchQuery(fetchWizformsOptions({
+      bookId: params.bookId,
+      enabled: true,
+      elementFilter: localElementFilter,
+      nameFilter: localNameFilter,
+      collection: loaderData.currentCollection
+    }))
+    .then((data) => {
+      setWizforms(data?.wizforms!);
+    });
   }
 
   return <div>
     <WizformsList 
-      currentCollection={loaderData.currentCollection}
       wizforms={wizforms}
-      nameFilter={loaderData.nameFilter}
-      elementFilter={loaderData.elementFilter}
-      bookId={params.bookId}
-      wizformsUpdateCallback={updatedWizformFilters}
+    />
+    <WizformsFilter 
+      filtersUpdatedCallback={onFiltersChanged} 
+      currentElementFilter={localElementFilter} 
+      currentNameFilter={localNameFilter}
+      elementFilterUpdateCallback={setLocalElementFilter}
+      nameFilterUpdateCallback={setLocalNameFilter}
     />
     {
       loaderData.focusedWizform != null ?
@@ -151,28 +165,9 @@ function RouteComponent() {
 }
 
 function WizformsList(params: {
-  wizforms: WizformSimpleModel[] | undefined,
-  bookId: string,
-  nameFilter: string | undefined,
-  elementFilter: WizformElementType,
-  currentCollection: string | null,
-  wizformsUpdateCallback: (value: WizformSimpleModel []) => void
+  wizforms: WizformSimpleModel[] | undefined
 }) {
   const wizformsDisabled = useCommonStore(state => state.wizformsDisabled);
-  const context = Route.useRouteContext();  
-  async function onFiltersChanged(element: WizformElementType, name: string) {
-    context.queryClient.fetchQuery(fetchWizformsOptions({
-      bookId: params.bookId,
-      enabled: true,
-      elementFilter: element,
-      nameFilter: name,
-      collection: params.currentCollection
-    }))
-    .then((data) => {
-      params.wizformsUpdateCallback(data?.wizforms!);
-    });
-  }
-
   return <>
     <SimpleGrid
           style={{padding: '3%'}}
@@ -182,7 +177,6 @@ function WizformsList(params: {
           key={w.id} disabled={wizformsDisabled} 
           to="." 
           search={{focused: w.id}} 
-          // params={{id: w.id, bookId: params.bookId}} 
           style={{textDecoration: 'none'}}
         >
             <Card shadow='sm' padding='lg' withBorder style={{height: '100%', backgroundColor: w.inCollectionId ? "gold" : "white"}}>
@@ -195,30 +189,37 @@ function WizformsList(params: {
             </Card>
         </Link>
       ))}</SimpleGrid>
-      <WizformsFilter filtersUpdatedCallback={onFiltersChanged}/>
   </>
 
 }
 
 function WizformsFilter(params: {
-  filtersUpdatedCallback: (element: WizformElementType, name: string | undefined) => void
+  currentElementFilter: WizformElementType,
+  currentNameFilter: string | undefined,
+  elementFilterUpdateCallback: (value: WizformElementType) => void,
+  nameFilterUpdateCallback: (value: string | undefined) => void,
+  filtersUpdatedCallback: () => void
 }) {
   const navigate = useNavigate();
   const [opened, {open, close}] = useDisclosure(false);
 
-  const [wizformsDisabled, setWizformsDisabled, nameFilter, elementFilter, setNameFilter, setElementFilter] = useCommonStore(useShallow((state) => [
+  const [wizformsDisabled, setWizformsDisabled, setNameFilter, setElementFilter] = useCommonStore(useShallow((state) => [
     state.wizformsDisabled, 
     state.setWizformsDisabled,
-    state.currentNameFilter,
-    state.currentElementFilter,
     state.setNameFilter,
     state.setElementFilter
   ]));
 
   async function updateElementFilter(value: WizformElementType) {
-    console.log("New element filter: ", value);
     await setLastElementFilterCookie({data: value});
     setElementFilter(value);
+    params.elementFilterUpdateCallback(value);
+  }
+
+  async function updateNameFilter(value: string) {
+    await setLastNameFilterCookie({data: value});
+    setNameFilter(value);
+    params.nameFilterUpdateCallback(value);
   }
 
   return <>
@@ -247,16 +248,14 @@ function WizformsFilter(params: {
         <ElementsSelector 
           label='Сортировать фей по стихии'
           disabled={false}
-          current={elementFilter!}
+          current={params.currentElementFilter!}
           selectedCallback={updateElementFilter}
         />
         <TextInput
-          value={nameFilter} 
-          onChange={(event) => {
-            setLastNameFilterCookie({data:event.currentTarget.value});
-            setNameFilter(event.currentTarget.value);
-          }}
-          placeholder='Сортировать фей по имени'
+          value={params.currentNameFilter} 
+          onChange={(event) => updateNameFilter(event.currentTarget.value)}
+          label='Сортировать фей по имени'
+          placeholder='Укажите фильтр(зависит от регистра)'
         /> 
           {/* <SegmentedControl
             size='sm'
@@ -275,7 +274,7 @@ function WizformsFilter(params: {
         <Button onClick={() => {
           setWizformsDisabled(false);
           close();
-          params.filtersUpdatedCallback(elementFilter!, nameFilter);
+          params.filtersUpdatedCallback();
         }}>Применить</Button>
       </Stack>
     </Dialog>
