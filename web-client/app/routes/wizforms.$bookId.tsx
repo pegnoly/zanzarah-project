@@ -195,13 +195,15 @@ function WizformsList(params: {
             </Card>
         </Link>
       ))}</SimpleGrid>
-      <WizformsFilter filtersUpdatedCallback={onFiltersChanged}/>
+      <WizformsFilter filtersUpdatedCallback={onFiltersChanged} nameFilter={params.nameFilter} elementFilter={params.elementFilter}/>
   </>
 
 }
 
 function WizformsFilter(params: {
-  filtersUpdatedCallback: (element: WizformElementType, name: string | undefined) => void
+  filtersUpdatedCallback: (element: WizformElementType, name: string | undefined) => void,
+  nameFilter: string | undefined,
+  elementFilter: WizformElementType
 }) {
   const navigate = useNavigate();
   const [opened, {open, close}] = useDisclosure(false);
@@ -214,6 +216,13 @@ function WizformsFilter(params: {
     state.setNameFilter,
     state.setElementFilter
   ]));
+
+  if (nameFilter == undefined) {
+    setNameFilter(params.nameFilter);
+  }
+  if (elementFilter == undefined) {
+    setElementFilter(params.elementFilter);
+  }
 
   async function updateElementFilter(value: WizformElementType) {
     console.log("New element filter: ", value);
@@ -256,7 +265,8 @@ function WizformsFilter(params: {
             setLastNameFilterCookie({data:event.currentTarget.value});
             setNameFilter(event.currentTarget.value);
           }}
-          placeholder='Сортировать фей по имени'
+          label='Сортировать фей по имени'
+          placeholder='Укажите фильтр(зависит от регистра)'
         /> 
           {/* <SegmentedControl
             size='sm'
