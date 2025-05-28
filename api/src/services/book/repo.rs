@@ -37,7 +37,8 @@ impl BookRepository {
                 "book_id" = $3 and
                 "name" like $4 and
                 "element" = $5 and
-                "enabled" = true;
+                "enabled" = true
+                order by "number";
             "#,
             [collection.into(), collection.into(), book_id.into(), 
                 if name.is_some() { 

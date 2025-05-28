@@ -1,7 +1,7 @@
-import { Badge, Button, Card, Group, Modal, NumberInput, Select, Text, TextInput } from "@mantine/core";
+import { Badge, Button, Card, Group, Loader, Modal, NumberInput, Select, Text, TextInput } from "@mantine/core";
 import { useCommonStore } from "../../stores/common";
 import { useShallow } from "zustand/shallow";
-import { CollectionModel, createCollection, fetchCollections, setActiveCollection } from "../../utils/queries/collections";
+import { CollectionModel, createCollection, fetchCollections, getEntriesCount, setActiveCollection } from "../../utils/queries/collections";
 import { AuthProps, RegistrationState } from "../../utils/auth/utils";
 import RegistrationForm from "../auth/registrationForm";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -20,6 +20,16 @@ function fetchCollectionsOnClient(bookId: string, userId: string) {
             return data;
         },
     });
+}
+
+function useEntriesCount(collectionId: string) {
+    return useQuery({
+        queryKey: ['collection_entries_count'],
+        queryFn: async() => {
+            const data = await getEntriesCount({data: {collectionId: collectionId}});
+            return data;
+        }
+    })
 }
 
 function CollectionsPreview(params: {
@@ -50,8 +60,9 @@ function CollectionsRenderer(params: {
     auth: AuthProps,
 }) {
     const [collections, setCollections] = useState<CollectionModel []>(params.collections!);
-    //const itemsInCollection = useCommonStore(state => state.itemsInCollection);
 
+    const { data, status } = useEntriesCount(collections.find(c => c.active)?.id!);
+    
     async function onCollectionCreated(value: CollectionModel) {
         setCollections([...collections, value]);
     }
@@ -68,7 +79,14 @@ function CollectionsRenderer(params: {
                 Необходимо выбрать книгу, чтобы создать коллекцию
             </> :
             <div style={{display: 'flex', flexDirection: 'column', justifyItems: 'center'}}>
-                <Text>{`В текущей коллекции ${collections.find(c => c.active)?.entriesCount}`}</Text>
+                <Group>
+                    <Text>В текущей коллекции: </Text>
+                    {
+                        status === 'pending' ? 
+                        <Loader/> :
+                        <>{data}</>
+                    }
+                </Group>
                 <CollectionSelector models={collections} selectCallback={onCollectionSelected}/>
                 <CollectionCreator bookData={params.currentBook} currentUser={params.auth.userId!} collectionCreatedCallback={onCollectionCreated}/>
             </div>
