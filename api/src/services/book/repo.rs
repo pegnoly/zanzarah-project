@@ -61,12 +61,27 @@ impl BookRepository {
     pub async fn get_wizform(
         &self,
         id: Uuid,
+        collection_id: Option<Uuid>,
         db: &DatabaseConnection,
-    ) -> Result<Option<WizformModel>, ZZApiError> {
-        Ok(wizform::Entity::find()
-            .filter(wizform::Column::Id.eq(id))
+    ) -> Result<Option<CollectionWizform>, ZZApiError> {
+        let wizform = CollectionWizform::find_by_statement(Statement::from_sql_and_values(
+            sea_orm::DatabaseBackend::Postgres, 
+            r#"
+            SELECT "w".*,
+                CASE 
+                    WHEN "ce"."collection_id" = $1 THEN "ce"."id"
+                    ELSE NULL
+                END AS "in_collection_id"
+            FROM 
+                "wizforms" "w"
+            LEFT JOIN 
+                "collection_entries" "ce" ON "w"."id" = "ce"."wizform_id" AND "ce"."collection_id" = $2
+            WHERE
+	            "w"."id" = $3"#, 
+                [collection_id.into(), collection_id.into(), id.into()]))
             .one(db)
-            .await?)
+            .await?;
+        Ok(wizform)
     }
 
     pub async fn get_elements(

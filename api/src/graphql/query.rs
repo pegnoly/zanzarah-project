@@ -114,7 +114,8 @@ impl Query {
         &self,
         context: &Context<'_>,
         #[graphql(desc = "Id of wizform to focus")] id: async_graphql::ID,
-    ) -> Result<Option<WizformModel>, ZZApiError> {
+        #[graphql(desc = "Optional current collection")] collection_id: Option<async_graphql::ID>
+    ) -> Result<Option<CollectionWizform>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
                 "Failed to get wizform service from context. {}",
@@ -130,7 +131,13 @@ impl Query {
             ZZApiError::Empty
         })?;
 
-        match service.get_wizform(Uuid::try_from(id.clone())?, db).await {
+        match service.get_wizform(
+            Uuid::try_from(id.clone())?, 
+            if let Some(collection) = collection_id {
+                Some(Uuid::from_str(&collection.0)?)
+            } else {
+                None
+            }, db).await {
             Ok(wizform) => Ok(wizform),
             Err(error) => {
                 tracing::error!(

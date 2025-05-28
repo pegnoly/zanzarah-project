@@ -122,13 +122,16 @@ function CurrentCollection(params: {
     const { data, status } = useEntriesCount(params.model.id);
 
     return <>
-        <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem'}}>{`Текущая коллекция: ${params.model.name}`}</Text>
+        <div style={{display: 'flex', flexDirection: 'row', gap: '3%'}}>
+            <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem',}}>{`Текущая коллекция: `}</Text>
+            <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem', color: 'green'}}>{params.model.name}</Text>
+        </div>
         <div style={{display: 'flex', flexDirection: 'row', gap: '3%'}}>
             <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem'}}>Фей в коллекции: </Text>
             {
                 status === 'pending' ?
                 <Loader size="xs"/> :
-                <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem'}}>{data}</Text>
+                <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem', color: 'green'}}>{data}</Text>
             }
         </div>
     </>

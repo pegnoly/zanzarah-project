@@ -4,8 +4,8 @@ import request, { gql } from "graphql-request"
 import { WizformElementType } from "../../graphql/graphql"
 
 const wizformQueryDocument = gql`
-    query WizformNameQuery($id: ID!) {
-        wizform(id: $id) {
+    query WizformNameQuery($id: ID!, $collectionId: ID) {
+        wizform(id: $id, collectionId: $collectionId) {
             name,
             id,
             bookId,
@@ -21,6 +21,7 @@ const wizformQueryDocument = gql`
             expModifier,
             evolutionForm,
             previousForm,
+            inCollectionId,
             magics {
                 types {
                     level,
@@ -103,7 +104,8 @@ export type WizformFull = {
     expModifier: number,
     evolutionForm: number,
     previousForm: number,
-    magics: Magics
+    magics: Magics,
+    inCollectionId: string | null
 }
 
 type WizformName = {
@@ -119,24 +121,25 @@ type WizformFullModel = {
 }
 
 type WizformNameQueryVariables = {
-    id: string
+    id: string,
+    collectionId: string | null
 }
 
 const fetchWizform = createServerFn({method: 'POST'})
-    .validator((id: string) => id)
+    .validator((data: WizformNameQueryVariables) => data)
     .handler(
     async ({data}) => {
         //console.info(`Fetching wizform ${data}`);
         const wizform = await request<WizformFullModel | undefined, WizformNameQueryVariables>(
             'https://zanzarah-project-api-lyaq.shuttle.app/', 
             wizformQueryDocument,
-            {id: data}
+            {id: data.id, collectionId: data.collectionId}
         );
         return wizform;
     }
 )
 
-export const fetchWizformOptions = (id: string) => queryOptions({
-    queryKey: ['wizform', id],
-    queryFn: () => fetchWizform({data: id})
+export const fetchWizformOptions = (data: WizformNameQueryVariables) => queryOptions({
+    queryKey: ['wizform', data.id, data.collectionId],
+    queryFn: () => fetchWizform({data})
 })
