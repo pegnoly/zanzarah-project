@@ -33,7 +33,7 @@ export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
       { rel: 'stylesheet', href: mantineCssUrl },
       { rel: 'preconnect', href: "https://fonts.googleapis.com"},
       { rel: 'preconnect', href: "https://fonts.gstatic.com", crossOrigin: 'true'},
-      { rel: 'stylesheet', href: "https://fonts.googleapis.com/css2?family=Yanone+Kaffeesatz:wght@200..700&family=Ysabeau+SC:wght@1..1000&display=swap"}
+      { rel: 'stylesheet', href: "https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Yanone+Kaffeesatz:wght@200..700&family=Ysabeau+SC:wght@1..1000&display=swap"}
     ]
   }),
   component: RootComponent,

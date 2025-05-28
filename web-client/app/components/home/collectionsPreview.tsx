@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Group, Loader, Modal, NumberInput, Select, Text, TextInput } from "@mantine/core";
+import { Badge, Button, Card, Divider, Group, Loader, Modal, NumberInput, Popover, Select, SimpleGrid, Text, TextInput } from "@mantine/core";
 import { useCommonStore } from "../../stores/common";
 import { useShallow } from "zustand/shallow";
 import { CollectionModel, createCollection, fetchCollections, getEntriesCount, setActiveCollection } from "../../utils/queries/collections";
@@ -41,17 +41,43 @@ function CollectionsPreview(params: {
         <Badge size="lg" radius={0}>
             Коллекции
         </Badge>
-        <Text>Коллекции позволяют отслеживать ваш прогресс при сборе фей</Text>
-        {
-            params.authData.userState != RegistrationState.Confirmed ?
-            <RegisterPreview/> :
-            <CollectionsRenderer 
-                currentBook={params.currentBook} 
-                collections={params?.currentCollections} 
-                auth={params.authData} 
-            />
-        }
+        <div style={{width: '100%', height: '90%'}}>
+            <SimpleGrid cols={{lg: 2, base: 1}}>
+                <CollectionsInfo auth={params.authData}/>
+                {
+                    params.authData.userState != RegistrationState.Confirmed ?
+                    <RegisterPreview/> :
+                    <CollectionsRenderer 
+                        currentBook={params.currentBook} 
+                        collections={params?.currentCollections} 
+                        auth={params.authData} 
+                    />
+                }
+            </SimpleGrid>
+        </div>
     </Card>
+}
+
+function CollectionsInfo(params: {
+    auth: AuthProps
+}) {
+    return <div style={{paddingTop: '3%'}}>
+        <Text style={{fontFamily: 'Comfortaa', fontSize: '1rem', fontWeight: 'bold', paddingBottom: '1%'}}>Коллекции позволяют отслеживать ваш прогресс при сборе фей.</Text>
+        <Divider/>
+        <Text 
+            style={{fontFamily: 'Comfortaa', fontSize: '1rem', fontWeight: 'bold', paddingTop: '1%'}}
+        >При наличии активной коллекции вы можете добавлять в нее фей через интерфейс книги.</Text>
+        {
+            params.auth.userState != RegistrationState.Confirmed ?
+            <>
+                <Divider/>
+                <Text 
+                    style={{fontFamily: 'Comfortaa', fontSize: '1rem', fontWeight: 'bold', paddingTop: '1%', color: 'red'}}
+                >Необходимо завершить регистрацию, чтобы использовать коллекции.</Text>
+            </> :
+            null
+        }
+    </div>
 }
 
 function CollectionsRenderer(params: {
@@ -61,8 +87,6 @@ function CollectionsRenderer(params: {
 }) {
     const [collections, setCollections] = useState<CollectionModel []>(params.collections!);
 
-    const { data, status } = useEntriesCount(collections.find(c => c.active)?.id!);
-    
     async function onCollectionCreated(value: CollectionModel) {
         setCollections([...collections, value]);
     }
@@ -78,19 +102,35 @@ function CollectionsRenderer(params: {
             <>
                 Необходимо выбрать книгу, чтобы создать коллекцию
             </> :
-            <div style={{display: 'flex', flexDirection: 'column', justifyItems: 'center'}}>
-                <Group>
-                    <Text>В текущей коллекции: </Text>
-                    {
-                        status === 'pending' ? 
-                        <Loader/> :
-                        <>{data}</>
-                    }
-                </Group>
+            <div style={{display: 'flex', flexDirection: 'column', justifyItems: 'center', gap: '4%'}}>
                 <CollectionSelector models={collections} selectCallback={onCollectionSelected}/>
                 <CollectionCreator bookData={params.currentBook} currentUser={params.auth.userId!} collectionCreatedCallback={onCollectionCreated}/>
+                <CurrentCollection model={collections.find(c => c.active)}/>
             </div>
         }
+    </>
+}
+
+function CurrentCollection(params: {
+    model: CollectionModel | undefined
+}) {
+
+    if (params.model == undefined) {
+        return <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1rem'}}>Нет активной коллекции</Text>
+    }
+
+    const { data, status } = useEntriesCount(params.model.id);
+
+    return <>
+        <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem'}}>{`Текущая коллекция: ${params.model.name}`}</Text>
+        <div style={{display: 'flex', flexDirection: 'row', gap: '3%'}}>
+            <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem'}}>Фей в коллекции: </Text>
+            {
+                status === 'pending' ?
+                <Loader size="xs"/> :
+                <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem'}}>{data}</Text>
+            }
+        </div>
     </>
 }
 
@@ -114,17 +154,24 @@ function CollectionSelector(params: {
         setActiveCollectionMutation.mutate({data: {collectionId: value!}});
     }
 
-    return <>
-        <Select
-            label="Список коллекций текущей книги"
-            placeholder="Установите активную коллекцию"
-            value={currentCollection}
-            onChange={updateCurrentCollection}
-            data={params.models.map((c) => ({
-                label: c.name, value: c.id
-            }))}
-        />
-    </>
+    return (
+        <Popover>
+            <Popover.Target>
+                <Button>Выбрать коллекцию</Button>
+            </Popover.Target>
+            <Popover.Dropdown>
+                <Select
+                    label="Список коллекций текущей книги"
+                    placeholder="Установите активную коллекцию"
+                    value={currentCollection}
+                    onChange={updateCurrentCollection}
+                    data={params.models.map((c) => ({
+                        label: c.name, value: c.id
+                    }))}
+                />
+            </Popover.Dropdown>
+        </Popover>
+    )
 }
 
 function CollectionCreator(params: {
@@ -183,20 +230,10 @@ function RegisterPreview() {
 
     switch (registrationState) {
         case RegistrationState.Unregistered:
-            return <>
-                <Text>Необходимо зарегистрироваться, чтобы пользоваться функционалом коллекций</Text>
-                <RegistrationForm/>
-            </>
+            return <RegistrationForm/>
         case RegistrationState.Unconfirmed:
             return <ConfirmationForm/>
         default:
-            <>Коллекции</>
-            // <Select
-            //     value={currentCollection}
-            //     data={params.currentCollections!.map((c) => ({
-            //         label: c.name, value: c.id 
-            //     }))}
-            // /> 
             break;
     }
 }

@@ -25,20 +25,22 @@ impl BookRepository {
     ) -> Result<Vec<CollectionWizform>, ZZApiError> {
         let query = CollectionWizform::find_by_statement(Statement::from_sql_and_values(sea_orm::DatabaseBackend::Postgres,
         r#"
-                select "w".*,
-                case 
-                    when "ce"."id" is not null and "ce"."collection_id" = $1 then "ce"."id"
-                    else null
-                end as "in_collection_id"
-                from "wizforms" "w"
-                left join "collection_entries" "ce" on ("ce"."wizform_id" = "w"."id")
-                where
-                ("ce"."collection_id" = $2 or "ce"."collection_id" is null) and
-                "book_id" = $3 and
-                "name" like $4 and
-                "element" = $5 and
-                "enabled" = true
-                order by "number";
+                SELECT "w".*,
+                    CASE 
+                        WHEN "ce"."collection_id" = $1 THEN "ce"."id"
+                        ELSE NULL
+                    END AS "in_collection_id"
+                FROM 
+                    "wizforms" "w"
+                LEFT JOIN 
+                    "collection_entries" "ce" ON "w"."id" = "ce"."wizform_id" AND "ce"."collection_id" = $2
+                WHERE
+                    "book_id" = $3 and
+                    "name" LIKE $4 and
+                    "element" = $5 and
+                    "enabled" = true
+                ORDER BY 
+                    "number"
             "#,
             [collection.into(), collection.into(), book_id.into(), 
                 if name.is_some() { 
