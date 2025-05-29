@@ -65,12 +65,14 @@ impl BookModel {
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
     Collection,
+    LocationSection
 }
 
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {
         match self {
             Self::Collection => Entity::has_many(super::collection::Entity).into(),
+            Self::LocationSection => Entity::has_many(super::location_section::Entity).into()
         }
     }
 }
@@ -78,6 +80,12 @@ impl RelationTrait for Relation {
 impl Related<super::collection::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Collection.def()
+    }
+}
+
+impl Related<super::location_section::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::LocationSection.def()
     }
 }
 

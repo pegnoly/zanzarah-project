@@ -1,8 +1,5 @@
 use super::models::{
-    book::{self, BookFullModel, BookModel},
-    collection::{self, CollectionFullModel}, collection_entry,
-    element::{self, ElementModel},
-    wizform::{self, WizformElementType, WizformModel, WizformUpdateModel},
+    book::{self, BookFullModel, BookModel}, collection::{self, CollectionFullModel}, collection_entry, element::{self, ElementModel}, location::LocationWithEntriesCountModel, location_section::{LocationSectionModel, LocationSectionWithCount}, location_wizform_entry::LocationWizformEntryModel, wizform::{self, WizformElementType, WizformModel, WizformUpdateModel}
 };
 use crate::{error::ZZApiError, services::book::models::wizform::CollectionWizform};
 use itertools::Itertools;
@@ -360,5 +357,45 @@ impl BookRepository {
             .count(db)
             .await?;
         Ok(count)
+    }
+
+    pub async fn get_locations_sections(
+        &self,
+        db: &DatabaseConnection,
+        book_id: Uuid
+    ) -> Result<Vec<LocationSectionWithCount>, ZZApiError> {
+        let data = LocationSectionWithCount::find_by_statement(Statement::from_sql_and_values(
+            sea_orm::DatabaseBackend::Postgres, 
+        r#"
+                SELECT "ls"."id", "ls"."name", COUNT("l"."id") as "locations_count" 
+                FROM "location_sections" "ls"
+                LEFT JOIN "locations" "l" on ("l"."section_id" = "ls"."id")
+                WHERE "ls"."book_id" = $1
+                GROUP BY "ls"."id"
+                ORDER BY "ls"."ordering"
+            "#, [book_id.into()]))
+            .all(db)
+            .await?;
+        Ok(data)
+    }
+
+    pub async fn get_locations(
+        &self,
+        db: &DatabaseConnection,
+        section_id: Uuid
+    ) -> Result<Vec<LocationWithEntriesCountModel>, ZZApiError> {
+        let data = LocationWithEntriesCountModel::find_by_statement(Statement::from_sql_and_values(
+            sea_orm::DatabaseBackend::Postgres, 
+        r#"
+                SELECT "l"."id", "l"."name", COUNT("we"."id") AS "entries_count" 
+                FROM "locations" "l"
+                LEFT JOIN "location_wizform_entries" "we" ON ("l"."id" = "we"."location_id")
+                WHERE "l"."section_id" = $1
+                GROUP BY "l"."id"
+                ORDER BY "l"."ordering"
+            "#, [section_id.into()]))
+            .all(db)
+            .await?;
+        Ok(data)
     }
 }

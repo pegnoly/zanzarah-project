@@ -41,9 +41,8 @@ function CollectionsPreview(params: {
         <Badge size="lg" radius={0}>
             Коллекции
         </Badge>
-        <div style={{width: '100%', height: '90%'}}>
+        <div style={{width: '100%', height: '90%', paddingTop: '3%'}}>
             <SimpleGrid cols={{lg: 2, base: 1}}>
-                <CollectionsInfo auth={params.authData}/>
                 {
                     params.authData.userState != RegistrationState.Confirmed ?
                     <RegisterPreview/> :
@@ -53,6 +52,7 @@ function CollectionsPreview(params: {
                         auth={params.authData} 
                     />
                 }
+                <CollectionsInfo auth={params.authData}/>
             </SimpleGrid>
         </div>
     </Card>
@@ -67,6 +67,10 @@ function CollectionsInfo(params: {
         <Text 
             style={{fontFamily: 'Comfortaa', fontSize: '1rem', fontWeight: 'bold', paddingTop: '1%'}}
         >При наличии активной коллекции вы можете добавлять в нее фей через интерфейс книги.</Text>
+        <Divider/>
+        <Text 
+            style={{fontFamily: 'Comfortaa', fontSize: '1rem', fontWeight: 'bold', paddingTop: '1%'}}
+        >Созданные коллекции привязаны к версии мода и сбрасываются, если новые версии вносят несовместимые изменения.</Text>
         {
             params.auth.userState != RegistrationState.Confirmed ?
             <>
