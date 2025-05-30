@@ -92,7 +92,7 @@ function Home() {
             <CollectionsPreview currentBook={data.currentBook!} currentCollections={data.collections} authData={data.auth}/>
           </Box>
           <Box bg="green">
-            <MapPreview/>
+            <MapPreview bookId={data.currentBook?.id}/>
           </Box>
       </SimpleGrid>
     </Box>

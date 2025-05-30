@@ -74,7 +74,7 @@ impl LocationSectionModel {
 pub struct LocationSectionWithCount {
     pub id: Uuid,
     pub name: String,
-    pub locations_count: i32
+    pub locations_count: i64
 }
 
 #[async_graphql::Object]
@@ -87,7 +87,7 @@ impl LocationSectionWithCount {
         &self.name
     }
 
-    async fn locations_count(&self) -> i32 {
+    async fn locations_count(&self) -> i64 {
         self.locations_count
     }
 }

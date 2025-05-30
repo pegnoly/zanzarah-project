@@ -1,8 +1,8 @@
-use sea_orm::prelude::*;
+use sea_orm::{prelude::*, FromQueryResult};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::{location, wizform};
+use super::{location, wizform::{self, WizformElementType}};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, DeriveEntityModel)]
 #[sea_orm(table_name = "location_wizform_entries")]
@@ -68,4 +68,12 @@ impl LocationWizformEntryModel {
     async fn comment(&self) -> Option<String> {
         self.comment.clone()
     }
+}
+
+#[derive(Debug, FromQueryResult, Serialize, Deserialize)]
+pub struct LocationWizformFullEntry {
+    pub id: Uuid,
+    pub wizform_name: String,
+    pub wizform_number: i32,
+    pub wizform_element: WizformElementType
 }

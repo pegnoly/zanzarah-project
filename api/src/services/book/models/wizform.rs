@@ -360,3 +360,11 @@ impl CollectionWizform {
         self.in_collection_id
     }
 }
+
+#[derive(Debug, FromQueryResult, Serialize, Deserialize)]
+pub struct WizformSelectionModel {
+    pub id: Uuid,
+    pub name: String,
+    pub element: WizformElementType,
+    pub number: i32
+}

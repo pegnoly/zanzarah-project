@@ -74,7 +74,7 @@ impl LocationModel {
 pub struct LocationWithEntriesCountModel {
     pub id: Uuid,
     pub name: String,
-    pub entries_count: i32
+    pub entries_count: i64
 }
 
 #[async_graphql::Object]
@@ -87,7 +87,7 @@ impl LocationWithEntriesCountModel {
         &self.name
     }
 
-    async fn entries_count(&self) -> i32 {
+    async fn entries_count(&self) -> i64 {
         self.entries_count
     }
 }

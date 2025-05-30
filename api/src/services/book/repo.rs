@@ -1,5 +1,5 @@
 use super::models::{
-    book::{self, BookFullModel, BookModel}, collection::{self, CollectionFullModel}, collection_entry, element::{self, ElementModel}, location::LocationWithEntriesCountModel, location_section::{LocationSectionModel, LocationSectionWithCount}, location_wizform_entry::LocationWizformEntryModel, wizform::{self, WizformElementType, WizformModel, WizformUpdateModel}
+    book::{self, BookFullModel, BookModel}, collection::{self, CollectionFullModel}, collection_entry, element::{self, ElementModel}, location::LocationWithEntriesCountModel, location_section::{LocationSectionModel, LocationSectionWithCount}, location_wizform_entry::{self, LocationWizformEntryModel, LocationWizformFullEntry}, wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel}
 };
 use crate::{error::ZZApiError, services::book::models::wizform::CollectionWizform};
 use itertools::Itertools;
@@ -396,6 +396,97 @@ impl BookRepository {
             "#, [section_id.into()]))
             .all(db)
             .await?;
+        Ok(data)
+    }
+
+    pub async fn get_location_wizforms(
+        &self,
+        db: &DatabaseConnection,
+        location_id: Uuid
+    ) -> Result<Vec<LocationWizformFullEntry>, ZZApiError> {
+        let data = location_wizform_entry::Entity::find()
+            .select_only()
+            .columns([location_wizform_entry::Column::Id, location_wizform_entry::Column::Comment])
+            .left_join(wizform::Entity)
+            .column_as(wizform::Column::Name, "wizform_name")
+            .column_as(wizform::Column::Number, "wizform_number")
+            .column_as(wizform::Column::Element, "wizform_element")
+            .filter(location_wizform_entry::Column::LocationId.eq(location_id))
+            .into_model::<LocationWizformFullEntry>()
+            .all(db)
+            .await?;
+        Ok(data)
+    }
+
+    pub async fn add_location_wizform(
+        &self,
+        db: &DatabaseConnection,
+        location_id: Uuid,
+        wizform_id: Uuid,
+        comment: Option<String>
+    ) -> Result<Uuid, ZZApiError> {
+        let id = Uuid::new_v4();
+        let model_to_insert = location_wizform_entry::ActiveModel {
+            id: Set(id),
+            location_id: Set(location_id),
+            wizform_id: Set(wizform_id),
+            comment: Set(comment)
+        };
+        model_to_insert.insert(db).await?;
+        Ok(id)
+    }
+
+    pub async fn update_location_wizform_comment(
+        &self,
+        db: &DatabaseConnection,
+        id: Uuid,
+        new_comment: String
+    ) -> Result<(), ZZApiError> {
+        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id).one(db).await? {
+            let mut model_to_update = existing_wizform.into_active_model();
+            model_to_update.comment = Set(if new_comment.is_empty() { None } else { Some(new_comment) });
+            model_to_update.update(db).await?;
+        } 
+        Ok(())
+    }
+
+    pub async fn delete_location_wizform(
+        &self,
+        db: &DatabaseConnection,
+        id: Uuid
+    ) -> Result<(), ZZApiError> {
+        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id).one(db).await? {
+            existing_wizform.delete(db).await?;
+        }
+        Ok(())
+    }
+
+    pub async fn get_wizforms_for_selection(
+        &self,
+        db: &DatabaseConnection,
+        element: Option<WizformElementType>,
+        name: Option<String>,
+        location_id: Uuid
+    ) -> Result<Vec<WizformSelectionModel>, ZZApiError> {
+        let element_condition = Condition::all()
+            .add_option(element.map(|element| Expr::col(wizform::Column::Element).eq(element)));
+
+        let name_condition = Condition::all()
+            .add_option(name.map(|name| Expr::col(wizform::Column::Name).like(name)));
+
+        let data = wizform::Entity::find()
+            .left_join(location_wizform_entry::Entity)
+            .filter(element_condition)
+            .filter(name_condition)
+            .filter(wizform::Column::Enabled.eq(true))
+            .filter(location_wizform_entry::Column::Id.is_null())
+            .select_only()
+            .columns([wizform::Column::Id, wizform::Column::Name, wizform::Column::Element, wizform::Column::Number])
+            .order_by_asc(wizform::Column::Number)
+            .into_model::<WizformSelectionModel>()
+            .all(db)
+            .await?;
+
         Ok(data)
     }
 }

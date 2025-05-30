@@ -56,9 +56,9 @@ type LoaderData = {
 
 export const Route = createFileRoute('/wizforms/$bookId')({
     component: RouteComponent,
-    validateSearch: (search: Record<string, unknown>): {element: WizformElementType | undefined, focused: string | undefined} => {
+    validateSearch: (search: Record<string, unknown>): {focused: string | undefined} => {
       return {
-        element: search["element"] as WizformElementType,
+        // element: search["element"] as WizformElementType,
         focused: search["focused"] as string
       }
     },
