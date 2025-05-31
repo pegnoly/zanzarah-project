@@ -74,6 +74,25 @@ impl LocationWizformEntryModel {
 pub struct LocationWizformFullEntry {
     pub id: Uuid,
     pub wizform_name: String,
-    pub wizform_number: i32,
+    pub wizform_number: i16,
     pub wizform_element: WizformElementType
+}
+
+#[async_graphql::Object]
+impl LocationWizformFullEntry {
+    async fn id(&self) -> async_graphql::ID {
+        self.id.into()
+    }
+
+    async fn wizform_name(&self) -> &String {
+        &self.wizform_name
+    }
+
+    async fn wizform_number(&self) -> i16 {
+        self.wizform_number
+    }
+
+    async fn wizform_element(&self) -> WizformElementType {
+        self.wizform_element
+    }
 }

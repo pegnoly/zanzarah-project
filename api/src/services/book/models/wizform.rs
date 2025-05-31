@@ -366,5 +366,24 @@ pub struct WizformSelectionModel {
     pub id: Uuid,
     pub name: String,
     pub element: WizformElementType,
-    pub number: i32
+    pub number: i16
+}
+
+#[async_graphql::Object]
+impl WizformSelectionModel {
+    async fn id(&self) -> async_graphql::ID {
+        self.id.into()
+    }
+
+    async fn name(&self) -> &String {
+        &self.name
+    }
+
+    async fn element(&self) -> WizformElementType {
+        self.element
+    }
+
+    async fn number(&self) -> i16 {
+        self.number
+    }
 }

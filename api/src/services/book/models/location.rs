@@ -91,3 +91,9 @@ impl LocationWithEntriesCountModel {
         self.entries_count
     }
 }
+
+#[derive(Debug, FromQueryResult, Serialize, Deserialize)]
+pub struct LocationNameModel {
+    pub location_name: String,
+    pub section_name: String
+}

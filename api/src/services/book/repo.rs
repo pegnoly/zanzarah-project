@@ -1,10 +1,10 @@
 use super::models::{
-    book::{self, BookFullModel, BookModel}, collection::{self, CollectionFullModel}, collection_entry, element::{self, ElementModel}, location::LocationWithEntriesCountModel, location_section::{LocationSectionModel, LocationSectionWithCount}, location_wizform_entry::{self, LocationWizformEntryModel, LocationWizformFullEntry}, wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel}
+    book::{self, BookFullModel, BookModel}, collection::{self, CollectionFullModel}, collection_entry, element::{self, ElementModel}, location::{self, LocationNameModel, LocationWithEntriesCountModel}, location_section::{self, LocationSectionModel, LocationSectionWithCount}, location_wizform_entry::{self, LocationWizformEntryModel, LocationWizformFullEntry}, wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel}
 };
 use crate::{error::ZZApiError, services::book::models::wizform::CollectionWizform};
 use itertools::Itertools;
 use sea_orm::{
-    prelude::Expr, sea_query::{OnConflict, SimpleExpr}, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related, Statement, TransactionTrait
+    prelude::Expr, sea_query::{OnConflict, SimpleExpr}, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related, RelationTrait, SelectColumns, Statement, TransactionTrait
 };
 use uuid::Uuid;
 
@@ -464,29 +464,50 @@ impl BookRepository {
     pub async fn get_wizforms_for_selection(
         &self,
         db: &DatabaseConnection,
-        element: Option<WizformElementType>,
-        name: Option<String>,
-        location_id: Uuid
+        book_id: Uuid,
+        // location_id: Uuid
     ) -> Result<Vec<WizformSelectionModel>, ZZApiError> {
-        let element_condition = Condition::all()
-            .add_option(element.map(|element| Expr::col(wizform::Column::Element).eq(element)));
-
-        let name_condition = Condition::all()
-            .add_option(name.map(|name| Expr::col(wizform::Column::Name).like(name)));
+        // let data = wizform::Entity::find()
+        //     .left_join(location_wizform_entry::Entity)
+        //     .filter(element_condition)
+        //     .filter(name_condition)
+        //     .filter(wizform::Column::Enabled.eq(true))
+        //     .filter(location_wizform_entry::Column::Id.is_null())
+        //     .select_only()
+        //     .columns([wizform::Column::Id, wizform::Column::Name, wizform::Column::Element, wizform::Column::Number])
+        //     .order_by_asc(wizform::Column::Number)
+        //     .into_model::<WizformSelectionModel>()
+        //     .all(db)
+        //     .await?;
 
         let data = wizform::Entity::find()
-            .left_join(location_wizform_entry::Entity)
-            .filter(element_condition)
-            .filter(name_condition)
-            .filter(wizform::Column::Enabled.eq(true))
-            .filter(location_wizform_entry::Column::Id.is_null())
             .select_only()
             .columns([wizform::Column::Id, wizform::Column::Name, wizform::Column::Element, wizform::Column::Number])
-            .order_by_asc(wizform::Column::Number)
+            .filter(wizform::Column::BookId.eq(book_id))
+            .filter(wizform::Column::Enabled.eq(true))
             .into_model::<WizformSelectionModel>()
             .all(db)
             .await?;
 
+        Ok(data)
+    }
+
+    pub async fn get_wizform_habitats(
+        &self,
+        db: &DatabaseConnection,
+        wizform_id: Uuid
+    ) -> Result<Vec<LocationNameModel>, ZZApiError> {
+        let data = location_wizform_entry::Entity::find()
+            .left_join(location::Entity)
+            .column_as(location::Column::Name, "location_name")
+            .join(sea_orm::JoinType::LeftJoin, location::Relation::Section.def())
+            .column_as(location_section::Column::Name, "section_name")
+            .filter(location_wizform_entry::Column::WizformId.eq(wizform_id))
+            .order_by_asc(location_section::Column::Ordering)
+            .order_by_asc(location::Column::Ordering)
+            .into_model::<LocationNameModel>()
+            .all(db)
+            .await?;
         Ok(data)
     }
 }

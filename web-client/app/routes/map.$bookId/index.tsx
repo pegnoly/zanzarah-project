@@ -1,6 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { fetchSectionsOptions, LocationSection } from '../../utils/queries/map'
 import SectionsGrid from '../../components/map/sectionsGrid';
+import { useCommonStore } from '../../stores/common';
+import { Button } from '@mantine/core';
 
 export const Route = createFileRoute('/map/$bookId/')({
   component: RouteComponent,
@@ -13,10 +15,16 @@ export const Route = createFileRoute('/map/$bookId/')({
 function RouteComponent() {
   const loaderData = Route.useLoaderData();
   const params = Route.useParams();
+  const navigate = useNavigate()
 
   return (
     <>
       <SectionsGrid bookId={params.bookId} sections={loaderData!}/>
+      <Button
+        onClick={() => navigate({to: '/'})} 
+        style={{position: 'sticky', bottom: '95%', left: '0%'}} size='xl' radius={0} color='grey'>
+        На главную
+      </Button>
     </>
   )
 }

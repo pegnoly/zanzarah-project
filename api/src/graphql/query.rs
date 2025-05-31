@@ -10,7 +10,7 @@ use crate::{
         auth::{prelude::{AuthRepository, UserModel}, utils::{AuthorizationResult, SignInResult}},
         book::{
             models::{
-                book::{BookFullModel, BookModel}, collection::{self, CollectionModel}, element::ElementModel, location::LocationWithEntriesCountModel, location_section::LocationSectionWithCount, wizform::{CollectionWizform, WizformElementType, WizformModel}
+                book::{BookFullModel, BookModel}, collection::{self, CollectionModel}, element::ElementModel, location::LocationWithEntriesCountModel, location_section::LocationSectionWithCount, location_wizform_entry::{LocationWizformEntryModel, LocationWizformFullEntry}, wizform::{CollectionWizform, WizformElementType, WizformModel, WizformSelectionModel}
             },
             repo::BookRepository,
         },
@@ -338,6 +338,54 @@ impl Query {
         })?;
 
         let result = service.get_locations(db, Uuid::from_str(&section_id.0)?).await?;
+        Ok(result)
+    }
+
+    async fn location_entries(
+        &self,
+        context: &Context<'_>,
+        location_id: async_graphql::ID
+    ) -> Result<Vec<LocationWizformFullEntry>, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        let result = service.get_location_wizforms(db, Uuid::from_str(&location_id.0)?).await?;
+        Ok(result)
+    }
+
+    async fn selectable_wizforms(
+        &self,
+        context: &Context<'_>,
+        book_id: async_graphql::ID
+    ) -> Result<Vec<WizformSelectionModel>, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        let result = service.get_wizforms_for_selection(db, Uuid::from_str(&book_id.0)?).await?;
         Ok(result)
     }
 }

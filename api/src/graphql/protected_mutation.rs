@@ -116,4 +116,35 @@ impl ProtectedMutation {
         service.remove_item_from_collection(db, Uuid::from_str(&id)?).await?;
         Ok("Wizform was removed from collection".to_string())
     }
+
+    async fn add_location_wizform(
+        &self,
+        context: &Context<'_>,
+        location_id: async_graphql::ID,
+        wizform_id: async_graphql::ID,
+        comment: Option<String>
+    ) -> Result<async_graphql::ID, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        let created_id = service.add_location_wizform(
+            db, 
+            Uuid::from_str(&location_id.0)?, 
+            Uuid::from_str(&wizform_id.0)?, 
+            comment
+        ).await?;
+        Ok(created_id.into())
+    }
 }
