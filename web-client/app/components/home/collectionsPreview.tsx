@@ -11,6 +11,7 @@ import ConfirmationForm from "../auth/confirmationForm";
 import { useDisclosure } from "@mantine/hooks";
 import { BookFullModel } from "../../utils/queries/books";
 import { useNavigate, useRouter } from "@tanstack/react-router";
+import LoginForm from "../auth/loginForm";
 
 function fetchCollectionsOnClient(bookId: string, userId: string) {
     return useQuery({
@@ -27,6 +28,7 @@ function useEntriesCount(collectionId: string) {
         queryKey: ['collection_entries_count'],
         queryFn: async() => {
             const data = await getEntriesCount({data: {collectionId: collectionId}});
+            console.log("Got data: ")
             return data;
         }
     })
@@ -37,7 +39,7 @@ function CollectionsPreview(params: {
     currentBook: BookFullModel | null,
     authData: AuthProps
 }) {
-    return <Card w="100%" h="100%">
+    return <Card w="100%" h="100%" withBorder radius={0}>
         <Badge size="lg" radius={0}>
             Коллекции
         </Badge>
@@ -237,7 +239,10 @@ function RegisterPreview() {
 
     switch (registrationState) {
         case RegistrationState.Unregistered:
-            return <RegistrationForm/>
+            return <Group justify="center">
+                <RegistrationForm/>
+                <LoginForm/>
+            </Group>
         case RegistrationState.Unconfirmed:
             return <ConfirmationForm/>
         default:

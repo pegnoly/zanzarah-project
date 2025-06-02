@@ -5,7 +5,7 @@ import { useCommonStore } from "../../stores/common";
 import { BookFullModel } from "../../utils/queries/books";
 import { useDisclosure } from "@mantine/hooks";
 
-const setBookCookie = createServerFn({method: 'POST'})
+export const setBookCookie = createServerFn({method: 'POST'})
     .validator((book: string) => book)
     .handler(async({data}) => {
         setCookie('zanzarah-project-current-book', data, {maxAge: 10000000})

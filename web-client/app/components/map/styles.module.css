@@ -6,7 +6,7 @@
     display: inline-flex;
 }
 
-@media (min-width: 390px) {
+@media (min-width: 300px) {
   .map_card_back {
     height: 250px;
   }

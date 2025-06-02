@@ -75,6 +75,11 @@ impl AuthRepository {
         let argon2 = Argon2::default();
         let salt = SaltString::generate(&mut OsRng);
         let email_hash = argon2.hash_password(email.as_bytes(), &SaltString::from_b64(&self.email_salt)?)?.to_string();
+
+        if let Some(_existing_user) = user::Entity::find().filter(user::Column::Email.eq(email_hash.clone())).one(db).await? {
+            return Err(ZZApiError::EmailAlreadyExists);
+        }
+
         let password_hash = argon2.hash_password(password.as_bytes(), &salt)?.to_string();
         // generation of confirmation code
         let totp = TOTP::new(totp_rs::Algorithm::SHA1,8,1,30, password.as_bytes().to_vec())?;
@@ -120,8 +125,8 @@ impl AuthRepository {
                 self.email_config.email.as_str(),
             ))
             .to(vec![("New zanzarah-project user", email.as_str())])
-            .subject("HI!")
-            .html_body(format!("<h1>Your confirmation code is {}</h1>", code))
+            .subject("Подтверждение аккаунта для Zanzarah project")
+            .html_body(format!("<h1>Ваш код подтверждения - {}</h1>", code))
             .text_body("Hello from zz-api");
 
         SmtpClientBuilder::new(self.email_config.host.clone(), 587)
@@ -208,23 +213,16 @@ impl AuthRepository {
                     new_token: token,
                     password_hash: existing_user.hashed_password,
                     registration_state: existing_user.registration_state,
-                    permission: existing_user.permission
+                    permission: existing_user.permission,
+                    user_id: existing_user.id.into()
                 })
             } else {
-                Err(ZZApiError::Custom("Incorrect password".to_string()))  
+                Err(ZZApiError::IncorrectPassword)  
             }
         } else {
-            Err(ZZApiError::Custom("Incorrect email".to_string()))   
+            Err(ZZApiError::IncorrectEmail)   
         }
     }
-
-    // pub async fn resend_code(
-    //     &self,
-    //     db: &DatabaseConnection,
-    //     email: String,
-    // ) -> Result<(), ZZApiError> {
-    //     Ok(())
-    // }
 
     pub async fn confirm_email(
         &self,
@@ -261,15 +259,13 @@ impl AuthRepository {
                                 registration_state: RegistrationState::Confirmed
                             })
                         } else {
-                            Err(ZZApiError::Custom("Incorrect code".to_string()))
+                            Err(ZZApiError::IncorrectCode)
                         }
                     } else {
-                        Err(ZZApiError::Custom("Confirmation code does not exist or already confirmed".to_string()))
+                        Err(ZZApiError::CodeAlreadyUsed)
                     }
                 }
-                _ => Err(ZZApiError::Custom(
-                    "It is not possible to confirm already confirmed user".to_string(),
-                )),
+                _ => Err(ZZApiError::UserAlreadyConfirmed),
             }
         } else {
             Err(ZZApiError::Custom(

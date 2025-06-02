@@ -10,12 +10,13 @@ import { registerUser } from "../../utils/auth/registerUser";
 import { useCommonStore } from "../../stores/common";
 import { useShallow } from "zustand/shallow";
 import { RegistrationState, UserPermissionType } from "../../utils/auth/utils";
+import { AuthError } from "./loginForm";
 
-const validationSchema = z.object({
+export const registrationValidationSchema = z.object({
     email: z.string().email({message: 'Некорректный формат'})
 });
 
-const saveRegisterInfoCookies = createServerFn({method: 'POST'})
+export const saveRegisterInfoCookies = createServerFn({method: 'POST'})
     .validator((data: RegistrationResult) => data)
     .handler(async({data}) => {
         //console.log("Saving auth cookies, ", data);
@@ -37,14 +38,24 @@ function RegistrationForm() {
             email: '',
             password: ''
         },
-        validate: zodResolver(validationSchema)
+        validate: zodResolver(registrationValidationSchema)
     });
 
     const registerUserMutation = useMutation({
         mutationFn: registerUser,
         mutationKey: ['register_user'],
         onError: (error) => {
-            console.log("Failed to registed user: ", error);
+            const errorString = error?.message as string ;
+            const splitIndex = errorString.indexOf("{");
+            const actualError = errorString.substring(0, splitIndex).replace("Message", "").replace(":", "").trim();
+            //console.log("Actual error: ", actualError);
+            switch (actualError as AuthError) {
+                case AuthError.EmailAlreadyExists:
+                    form.setFieldError("email", "Email уже зарегистрирован");
+                    break;
+                default:
+                    break;
+            }
         },
         onSuccess: async(data) => {
             if (data) {
@@ -86,7 +97,7 @@ function RegistrationForm() {
                             {...form.getInputProps('password')}
                         />
                         <Group justify="flex-end" mt="md">
-                            <Button type="submit">Submit</Button>
+                            <Button type="submit">Зарегистрироваться</Button>
                         </Group>
                     </form>
                 </Modal.Body>

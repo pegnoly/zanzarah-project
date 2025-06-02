@@ -9,10 +9,11 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+import '@mantine/carousel/styles.css';
 import { QueryClient } from '@tanstack/react-query'
 import { MantineProvider } from "@mantine/core"
 import mantineCssUrl from '@mantine/core/styles.css?url'
-import '@mantine/notifications/styles.css';
 import { Notifications } from '@mantine/notifications';
 
 export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
@@ -26,7 +27,7 @@ export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'Zanzarah project',
       },
     ],
     links: [
@@ -53,7 +54,7 @@ function RootComponent() {
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html>
+    <html style={{backgroundColor: 'silver'}}>
       <head>
         <HeadContent />
       </head>

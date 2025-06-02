@@ -350,13 +350,13 @@ impl BookRepository {
         &self,
         db: &DatabaseConnection,
         collection_id: Uuid
-    ) -> Result<u64, ZZApiError> {
-        let count = collection::Entity::find()
-            .left_join(collection_entry::Entity)
-            .filter(collection::Column::Id.eq(collection_id))
+    ) -> Result<i64, ZZApiError> {
+        let count = collection_entry::Entity::find()
+            .left_join(collection::Entity)
+            .filter(collection_entry::Column::CollectionId.eq(collection_id))
             .count(db)
             .await?;
-        Ok(count)
+        Ok(count as i64)
     }
 
     pub async fn get_locations_sections(

@@ -1,20 +1,15 @@
 // app/routes/index.tsx
 
-import { Box, Card, CardSection, Grid, GridCol, NumberInput, PasswordInput, SimpleGrid } from "@mantine/core"
-import { createFileRoute, Outlet } from "@tanstack/react-router"
+import { Box, Card, SimpleGrid } from "@mantine/core"
+import { createFileRoute } from "@tanstack/react-router"
 import WizformsPreview from "../components/home/wizformsPreview"
 import classes from "../styles/main.module.css"
-import BooksPreview, { getBookCookie } from "../components/home/booksPreview"
+import BooksPreview, { getBookCookie, setBookCookie } from "../components/home/booksPreview"
 import CollectionsPreview from "../components/home/collectionsPreview"
 import MapPreview from "../components/home/mapPreview"
 import { BookFullModel, BookSimpleModel, fetchBookOptions, fetchBooksOptions } from "../utils/queries/books"
 import { CollectionModel, fetchCollectionsOptions } from "../utils/queries/collections"
-import { createServerFn } from "@tanstack/react-start"
-import { getCookie, setCookie } from "@tanstack/react-start/server"
-import axios from 'axios';
 import { AuthProps, processAuth, UserPermissionType, RegistrationState } from "../utils/auth/utils"
-import { useCommonStore } from "../stores/common"
-import { useShallow } from "zustand/shallow"
 
 type LoaderData = {
   auth: AuthProps,
@@ -47,9 +42,12 @@ export const Route = createFileRoute('/')({
     if (currentBookCookie != undefined) {
       const book = await context.queryClient.ensureQueryData(fetchBookOptions(currentBookCookie));
       loaderData = {...loaderData, currentBook: book?.currentBook}
+    } else {
+      await setBookCookie({data: booksData?.books[0].id!});
+      const book = await context.queryClient.ensureQueryData(fetchBookOptions(booksData?.books[0].id!));
+      loaderData = {...loaderData, currentBook: book?.currentBook}
     }
     if (loaderData.auth.userState == RegistrationState.Confirmed && loaderData.auth.userId != null && currentBookCookie != undefined) {
-      //await context.queryClient.invalidateQueries({ queryKey: ['collections', loaderData.auth.userId, currentBookCookie]});
       const collectionsData = await context.queryClient.ensureQueryData(
         fetchCollectionsOptions({bookId: currentBookCookie, userId: loaderData.auth.userId})
       );
@@ -88,10 +86,10 @@ function Home() {
               activeWizformsCount={data.currentBook?.activeWizformsCount}
             />
           </Box>        
-          <Box bg="yellow">
+          <Box>
             <CollectionsPreview currentBook={data.currentBook!} currentCollections={data.collections} authData={data.auth}/>
           </Box>
-          <Box bg="green">
+          <Box>
             <MapPreview bookId={data.currentBook?.id}/>
           </Box>
       </SimpleGrid>

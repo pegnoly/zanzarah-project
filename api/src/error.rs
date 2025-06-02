@@ -1,5 +1,7 @@
 use std::num::ParseIntError;
 
+use serde::Serialize;
+
 #[derive(Debug, thiserror::Error)]
 pub enum ZZApiError {
     #[error(transparent)]
@@ -17,15 +19,36 @@ pub enum ZZApiError {
     #[error(transparent)]
     ParseInt(#[from] ParseIntError),
     #[error(transparent)]
-    JWT(#[from] jsonwebtoken::errors::Error),
+    Jwt(#[from] jsonwebtoken::errors::Error),
     #[error("Failed to generate hash: {0:?}")]
     Argon2Hash(argon2::password_hash::Error),
     #[error(transparent)]
-    TOTP(#[from] totp_rs::TotpUrlError)
+    Totp(#[from] totp_rs::TotpUrlError),
+    #[error("IncorrectEmail")]
+    IncorrectEmail,
+    #[error("IncorrectPassword")]
+    IncorrectPassword,
+    #[error("EmailAlreadyExists")]
+    EmailAlreadyExists,
+    #[error("IncorrectCode")]
+    IncorrectCode,
+    #[error("CodeAlreadyUsed")]
+    CodeAlreadyUsed,
+    #[error("UserAlreadyConfirmed")]
+    UserAlreadyConfirmed
 }
 
 impl From<argon2::password_hash::Error> for ZZApiError {
     fn from(value: argon2::password_hash::Error) -> Self {
         ZZApiError::Argon2Hash(value)
+    }
+}
+
+impl Serialize for ZZApiError {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::ser::Serializer,
+    {
+        serializer.serialize_str(self.to_string().as_ref())
     }
 }
