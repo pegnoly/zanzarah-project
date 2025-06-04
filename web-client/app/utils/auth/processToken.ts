@@ -34,6 +34,6 @@ export const requestTokenData = createServerFn({method: 'GET'})
       processTokenQuery,
       {token: data.token}
     );
-    console.log("Process token result: ", result);
+    // console.log("Process token result: ", result);
     return result?.processToken;
   })

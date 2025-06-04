@@ -49,7 +49,7 @@ export const Route = createFileRoute('/map/$bookId/section/$id')({
 
 function RouteComponent() {
   const loaderData = Route.useLoaderData();
-  console.log("Focused: ", loaderData?.focused);
+  // console.log("Focused: ", loaderData?.focused);
   const { focused } = Route.useSearch();
   const navigate = useNavigate();
 

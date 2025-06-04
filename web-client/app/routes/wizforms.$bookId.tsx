@@ -16,11 +16,11 @@ import { fetchWizformOptions, WizformFull } from '../utils/queries/wizform';
 import { useMutation } from '@tanstack/react-query';
 import request from 'graphql-request';
 import { notifications } from '@mantine/notifications';
-import { Carousel } from '@mantine/carousel';
 import { ActiveMagicSlot } from '../components/magic/activeSlot';
 import { PassiveMagicSlot } from '../components/magic/passiveSlot';
 import useWizformsStore from '../stores/wizforms';
 import React from 'react'
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 const setLastNameFilterCookie = createServerFn({method: 'POST'})
   .validator((filter: string) => filter)
@@ -408,38 +408,44 @@ function FocusedWizform(params: {
                 >{wizform!.previousForm == undefined ? 'Отсутствует' : wizform!.previousFormName!}</Text>
               </div>
             </div>
-            <div style={{paddingTop: '5%'}}>
+            <div style={{paddingTop: '5%', width: '100%'}}>
               <Badge radius={0}>
                 Уровни магии
               </Badge>
-              <Carousel withControls>{wizform!.magics.types.map((magic, index) => (
-                <Carousel.Slide key={index}>
-                  <div>
-                    <Text style={{fontFamily: 'Yanone Kaffeesatz', fontWeight: 'bolder', fontSize: '1.5rem'}}>{`Уровень ${magic.level}`}</Text>
-                    <div style={{paddingLeft: '25%'}}>
-                      <Stack gap={1}>
-                        <Group>
-                          <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Первое активное</Text>
-                          <ActiveMagicSlot slot={magic.firstActiveSlot}/>
-                        </Group>
-                        <Group>
-                          <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Первое пассивное</Text>
-                          <PassiveMagicSlot slot={magic.firstPassiveSlot}/>
-                        </Group>
-                        <Group>
-                          <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Второе активное</Text>
-                          <ActiveMagicSlot slot={magic.secondActiveSlot}/>
-                        </Group>
-                        <Group>
-                          <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Второе пассивное</Text>
-                          <PassiveMagicSlot slot={magic.secondPassiveSlot}/>
-                        </Group>
-                      </Stack>
+              <div style={{width: '90%'}}>
+                <Carousel orientation='horizontal' className="w-full max-w-xs" style={{width: '90%'}} opts={{loop: true, slidesToScroll: 1}}>
+                  <CarouselContent>{wizform!.magics.types.map((magic, index) => (
+                  <CarouselItem key={index}>
+                    <div>
+                      <Text style={{fontFamily: 'Yanone Kaffeesatz', fontWeight: 'bolder', fontSize: '1.5rem'}}>{`Уровень ${magic.level}`}</Text>
+                      <div style={{paddingLeft: '5%', justifyItems: 'center'}}>
+                        <Stack gap={1}>
+                          <Stack gap={1}>
+                            <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Первое активное</Text>
+                            <ActiveMagicSlot slot={magic.firstActiveSlot}/>
+                          </Stack>
+                          <Stack gap={1}>
+                            <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Первое пассивное</Text>
+                            <PassiveMagicSlot slot={magic.firstPassiveSlot}/>
+                          </Stack>
+                          <Stack gap={1}>
+                            <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Второе активное</Text>
+                            <ActiveMagicSlot slot={magic.secondActiveSlot}/>
+                          </Stack>
+                          <Stack gap={1}>
+                            <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Второе пассивное</Text>
+                            <PassiveMagicSlot slot={magic.secondPassiveSlot}/>
+                          </Stack>
+                        </Stack>
+                      </div>
                     </div>
-                  </div>
-                </Carousel.Slide>
-              ))}
-              </Carousel>
+                  </CarouselItem>
+                ))}
+                </CarouselContent>
+                <CarouselPrevious/>
+                <CarouselNext/>
+                </Carousel>
+              </div>
             </div>
             {
               params.permission != UserPermissionType.UnregisteredUser ? (

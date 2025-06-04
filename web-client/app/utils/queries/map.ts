@@ -198,4 +198,29 @@ export const addLocationWizform = createServerFn({method: 'POST'})
             {locationId: data.locationId, wizformId: data.wizformId, comment: data.comment}
         );
         return result?.addLocationWizform;
+    });
+
+type DeleteLocationEntryMutationVariables = {
+    id: string
+}
+
+type DeleteLocationEntryMutationResult = {
+    removeLocationWizform: string
+}
+
+const deleteLocationEntryMutation = gql`
+    mutation removeLocationWizformMutation($id: ID!) {
+        removeLocationWizform(id: $id)
+    }
+`
+
+export const deleteLocationWizform = createServerFn({method: 'POST'})
+    .validator((data: DeleteLocationEntryMutationVariables) => data)
+    .handler(async({data}) => {
+        const result = await request<DeleteLocationEntryMutationResult | undefined, DeleteLocationEntryMutationVariables>(
+            'https://zanzarah-project-api-lyaq.shuttle.app/', 
+            deleteLocationEntryMutation,
+            {id: data.id}
+        );
+        return result?.removeLocationWizform;
     })

@@ -28,7 +28,7 @@ function useEntriesCount(collectionId: string) {
         queryKey: ['collection_entries_count'],
         queryFn: async() => {
             const data = await getEntriesCount({data: {collectionId: collectionId}});
-            console.log("Got data: ")
+            // console.log("Got data: ")
             return data;
         }
     })

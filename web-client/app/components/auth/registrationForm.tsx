@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { useForm, zodResolver } from "@mantine/form"
+import { useForm } from "@mantine/form"
 import { Button, Group, Modal, PasswordInput, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useMutation } from "@tanstack/react-query";
@@ -11,10 +11,14 @@ import { useCommonStore } from "../../stores/common";
 import { useShallow } from "zustand/shallow";
 import { RegistrationState, UserPermissionType } from "../../utils/auth/utils";
 import { AuthError } from "./loginForm";
+import { zodResolver } from 'mantine-form-zod-resolver';
 
 export const registrationValidationSchema = z.object({
-    email: z.string().email({message: 'Некорректный формат'})
+    email: z.string().email({message: 'Некорректный формат'}),
+    password: z.string()
 });
+
+type FormValues = z.infer<typeof registrationValidationSchema>;
 
 export const saveRegisterInfoCookies = createServerFn({method: 'POST'})
     .validator((data: RegistrationResult) => data)
@@ -32,7 +36,7 @@ function RegistrationForm() {
         state.setPermission
     ]));
 
-    const form = useForm({
+    const form = useForm<FormValues>({
         mode: 'controlled',
         initialValues: {
             email: '',

@@ -1,16 +1,13 @@
 import { z } from "zod";
-import { useForm, zodResolver } from "@mantine/form"
+import { useForm } from "@mantine/form"
 import { Button, Group, Modal, PasswordInput, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useMutation } from "@tanstack/react-query";
-import { registerUser } from "../../utils/auth/registerUser";
 import { useCommonStore } from "../../stores/common";
 import { useShallow } from "zustand/shallow";
-import { RegistrationState, UserPermissionType } from "../../utils/auth/utils";
 import { registrationValidationSchema, saveRegisterInfoCookies } from "./registrationForm";
 import { signIn } from "../../utils/auth/signIn";
-import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { zodResolver } from 'mantine-form-zod-resolver';
 
 export enum AuthError {
     IncorrectEmail = "IncorrectEmail",
@@ -21,6 +18,8 @@ export enum AuthError {
     UserAlreadyConfirmed = "UserAlreadyConfirmed"
 }
 
+type FormValues = z.infer<typeof registrationValidationSchema>;
+
 function LoginForm() {
     const [opened, {open, close}] = useDisclosure(false);
     const navigate = useNavigate();
@@ -30,7 +29,7 @@ function LoginForm() {
         state.setPermission
     ]));
 
-    const form = useForm({
+    const form = useForm<FormValues>({
         mode: 'controlled',
         initialValues: {
             email: '',

@@ -147,4 +147,28 @@ impl ProtectedMutation {
         ).await?;
         Ok(created_id.into())
     }
+
+
+    async fn remove_location_wizform(
+        &self,
+        context: &Context<'_>,
+        id: async_graphql::ID
+    ) -> Result<String, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        service.delete_location_wizform(db, Uuid::from_str(&id.0)?).await?;
+        Ok("Location wizform deleted".to_string())
+    }
 }

@@ -1,7 +1,7 @@
 import { Accordion, Button, Group, List, Modal, Select, Tabs, Text, TextInput } from "@mantine/core";
 import { AuthProps, RegistrationState, UserPermissionType } from "../../utils/auth/utils";
 import { WizformElement } from "../../utils/queries/elements";
-import { addLocationWizform, Location, LocationFullModel, LocationWizformEntry, SelectableWizform } from "../../utils/queries/map";
+import { addLocationWizform, deleteLocationWizform, Location, LocationFullModel, LocationWizformEntry, SelectableWizform } from "../../utils/queries/map";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import { useCommonStore } from "../../stores/common";
@@ -31,6 +31,11 @@ function LocationFocused(params: {
         setEntries([...entries!, entry])
     }
 
+    async function entryRemoved(id: string) {
+        const updatedEntries = entries?.filter(e => e.id != id);
+        setEntries(updatedEntries);
+    }
+
     async function selectableRemoved(wizformId: string) {
         const updatedSelectables = selectables?.filter(s => s.id != wizformId);
         setSelectables(updatedSelectables);
@@ -49,6 +54,7 @@ function LocationFocused(params: {
                 params.auth.userState == RegistrationState.Confirmed && 
                 (params.auth.userPermission == UserPermissionType.Editor || params.auth.userPermission == UserPermissionType.Admin) ?
                 <EditorTabs 
+                    onModelRemoved={entryRemoved}
                     auth={params.auth}
                     currentLocation={params.location.id}
                     models={entries}
@@ -57,6 +63,7 @@ function LocationFocused(params: {
                     onSelectablesUpdated={selectableRemoved}
                 /> :
                 <WizformsList 
+                    modelRemovedCallback={entryRemoved}
                     auth={params.auth}
                     models={params.models}
                 />
@@ -72,13 +79,18 @@ function EditorTabs(params: {
     models: LocationWizformEntry [] | undefined,
     selectables: SelectableWizform [],
     onSelectablesUpdated: (wizformId: string) => void,
-    onModelsUpdated: (entry: LocationWizformEntry) => void
+    onModelsUpdated: (entry: LocationWizformEntry) => void,
+    onModelRemoved: (id: string) => void,
     currentLocation: string
 }) {
 
     async function entryCreated(wizformId: string, entry: LocationWizformEntry) {
         params.onModelsUpdated(entry);
         params.onSelectablesUpdated(wizformId);
+    }
+
+    async function entryRemoved(id: string) {
+        params.onModelRemoved(id);
     }
 
     return (
@@ -96,6 +108,7 @@ function EditorTabs(params: {
                 <WizformsList 
                     auth={params.auth}
                     models={params.models}
+                    modelRemovedCallback={entryRemoved}
                 />
             </Tabs.Panel>
             <Tabs.Panel value={TabsVariant.EntryCreator}>
@@ -107,11 +120,19 @@ function EditorTabs(params: {
 }
 
 function WizformsList(params: {
-    models: LocationWizformEntry [] | undefined
+    models: LocationWizformEntry [] | undefined,
+    modelRemovedCallback: (id: string) => void,
     auth: AuthProps
 }) {
     const presentedElements = [...new Set(params.models?.map(m => m.wizformElement))];
     const elements = useCommonStore(state => state.elements);
+
+    const deleteLocationEntryMutation = useMutation({
+        mutationFn: deleteLocationWizform,
+        onSuccess(data, variables, context) {
+            params.modelRemovedCallback(variables.data.id);
+        },
+    })
 
     return <>
         <Accordion>{presentedElements.map((e, i) => (
@@ -124,7 +145,7 @@ function WizformsList(params: {
                             {
                                 params.auth.userState == RegistrationState.Confirmed &&
                                 (params.auth.userPermission == (UserPermissionType.Admin || UserPermissionType.Editor)) ?
-                                <Button size="compact-xs">
+                                <Button onClick={() => deleteLocationEntryMutation.mutate({data: {id: m.id}})} size="compact-xs">
                                     <IconTrashFilled/>
                                 </Button> :
                                 null

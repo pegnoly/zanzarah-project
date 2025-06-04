@@ -28,10 +28,10 @@ export const Route = createFileRoute('/')({
       collections: undefined
     }
     if (cause == "stay") {
-      console.log("Page was reloaded")
+      // console.log("Page was reloaded")
       loaderData = {...loaderData, auth: {...loaderData.auth, userState: RegistrationState.Unchanged}};
     } else {
-      console.log("Page was restarted")
+      // console.log("Page was restarted")
       const authData = await processAuth();
       loaderData = {...loaderData, auth: authData};
     }

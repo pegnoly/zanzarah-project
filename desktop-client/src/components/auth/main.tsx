@@ -20,7 +20,8 @@ function AuthMain() {
     async function tryRegisterUser(params: {email: string, password: string}) {
         setEmail(params.email);
         await invoke<string>("try_register_user", {email: params.email, password: params.password})
-            .then((message) => console.log(message));
+            // .then((message) => 
+            //     console.log(message));
     }
 
     return <>
