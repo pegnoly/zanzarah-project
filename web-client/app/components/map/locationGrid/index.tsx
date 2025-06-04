@@ -5,12 +5,19 @@ import { locationBackgroundsData } from "./imports";
 import { Link } from "@tanstack/react-router";
 
 function LocationsGrid(params: {
-    locations: Location[]
+    locations: Location[],
+    sectionId: string,
+    bookId: string
 }) {
 
     return (
         <SimpleGrid cols={{sm: 1, lg: 2}} className={classes.map_grid}>{params.locations?.map((l, i) => (
-        <Link key={i} to="." search={{focused: l.id}} style={{textDecoration: 'none'}}>
+        <Link 
+            key={i} 
+            to="/map/$bookId/section/$id/$focusedId/modal" 
+            params={{focusedId: l.id, id: params.sectionId, bookId: params.bookId}} 
+            style={{textDecoration: 'none'}}
+        >
             <Card 
                 withBorder 
                 radius={0} 

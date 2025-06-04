@@ -206,12 +206,17 @@ type DeleteLocationEntryMutationVariables = {
 }
 
 type DeleteLocationEntryMutationResult = {
-    removeLocationWizform: string
+    removeLocationWizform: SelectableWizform | null
 }
 
 const deleteLocationEntryMutation = gql`
     mutation removeLocationWizformMutation($id: ID!) {
-        removeLocationWizform(id: $id)
+        removeLocationWizform(id: $id) {
+            id,
+            element,
+            name,
+            number
+        }
     }
 `
 

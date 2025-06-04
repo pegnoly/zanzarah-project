@@ -454,11 +454,20 @@ impl BookRepository {
         &self,
         db: &DatabaseConnection,
         id: Uuid
-    ) -> Result<(), ZZApiError> {
+    ) -> Result<Option<WizformSelectionModel>, ZZApiError> {
         if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id).one(db).await? {
+            let deleted_id = existing_wizform.wizform_id;
             existing_wizform.delete(db).await?;
+            Ok(wizform::Entity::find_by_id(deleted_id)
+                .select_only()
+                .columns([wizform::Column::Id, wizform::Column::Name, wizform::Column::Element, wizform::Column::Number])
+                .into_model::<WizformSelectionModel>()
+                .one(db)
+                .await?
+            )
+        } else {
+            Ok(None)
         }
-        Ok(())
     }
 
     pub async fn get_wizforms_for_selection(

@@ -1,15 +1,15 @@
 import { Accordion, Button, Group, List, Modal, Select, Tabs, Text, TextInput } from "@mantine/core";
 import { AuthProps, RegistrationState, UserPermissionType } from "../../utils/auth/utils";
-import { WizformElement } from "../../utils/queries/elements";
-import { addLocationWizform, deleteLocationWizform, Location, LocationFullModel, LocationWizformEntry, SelectableWizform } from "../../utils/queries/map";
-import { useDisclosure } from "@mantine/hooks";
-import { useNavigate } from "@tanstack/react-router";
+import { addLocationWizform, deleteLocationWizform, fetchLocationEntriesOptions, Location, LocationFullModel, LocationWizformEntry, SelectableWizform } from "../../utils/queries/map";
+import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import { useCommonStore } from "../../stores/common";
 import { useState } from "react";
 import { WizformElementType } from "../../graphql/graphql";
 import ElementsSelector from "../utils/elementsSelector";
 import { useMutation } from "@tanstack/react-query";
 import { IconTrashFilled } from "@tabler/icons-react";
+import useMapStore from "@/stores/map";
+import { useShallow } from "zustand/shallow";
 
 enum TabsVariant {
     EntriesList = "EntriesList",
@@ -17,36 +17,47 @@ enum TabsVariant {
 }
 
 function LocationFocused(params: {
-    models: LocationWizformEntry [] | undefined,
-    selectableWizforms: SelectableWizform [] | undefined,
+    bookId: string,
+    sectionId: string,
     auth: AuthProps,
-    location: Location
+    location: Location,
+    entries: LocationWizformEntry [],
+    selectables: SelectableWizform [],
 }) {
     const navigate = useNavigate();
-    const [opened, {open, close}] = useDisclosure(true);
-    const [entries, setEntries] = useState<LocationWizformEntry [] | undefined>(params.models);
-    const [selectables, setSelectables] = useState<SelectableWizform [] | undefined>(params.selectableWizforms);
+    // const context = Route.useRouteContext();
+    const [entries, setEntries, selectables, setSelectables] = useMapStore(useShallow((state) => [
+        state.entriesData,
+        state.setEntries,
+        state.selectablesData,
+        state.setSelectables,
+    ]));
 
-    async function entryAdded(entry: LocationWizformEntry) {
-        setEntries([...entries!, entry])
+    if (entries?.get(params.location.id) == undefined) {
+        const updatedEntriesData = entries?.set(params.location.id, params.entries);
+        setEntries(updatedEntriesData!);
+    }
+    if (selectables?.get(params.location.id) == undefined) {
+        const updatedSelectablesData = selectables?.set(params.location.id, params.selectables);
+        setSelectables(updatedSelectablesData!);
     }
 
-    async function entryRemoved(id: string) {
-        const updatedEntries = entries?.filter(e => e.id != id);
-        setEntries(updatedEntries);
+    async function entryAdded(wizformId: string, entry: LocationWizformEntry) {
+        setSelectables(selectables?.set(params.location.id, selectables.get(params.location.id)?.filter(s => s.id != wizformId))!);
+        setEntries(entries?.set(params.location.id, [...entries.get(params.location.id)!, entry])!);
     }
 
-    async function selectableRemoved(wizformId: string) {
-        const updatedSelectables = selectables?.filter(s => s.id != wizformId);
-        setSelectables(updatedSelectables);
+    async function entryRemoved(entryId: string, selectable: SelectableWizform) {
+        setEntries(entries?.set(params.location.id, entries.get(params.location.id)?.filter(e => e.id != entryId))!);
+        setSelectables(selectables?.set(params.location.id, [...selectables.get(params.location.id)!, selectable])!);
     }
 
     return <>
-    <Modal.Root opened={opened} centered={true} onClose={() => navigate({to: '.', search: {focused: undefined}})}>
+    <Modal.Root opened={true} centered={true} onClose={() => navigate({to: '/map/$bookId/section/$id', params: {bookId: params.bookId, id: params.sectionId}})}>
         <Modal.Overlay/>
         <Modal.Content>
             <Modal.Header>
-                <Modal.Title>{`Феи локации ${params.location.name}`}</Modal.Title>
+                <Modal.Title style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '2rem'}}>{`Феи локации ${params.location.name}`}</Modal.Title>
                 <Modal.CloseButton/>
             </Modal.Header>
             <Modal.Body>
@@ -54,19 +65,19 @@ function LocationFocused(params: {
                 params.auth.userState == RegistrationState.Confirmed && 
                 (params.auth.userPermission == UserPermissionType.Editor || params.auth.userPermission == UserPermissionType.Admin) ?
                 <EditorTabs 
-                    onModelRemoved={entryRemoved}
                     auth={params.auth}
                     currentLocation={params.location.id}
-                    models={entries}
-                    selectables={selectables!}
-                    onModelsUpdated={entryAdded}
-                    onSelectablesUpdated={selectableRemoved}
+                    entryAddedCallback={entryAdded}
+                    entryRemovedCallback={entryRemoved}
+                    // entries={params.entries}
+                    // selectables={params.selectables}
                 /> :
                 <WizformsList 
                     modelRemovedCallback={entryRemoved}
                     auth={params.auth}
-                    models={params.models}
-                />
+                    currentLocation={params.location.id}
+                    // entries={params.entries}
+                />  
             }
             </Modal.Body>
         </Modal.Content>
@@ -76,21 +87,16 @@ function LocationFocused(params: {
 
 function EditorTabs(params: {
     auth: AuthProps,
-    models: LocationWizformEntry [] | undefined,
-    selectables: SelectableWizform [],
-    onSelectablesUpdated: (wizformId: string) => void,
-    onModelsUpdated: (entry: LocationWizformEntry) => void,
-    onModelRemoved: (id: string) => void,
-    currentLocation: string
+    currentLocation: string,
+    entryAddedCallback: (wizformId: string, entry: LocationWizformEntry) => void,
+    entryRemovedCallback: (id: string, selectable: SelectableWizform) => void,
 }) {
-
     async function entryCreated(wizformId: string, entry: LocationWizformEntry) {
-        params.onModelsUpdated(entry);
-        params.onSelectablesUpdated(wizformId);
+        params.entryAddedCallback(wizformId, entry);
     }
 
-    async function entryRemoved(id: string) {
-        params.onModelRemoved(id);
+    async function entryRemoved(id: string, selectable: SelectableWizform) {
+        params.entryRemovedCallback(id, selectable);
     }
 
     return (
@@ -107,12 +113,15 @@ function EditorTabs(params: {
             <Tabs.Panel value={TabsVariant.EntriesList}>
                 <WizformsList 
                     auth={params.auth}
-                    models={params.models}
                     modelRemovedCallback={entryRemoved}
+                    currentLocation={params.currentLocation}
                 />
             </Tabs.Panel>
             <Tabs.Panel value={TabsVariant.EntryCreator}>
-                <LocationEntryCreator onEntryCreated={entryCreated} selectables={params.selectables} currentLocation={params.currentLocation}/>
+                <LocationEntryCreator 
+                    onEntryCreated={entryCreated} 
+                    currentLocation={params.currentLocation}
+                />
             </Tabs.Panel>
         </Tabs> 
     </>
@@ -120,17 +129,22 @@ function EditorTabs(params: {
 }
 
 function WizformsList(params: {
-    models: LocationWizformEntry [] | undefined,
-    modelRemovedCallback: (id: string) => void,
-    auth: AuthProps
+    currentLocation: string,
+    auth: AuthProps,
+    modelRemovedCallback: (id: string, selectable: SelectableWizform) => void
 }) {
-    const presentedElements = [...new Set(params.models?.map(m => m.wizformElement))];
-    const elements = useCommonStore(state => state.elements);
+    const elements = useCommonStore(useShallow((state) => state.elements));
+    const entries = useMapStore(useShallow((state) => state.entriesData?.get(params.currentLocation)));
+    console.log("Entries after update: ", entries)
+
+    const presentedElements = [...new Set(entries?.map(m => m.wizformElement))];
 
     const deleteLocationEntryMutation = useMutation({
         mutationFn: deleteLocationWizform,
         onSuccess(data, variables, context) {
-            params.modelRemovedCallback(variables.data.id);
+            if (data) {
+                params.modelRemovedCallback(variables.data.id, data!);
+            }
         },
     })
 
@@ -139,9 +153,9 @@ function WizformsList(params: {
             <Accordion.Item key={i} value={e}>
                 <Accordion.Control style={{backgroundColor: 'silver'}}>{elements?.find(el => el.element == e)?.name}</Accordion.Control>
                 <Accordion.Panel>
-                    <List>{params.models?.filter(m => m.wizformElement == e).map((m, mi) => (
-                        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                            <Text key={mi}>{m.wizformName}</Text>
+                    <List>{entries?.filter(m => m.wizformElement == e).map((m, mi) => (
+                        <div key={mi} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+                            <Text>{m.wizformName}</Text>
                             {
                                 params.auth.userState == RegistrationState.Confirmed &&
                                 (params.auth.userPermission == (UserPermissionType.Admin || UserPermissionType.Editor)) ?
@@ -160,10 +174,11 @@ function WizformsList(params: {
 }
 
 function LocationEntryCreator(params: {
-    selectables: SelectableWizform [],
     currentLocation: string,
     onEntryCreated: (wizformId: string, entry: LocationWizformEntry) => void 
 }) {
+    const selectables = useMapStore(useShallow((state) => state.selectablesData?.get(params.currentLocation)));
+
     const [elementFilter, setElementFilter] = useState<WizformElementType>(WizformElementType.Nature);
     const [nameFilter, setNameFilter] = useState<string>("");
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -173,7 +188,7 @@ function LocationEntryCreator(params: {
         onSuccess: (data) => {
             setSelectedId(null);
             if (data != undefined) {
-                const selectable = params.selectables.find(s => s.id == selectedId);
+                const selectable = selectables?.find(s => s.id == selectedId);
                 params.onEntryCreated(
                     selectedId!, 
                     {
@@ -202,7 +217,7 @@ function LocationEntryCreator(params: {
                 style={{justifyItems: 'center'}}
                 value={selectedId}
                 onChange={setSelectedId}
-                data={params.selectables
+                data={selectables!
                     .filter(s => s.element == elementFilter)
                     .filter(s => nameFilter == "" ? s : s.name.toLowerCase().startsWith(nameFilter.toLowerCase()))
                     .sort((s1, s2) => s1.number - s2.number)

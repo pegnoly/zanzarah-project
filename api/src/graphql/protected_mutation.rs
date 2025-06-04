@@ -4,7 +4,7 @@ use async_graphql::Context;
 use sea_orm::DatabaseConnection;
 use uuid::Uuid;
 
-use crate::{error::ZZApiError, services::book::{models::collection, repo::BookRepository}};
+use crate::{error::ZZApiError, services::book::{models::{collection, wizform::WizformSelectionModel}, repo::BookRepository}};
 
 use super::mutation::AddCollectionItemResponse;
 
@@ -153,7 +153,7 @@ impl ProtectedMutation {
         &self,
         context: &Context<'_>,
         id: async_graphql::ID
-    ) -> Result<String, ZZApiError> {
+    ) -> Result<Option<WizformSelectionModel>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
                 "Failed to get wizform service from context. {}",
@@ -168,7 +168,7 @@ impl ProtectedMutation {
             );
             ZZApiError::Empty
         })?;
-        service.delete_location_wizform(db, Uuid::from_str(&id.0)?).await?;
-        Ok("Location wizform deleted".to_string())
+        let deleted = service.delete_location_wizform(db, Uuid::from_str(&id.0)?).await?;
+        Ok(deleted)
     }
 }

@@ -16,6 +16,7 @@ import { Route as IndexImport } from './routes/index'
 import { Route as WizformsBookIdImport } from './routes/wizforms.$bookId'
 import { Route as MapBookIdIndexImport } from './routes/map.$bookId/index'
 import { Route as MapBookIdSectionIdImport } from './routes/map.$bookId/section.$id'
+import { Route as MapBookIdSectionIdFocusedIdModalImport } from './routes/map.$bookId/section.$id.$focusedId.modal'
 
 // Create/Update Routes
 
@@ -48,6 +49,13 @@ const MapBookIdSectionIdRoute = MapBookIdSectionIdImport.update({
   path: '/map/$bookId/section/$id',
   getParentRoute: () => rootRoute,
 } as any)
+
+const MapBookIdSectionIdFocusedIdModalRoute =
+  MapBookIdSectionIdFocusedIdModalImport.update({
+    id: '/$focusedId/modal',
+    path: '/$focusedId/modal',
+    getParentRoute: () => MapBookIdSectionIdRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -88,17 +96,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MapBookIdSectionIdImport
       parentRoute: typeof rootRoute
     }
+    '/map/$bookId/section/$id/$focusedId/modal': {
+      id: '/map/$bookId/section/$id/$focusedId/modal'
+      path: '/$focusedId/modal'
+      fullPath: '/map/$bookId/section/$id/$focusedId/modal'
+      preLoaderRoute: typeof MapBookIdSectionIdFocusedIdModalImport
+      parentRoute: typeof MapBookIdSectionIdImport
+    }
   }
 }
 
 // Create and export the route tree
+
+interface MapBookIdSectionIdRouteChildren {
+  MapBookIdSectionIdFocusedIdModalRoute: typeof MapBookIdSectionIdFocusedIdModalRoute
+}
+
+const MapBookIdSectionIdRouteChildren: MapBookIdSectionIdRouteChildren = {
+  MapBookIdSectionIdFocusedIdModalRoute: MapBookIdSectionIdFocusedIdModalRoute,
+}
+
+const MapBookIdSectionIdRouteWithChildren =
+  MapBookIdSectionIdRoute._addFileChildren(MapBookIdSectionIdRouteChildren)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/books': typeof BooksRoute
   '/wizforms/$bookId': typeof WizformsBookIdRoute
   '/map/$bookId': typeof MapBookIdIndexRoute
-  '/map/$bookId/section/$id': typeof MapBookIdSectionIdRoute
+  '/map/$bookId/section/$id': typeof MapBookIdSectionIdRouteWithChildren
+  '/map/$bookId/section/$id/$focusedId/modal': typeof MapBookIdSectionIdFocusedIdModalRoute
 }
 
 export interface FileRoutesByTo {
@@ -106,7 +133,8 @@ export interface FileRoutesByTo {
   '/books': typeof BooksRoute
   '/wizforms/$bookId': typeof WizformsBookIdRoute
   '/map/$bookId': typeof MapBookIdIndexRoute
-  '/map/$bookId/section/$id': typeof MapBookIdSectionIdRoute
+  '/map/$bookId/section/$id': typeof MapBookIdSectionIdRouteWithChildren
+  '/map/$bookId/section/$id/$focusedId/modal': typeof MapBookIdSectionIdFocusedIdModalRoute
 }
 
 export interface FileRoutesById {
@@ -115,7 +143,8 @@ export interface FileRoutesById {
   '/books': typeof BooksRoute
   '/wizforms/$bookId': typeof WizformsBookIdRoute
   '/map/$bookId/': typeof MapBookIdIndexRoute
-  '/map/$bookId/section/$id': typeof MapBookIdSectionIdRoute
+  '/map/$bookId/section/$id': typeof MapBookIdSectionIdRouteWithChildren
+  '/map/$bookId/section/$id/$focusedId/modal': typeof MapBookIdSectionIdFocusedIdModalRoute
 }
 
 export interface FileRouteTypes {
@@ -126,6 +155,7 @@ export interface FileRouteTypes {
     | '/wizforms/$bookId'
     | '/map/$bookId'
     | '/map/$bookId/section/$id'
+    | '/map/$bookId/section/$id/$focusedId/modal'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +163,7 @@ export interface FileRouteTypes {
     | '/wizforms/$bookId'
     | '/map/$bookId'
     | '/map/$bookId/section/$id'
+    | '/map/$bookId/section/$id/$focusedId/modal'
   id:
     | '__root__'
     | '/'
@@ -140,6 +171,7 @@ export interface FileRouteTypes {
     | '/wizforms/$bookId'
     | '/map/$bookId/'
     | '/map/$bookId/section/$id'
+    | '/map/$bookId/section/$id/$focusedId/modal'
   fileRoutesById: FileRoutesById
 }
 
@@ -148,7 +180,7 @@ export interface RootRouteChildren {
   BooksRoute: typeof BooksRoute
   WizformsBookIdRoute: typeof WizformsBookIdRoute
   MapBookIdIndexRoute: typeof MapBookIdIndexRoute
-  MapBookIdSectionIdRoute: typeof MapBookIdSectionIdRoute
+  MapBookIdSectionIdRoute: typeof MapBookIdSectionIdRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -156,7 +188,7 @@ const rootRouteChildren: RootRouteChildren = {
   BooksRoute: BooksRoute,
   WizformsBookIdRoute: WizformsBookIdRoute,
   MapBookIdIndexRoute: MapBookIdIndexRoute,
-  MapBookIdSectionIdRoute: MapBookIdSectionIdRoute,
+  MapBookIdSectionIdRoute: MapBookIdSectionIdRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -189,7 +221,14 @@ export const routeTree = rootRoute
       "filePath": "map.$bookId/index.tsx"
     },
     "/map/$bookId/section/$id": {
-      "filePath": "map.$bookId/section.$id.tsx"
+      "filePath": "map.$bookId/section.$id.tsx",
+      "children": [
+        "/map/$bookId/section/$id/$focusedId/modal"
+      ]
+    },
+    "/map/$bookId/section/$id/$focusedId/modal": {
+      "filePath": "map.$bookId/section.$id.$focusedId.modal.tsx",
+      "parent": "/map/$bookId/section/$id"
     }
   }
 }
