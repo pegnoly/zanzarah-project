@@ -233,13 +233,6 @@ function WizformsFilter(params: {
   const [wizformsDisabled, setWizformsDisabled] = useCommonStore(useShallow((state) => [state.wizformsDisabled, state.setWizformsDisabled]));
   const [setElementFilter, setNameFilter] = useWizformsStore(useShallow((state) => [state.setElementFilter, state.setNameFilter]));
 
-  if (nameFilter == undefined) {
-    setNameFilter(params.nameFilter);
-  }
-  if (elementFilter == undefined) {
-    setElementFilter(params.elementFilter);
-  }
-
   async function updateElementFilter(value: WizformElementType) {
     await setLastElementFilterCookie({data: value});
     setElementFilter(value);

@@ -135,7 +135,7 @@ function WizformsList(params: {
 }) {
     const elements = useCommonStore(useShallow((state) => state.elements));
     const entries = useMapStore(useShallow((state) => state.entriesData?.get(params.currentLocation)));
-    console.log("Entries after update: ", entries)
+    // console.log("Entries after update: ", entries)
 
     const presentedElements = [...new Set(entries?.map(m => m.wizformElement))];
 
