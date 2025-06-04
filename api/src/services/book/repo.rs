@@ -465,30 +465,24 @@ impl BookRepository {
         &self,
         db: &DatabaseConnection,
         book_id: Uuid,
-        // location_id: Uuid
+        location_id: Uuid
     ) -> Result<Vec<WizformSelectionModel>, ZZApiError> {
-        // let data = wizform::Entity::find()
-        //     .left_join(location_wizform_entry::Entity)
-        //     .filter(element_condition)
-        //     .filter(name_condition)
-        //     .filter(wizform::Column::Enabled.eq(true))
-        //     .filter(location_wizform_entry::Column::Id.is_null())
-        //     .select_only()
-        //     .columns([wizform::Column::Id, wizform::Column::Name, wizform::Column::Element, wizform::Column::Number])
-        //     .order_by_asc(wizform::Column::Number)
-        //     .into_model::<WizformSelectionModel>()
-        //     .all(db)
-        //     .await?;
-
-        let data = wizform::Entity::find()
-            .select_only()
-            .columns([wizform::Column::Id, wizform::Column::Name, wizform::Column::Element, wizform::Column::Number])
-            .filter(wizform::Column::BookId.eq(book_id))
-            .filter(wizform::Column::Enabled.eq(true))
-            .into_model::<WizformSelectionModel>()
+        let data = WizformSelectionModel::find_by_statement(Statement::from_sql_and_values(
+            sea_orm::DatabaseBackend::Postgres, 
+        r#"
+                SELECT "w"."id", "w"."name", "w"."element", "w"."number" 
+                FROM "wizforms" "w"
+                WHERE "w"."book_id" = $1 
+                AND "w"."enabled" = true
+                AND NOT EXISTS (
+                    SELECT "lw"."id" 
+                    FROM "location_wizform_entries" "lw"
+                    WHERE "lw"."wizform_id" = "w"."id" AND "lw"."location_id" = $2
+                )
+                ORDER BY "w"."number"
+            "#, [book_id.into(), location_id.into()]))
             .all(db)
             .await?;
-
         Ok(data)
     }
 

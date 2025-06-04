@@ -368,7 +368,8 @@ impl Query {
     async fn selectable_wizforms(
         &self,
         context: &Context<'_>,
-        book_id: async_graphql::ID
+        book_id: async_graphql::ID,
+        location_id: async_graphql::ID
     ) -> Result<Vec<WizformSelectionModel>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -385,7 +386,11 @@ impl Query {
             ZZApiError::Empty
         })?;
 
-        let result = service.get_wizforms_for_selection(db, Uuid::from_str(&book_id.0)?).await?;
+        let result = service.get_wizforms_for_selection(
+            db, 
+            Uuid::from_str(&book_id.0)?,
+            Uuid::from_str(&location_id.0)?
+        ).await?;
         Ok(result)
     }
 }

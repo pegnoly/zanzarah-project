@@ -139,7 +139,8 @@ export type SelectableWizform = {
 }
 
 type SelectableWizformsQueryVariables = {
-    bookId: string
+    bookId: string,
+    locationId: string
 }
 
 export type SelectableWizformsQueryResult = {
@@ -147,8 +148,8 @@ export type SelectableWizformsQueryResult = {
 }
 
 const selectableWizformsQuery = gql`
-    query selectableWizformsQuery($bookId: ID!) {
-        selectableWizforms(bookId: $bookId) {
+    query selectableWizformsQuery($bookId: ID!, $locationId: ID!) {
+        selectableWizforms(bookId: $bookId, locationId: $locationId) {
             id,
             name,
             element,
@@ -163,13 +164,13 @@ const fetchSelectableWizforms = createServerFn({method: 'GET'})
         const result = await request<SelectableWizformsQueryResult | undefined, SelectableWizformsQueryVariables>(
             'https://zanzarah-project-api-lyaq.shuttle.app/', 
             selectableWizformsQuery,
-            {bookId: data.bookId}
+            {bookId: data.bookId, locationId: data.locationId}
         );
         return result?.selectableWizforms;
     });
 
 export const fetchSelectableWizformsOptions = (data: SelectableWizformsQueryVariables) => queryOptions({
-    queryKey: ['selectable_wizforms', data.bookId],
+    queryKey: ['selectable_wizforms', data.bookId, data.locationId],
     queryFn: () => fetchSelectableWizforms({data})
 });
 

@@ -39,7 +39,7 @@ export const Route = createFileRoute('/map/$bookId/section/$id')({
       const focusedData = await context.queryClient.ensureQueryData(fetchLocationEntriesOptions({locationId: focused}));
       loaderData = {...loaderData, auth: auth, elements: elements?.elements, focused: focusedData};
       if (auth.userState == RegistrationState.Confirmed && (auth.userPermission == UserPermissionType.Editor || auth.userPermission == UserPermissionType.Admin)) {
-        const selectableWizforms = await context.queryClient.ensureQueryData(fetchSelectableWizformsOptions({bookId: params.bookId}));
+        const selectableWizforms = await context.queryClient.ensureQueryData(fetchSelectableWizformsOptions({bookId: params.bookId, locationId: focused}));
         loaderData = {...loaderData, selectableWizforms: selectableWizforms};
       } 
     }
