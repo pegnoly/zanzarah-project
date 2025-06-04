@@ -73,7 +73,7 @@ impl ProtectedQuery {
         &self,
         context: &Context<'_>,
         collection_id: async_graphql::ID
-    ) -> Result<u64, ZZApiError> {
+    ) -> Result<i64, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
                 "Failed to get wizform service from context. {}",

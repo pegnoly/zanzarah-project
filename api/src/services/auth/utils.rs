@@ -39,7 +39,8 @@ pub struct SignInResult {
     pub email_hash: String,
     pub password_hash: String,
     pub registration_state: RegistrationState,
-    pub permission: UserPermissionType
+    pub permission: UserPermissionType,
+    pub user_id: async_graphql::ID
 }
 
 #[derive(Debug, async_graphql::SimpleObject)]

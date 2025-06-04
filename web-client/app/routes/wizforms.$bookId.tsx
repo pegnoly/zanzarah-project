@@ -1,9 +1,9 @@
-import { createFileRoute, Link, Outlet, useNavigate, useRouteContext } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { WizformElementType } from '../graphql/graphql'
-import { fetchWizforms, fetchWizformsOptions, fetchWizformsOptionsClient, WizformSimpleModel, WizformsModel} from '../utils/queries/wizforms'
-import { Badge, Button, ButtonGroup, Card, Dialog, Group, Image, Modal, SegmentedControl, SimpleGrid, Stack, Text, TextInput } from '@mantine/core';
+import { fetchWizformsOptions, WizformsModel} from '../utils/queries/wizforms'
+import { Badge, Button, ButtonGroup, Card, Dialog, Group, Image, Modal, SimpleGrid, Stack, Text, TextInput } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useEffect, useState } from 'react';
+import { Ref, useState } from 'react';
 import { useCommonStore } from '../stores/common';
 import { useShallow } from 'zustand/shallow'
 import ElementsSelector from '../components/utils/elementsSelector';
@@ -11,14 +11,16 @@ import { createServerFn } from '@tanstack/react-start';
 import { getCookie, setCookie } from '@tanstack/react-start/server';
 import { ElementsModel, fetchElementsOptions } from '../utils/queries/elements';
 import { AuthProps, processAuth, UserPermissionType } from '../utils/auth/utils';
-import { addCollectionItemMutation, AddCollectionItemMutationResult, AddCollectionItemMutationVariables, fetchCollectionsOptions, getActiveCollection } from '../utils/queries/collections';
+import { addCollectionItemMutation, AddCollectionItemMutationResult, AddCollectionItemMutationVariables, getActiveCollection, removeCollectionItem } from '../utils/queries/collections';
 import { fetchWizformOptions, WizformFull } from '../utils/queries/wizform';
-import { useMutation, useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import request from 'graphql-request';
 import { notifications } from '@mantine/notifications';
-import { Carousel } from '@mantine/carousel';
 import { ActiveMagicSlot } from '../components/magic/activeSlot';
 import { PassiveMagicSlot } from '../components/magic/passiveSlot';
+import useWizformsStore from '../stores/wizforms';
+import React from 'react'
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 const setLastNameFilterCookie = createServerFn({method: 'POST'})
   .validator((filter: string) => filter)
@@ -47,7 +49,7 @@ const getLastElementFilterCookie = createServerFn({method: 'GET'})
 type LoaderData = {
   nameFilter: string | undefined,
   elementFilter: WizformElementType,
-  // wizforms: WizformsModel | undefined,
+  wizforms: WizformsModel | undefined,
   elements: ElementsModel | undefined,
   auth: AuthProps,
   currentCollection: string | null,
@@ -56,9 +58,8 @@ type LoaderData = {
 
 export const Route = createFileRoute('/wizforms/$bookId')({
     component: RouteComponent,
-    validateSearch: (search: Record<string, unknown>): {element: WizformElementType | undefined, focused: string | undefined} => {
+    validateSearch: (search: Record<string, unknown>): {focused: string | undefined} => {
       return {
-        element: search["element"] as WizformElementType,
         focused: search["focused"] as string
       }
     },
@@ -70,19 +71,30 @@ export const Route = createFileRoute('/wizforms/$bookId')({
         elements: undefined,
         auth: await processAuth(),
         currentCollection: null,
+        wizforms: undefined,
         focusedWizform: null
       }
       const nameFilterCookie = await getLastNameFilterCookie();
       const elementFilterCookie = await getLastElementFilterCookie();
-      loaderData = {...loaderData, nameFilter: nameFilterCookie, elementFilter: elementFilterCookie as WizformElementType};
+      loaderData = {...loaderData, 
+        nameFilter: nameFilterCookie != undefined ? nameFilterCookie : loaderData.nameFilter, 
+        elementFilter: elementFilterCookie != undefined ? elementFilterCookie as WizformElementType : loaderData.elementFilter
+      };
       if (loaderData.auth.userId) {
         const activeCollection = await getActiveCollection({data: {bookId: params.bookId, userId: loaderData.auth.userId}});
         loaderData = {...loaderData, currentCollection: activeCollection!}
       }
       const elementsData = await context.queryClient.ensureQueryData(fetchElementsOptions({bookId: params.bookId}));
-      loaderData = {...loaderData, elements: elementsData};
+      const wizformsData = await context.queryClient.ensureQueryData(fetchWizformsOptions({
+        bookId: params.bookId,
+        collection: loaderData.currentCollection,
+        elementFilter: loaderData.elementFilter,
+        nameFilter: loaderData.nameFilter,
+        enabled: true
+      }));
+      loaderData = {...loaderData, elements: elementsData, wizforms: wizformsData};
       if (focused != undefined) {
-        const focusedWizform = await context.queryClient.ensureQueryData(fetchWizformOptions(focused));
+        const focusedWizform = await context.queryClient.ensureQueryData(fetchWizformOptions({id: focused, collectionId: loaderData.currentCollection}));
         loaderData = {...loaderData, focusedWizform: focusedWizform?.wizform!};
       }
       return loaderData;
@@ -92,48 +104,72 @@ export const Route = createFileRoute('/wizforms/$bookId')({
 function RouteComponent() {
   const loaderData =  Route.useLoaderData();
   const params = Route.useParams();
+  const context = Route.useRouteContext();
 
-  const [elementFilter, nameFilter, setElements] = useCommonStore(useShallow((state) => [
-    state.currentElementFilter,
-    state.currentNameFilter,
-    state.setElements
+  const setElements = useCommonStore(state => state.setElements);
+  const [wizforms, elementFilter, nameFilter, setWizforms, focusedWizform, setFocusedWizform] = useWizformsStore(useShallow((state) => [
+    state.wizforms,
+    state.elementFilter,
+    state.nameFilter,
+    state.setWizforms,
+    state.focusedWizform,
+    state.setFocusedWizform
   ]));
 
   setElements(loaderData.elements?.elements);
+  if (wizforms == undefined) {
+    setWizforms(loaderData.wizforms?.wizforms!)
+  }
+  if (focusedWizform == undefined || (loaderData.focusedWizform != undefined && (focusedWizform.id != loaderData.focusedWizform.id))) {
+    setFocusedWizform(loaderData.focusedWizform!);
+  }
 
-  const { data, status } = useSuspenseQuery(fetchWizformsOptions({
-    bookId: params.bookId, 
-    collection: loaderData.currentCollection, 
-    elementFilter: elementFilter == undefined ? loaderData.elementFilter : elementFilter,
-    enabled: true,
-    nameFilter: nameFilter == undefined ? loaderData.nameFilter : elementFilter
-  }));
+  const [localElementFilter, setLocalElementFilter] = useState<WizformElementType>(elementFilter != undefined ? elementFilter : loaderData.elementFilter);
+  const [localNameFilter, setLocalNameFilter] = useState<string | undefined>(nameFilter != undefined ? nameFilter : loaderData.nameFilter);
 
-
-  const [wizforms, setWizforms] = useState<WizformSimpleModel [] | undefined>(data?.wizforms);
   async function addWizformToCollection(wizformId: string, inCollectionId: string) {
     const updatedWizforms = wizforms?.map((w) => {
       if (w.id == wizformId) {
-        w.inCollectionId = inCollectionId;
+        w.inCollectionId = "optimistically_updated";
         return w;
       }
       return w;
     });
-    setWizforms(updatedWizforms);
+    setWizforms(updatedWizforms!);
   }
 
-  async function updatedWizformFilters(value: WizformSimpleModel[]) {
-    setWizforms(value);
+  async function removeWizformFromCollection(wizformId: string) {
+    const updatedWizforms = wizforms?.map((w) => {
+      if (w.id == wizformId) {
+        w.inCollectionId = null;
+        return w;
+      }
+      return w;
+    });
+    setWizforms(updatedWizforms!);
+  }
+
+  async function onFiltersChanged() {
+    context.queryClient.fetchQuery(fetchWizformsOptions({
+      bookId: params.bookId,
+      enabled: true,
+      elementFilter: localElementFilter,
+      nameFilter: localNameFilter,
+      collection: loaderData.currentCollection
+    }))
+    .then((data) => {
+      setWizforms(data?.wizforms!);
+    });
   }
 
   return <div>
-    <WizformsList 
-      currentCollection={loaderData.currentCollection}
-      wizforms={wizforms}
-      nameFilter={loaderData.nameFilter}
-      elementFilter={loaderData.elementFilter}
-      bookId={params.bookId}
-      wizformsUpdateCallback={updatedWizformFilters}
+    <WizformsList/>
+    <WizformsFilter 
+      filtersUpdatedCallback={onFiltersChanged} 
+      currentElementFilter={localElementFilter} 
+      currentNameFilter={localNameFilter}
+      elementFilterUpdateCallback={setLocalElementFilter}
+      nameFilterUpdateCallback={setLocalNameFilter}
     />
     {
       loaderData.focusedWizform != null ?
@@ -143,6 +179,7 @@ function RouteComponent() {
         currentCollection={loaderData.currentCollection}
         permission={loaderData.auth.userPermission!}
         wizformAddedToCollectionCallback={addWizformToCollection}
+        wizformRemovedFromCollectionCallback={removeWizformFromCollection}
         elements={loaderData.elements!}
       /> :
       null
@@ -150,39 +187,22 @@ function RouteComponent() {
   </div>
 }
 
-function WizformsList(params: {
-  wizforms: WizformSimpleModel[] | undefined,
-  bookId: string,
-  nameFilter: string | undefined,
-  elementFilter: WizformElementType,
-  currentCollection: string | null,
-  wizformsUpdateCallback: (value: WizformSimpleModel []) => void
-}) {
-  const wizformsDisabled = useCommonStore(state => state.wizformsDisabled);
-  const context = Route.useRouteContext();  
-  async function onFiltersChanged(element: WizformElementType, name: string) {
-    context.queryClient.fetchQuery(fetchWizformsOptions({
-      bookId: params.bookId,
-      enabled: true,
-      elementFilter: element,
-      nameFilter: name,
-      collection: params.currentCollection
-    }))
-    .then((data) => {
-      params.wizformsUpdateCallback(data?.wizforms!);
-    });
-  }
+function WizformsList() {
+  const wizformsDisabled = useCommonStore(useShallow((state) => state.wizformsDisabled));
+  const wizforms = useWizformsStore(useShallow((state) => state.wizforms));
 
   return <>
-    <SimpleGrid
+    {
+      wizforms == undefined ?
+      null :
+      <SimpleGrid
           style={{padding: '3%'}}
           cols={{ base: 1, sm: 2, md: 3, lg: 4 }} 
-      >{params.wizforms!.map((w, _i) => (
+        >{wizforms!.map((w, _i) => (
         <Link 
           key={w.id} disabled={wizformsDisabled} 
           to="." 
           search={{focused: w.id}} 
-          // params={{id: w.id, bookId: params.bookId}} 
           style={{textDecoration: 'none'}}
         >
             <Card shadow='sm' padding='lg' withBorder style={{height: '100%', backgroundColor: w.inCollectionId ? "gold" : "white"}}>
@@ -195,27 +215,23 @@ function WizformsList(params: {
             </Card>
         </Link>
       ))}</SimpleGrid>
-      <WizformsFilter filtersUpdatedCallback={onFiltersChanged} nameFilter={params.nameFilter} elementFilter={params.elementFilter}/>
+    }
   </>
 
 }
 
 function WizformsFilter(params: {
-  filtersUpdatedCallback: (element: WizformElementType, name: string | undefined) => void,
-  nameFilter: string | undefined,
-  elementFilter: WizformElementType
+  currentElementFilter: WizformElementType,
+  currentNameFilter: string | undefined,
+  elementFilterUpdateCallback: (value: WizformElementType) => void,
+  nameFilterUpdateCallback: (value: string | undefined) => void,
+  filtersUpdatedCallback: () => void
 }) {
   const navigate = useNavigate();
   const [opened, {open, close}] = useDisclosure(false);
 
-  const [wizformsDisabled, setWizformsDisabled, nameFilter, elementFilter, setNameFilter, setElementFilter] = useCommonStore(useShallow((state) => [
-    state.wizformsDisabled, 
-    state.setWizformsDisabled,
-    state.currentNameFilter,
-    state.currentElementFilter,
-    state.setNameFilter,
-    state.setElementFilter
-  ]));
+  const [wizformsDisabled, setWizformsDisabled] = useCommonStore(useShallow((state) => [state.wizformsDisabled, state.setWizformsDisabled]));
+  const [setElementFilter, setNameFilter] = useWizformsStore(useShallow((state) => [state.setElementFilter, state.setNameFilter]));
 
   if (nameFilter == undefined) {
     setNameFilter(params.nameFilter);
@@ -225,9 +241,15 @@ function WizformsFilter(params: {
   }
 
   async function updateElementFilter(value: WizformElementType) {
-    console.log("New element filter: ", value);
     await setLastElementFilterCookie({data: value});
     setElementFilter(value);
+    params.elementFilterUpdateCallback(value);
+  }
+
+  async function updateNameFilter(value: string) {
+    await setLastNameFilterCookie({data: value});
+    setNameFilter(value);
+    params.nameFilterUpdateCallback(value);
   }
 
   return <>
@@ -256,36 +278,19 @@ function WizformsFilter(params: {
         <ElementsSelector 
           label='Сортировать фей по стихии'
           disabled={false}
-          current={elementFilter!}
+          current={params.currentElementFilter!}
           selectedCallback={updateElementFilter}
         />
         <TextInput
-          value={nameFilter} 
-          onChange={(event) => {
-            setLastNameFilterCookie({data:event.currentTarget.value});
-            setNameFilter(event.currentTarget.value);
-          }}
+          value={params.currentNameFilter} 
+          onChange={(event) => updateNameFilter(event.currentTarget.value)}
           label='Сортировать фей по имени'
           placeholder='Укажите фильтр(зависит от регистра)'
         /> 
-          {/* <SegmentedControl
-            size='sm'
-            value={collectionState}
-            fullWidth
-            orientation='vertical'
-            color='gold'
-            // style={{display: 'contents'}}
-            onChange={(value) => setCollectionState(value as CollectionState)}
-            data={[
-              {value: CollectionState.None, label: '1'},
-              {value: CollectionState.OnlyCollectionItems, label: "2"},
-              {value: CollectionState.OnlyNonCollectionItems, label: "3"}
-            ]}
-          /> */}
         <Button onClick={() => {
           setWizformsDisabled(false);
           close();
-          params.filtersUpdatedCallback(elementFilter!, nameFilter);
+          params.filtersUpdatedCallback();
         }}>Применить</Button>
       </Stack>
     </Dialog>
@@ -298,9 +303,11 @@ function FocusedWizform(params: {
   currentCollection: string | null,
   permission: UserPermissionType,
   elements: ElementsModel,
-  wizformAddedToCollectionCallback: (wizformId: string,  inCollectionId: string) => void
+  wizformAddedToCollectionCallback: (wizformId: string,  inCollectionId: string) => void,
+  wizformRemovedFromCollectionCallback: (wizformId: string) => void
 }) {
   const navigate = useNavigate();
+  const [wizform, setWizform] = useWizformsStore(useShallow((state) => [state.focusedWizform, state.setFocusedWizform]));
 
   const addToCollectionMutation = useMutation({
     mutationFn: async(data: AddCollectionItemMutationVariables) => {
@@ -310,7 +317,8 @@ function FocusedWizform(params: {
           {collectionId: data.collectionId, wizformId: data.wizformId}
       );
       if (collectionItemId != null) {
-        params.wizformAddedToCollectionCallback(params.wizform.id, collectionItemId.addCollectionItem.createdId);
+        setWizform({...wizform!, inCollectionId: collectionItemId.addCollectionItem.createdId})
+        params.wizformAddedToCollectionCallback(wizform!.id, collectionItemId.addCollectionItem.createdId);
         notifications.show({
           message: "Фея добавлена в коллекцию",
           color: 'green',
@@ -318,6 +326,21 @@ function FocusedWizform(params: {
         })
       }
     },
+  });
+
+  const removeFromCollectionMutation = useMutation({
+    mutationFn: removeCollectionItem,
+    onSuccess: (data) => {
+      if (data) {
+        setWizform({...wizform!, inCollectionId: null});
+        params.wizformRemovedFromCollectionCallback(wizform!.id);
+        notifications.show({
+          message: "Фея удалена из коллекции",
+          color: 'red',
+          autoClose: 5000
+        })
+      }
+    }
   })
 
   return (
@@ -327,10 +350,10 @@ function FocusedWizform(params: {
         <Modal.Header>
           <Modal.Title>
             <div style={{display: 'flex', flexDirection: 'column', gap: '1%'}}>
-              <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '2rem'}}>{params.wizform.name}</Text>
+              <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '2rem'}}>{wizform!.name}</Text>
               <Text 
                 style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem'}}
-              >{`${params.elements.elements?.find(e => e.element == params.wizform.element)?.name}, №${params.wizform.number}`}</Text>
+              >{`${params.elements.elements?.find(e => e.element == wizform!.element)?.name}, №${wizform!.number}`}</Text>
             </div>
           </Modal.Title>
           <Modal.CloseButton/>
@@ -343,95 +366,110 @@ function FocusedWizform(params: {
               </Badge>
               <Group gap="xs">
                 <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Максимальное здоровье:`}</Text>
-                <Text size="md" style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{params.wizform.hitpoints}</Text>
+                <Text size="md" style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{wizform!.hitpoints}</Text>
               </Group>
               <Group gap="xs">
                 <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Ловкость:`}</Text>
-                <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{params.wizform.agility}</Text>
+                <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{wizform!.agility}</Text>
               </Group>
               <Group gap="xs">
                 <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Прыгучесть:`}</Text>
-                <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{params.wizform.jumpAbility}</Text>
+                <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{wizform!.jumpAbility}</Text>
               </Group>
               <Group gap="xs">
                 <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Меткость:`}</Text>
-                <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{params.wizform.precision}</Text>
+                <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{wizform!.precision}</Text>
               </Group>
               <Group gap="xs">
                 <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Скорость повышения уровня:`}</Text>
-                <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{params.wizform.expModifier}</Text>
+                <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{wizform!.expModifier}</Text>
               </Group>
             </div>
             <div style={{display: 'flex', flexDirection: 'column', alignItems: 'end', paddingTop: '5%'}}>
               <Badge radius={0}>
                 Превращения
               </Badge>
-              <Group gap="sm">
+              <div style={{display: 'flex', flexDirection: 'column', gap: '2%', alignItems: 'end'}}>
                 <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Эволюция:`}</Text>
                 <Text 
                   size='md' 
                   lineClamp={1}
                   style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
-                >{params.wizform.evolutionForm == -1 ? 'Отстуствует' : params.wizform.evolutionName}</Text>
-              </Group>
+                >{wizform!.evolutionForm == -1 ? 'Отстуствует' : wizform!.evolutionName}</Text>
+              </div>
               <Group gap="xs">
-                <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Уровень эволюции:`}</Text>
+                <Text span size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Уровень эволюции:`}</Text>
                 <Text 
+                  span
                   size='md' 
                   style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
-                >{params.wizform.evolutionLevel == -1 ? 'Отсутствует' : params.wizform.evolutionLevel!}</Text>
+                >{wizform!.evolutionLevel == -1 ? 'Отсутствует' : wizform!.evolutionLevel!}</Text>
               </Group>
-              <Group gap="sm">
-                <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Предыдущая форма:`}</Text>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '2%', alignItems: 'end'}}>
+                <Text span size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Предыдущая форма:`}</Text>
                 <Text 
+                  span
                   size='md' 
                   lineClamp={1}
                   style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
-                >{params.wizform.previousForm == undefined ? 'Отсутствует' : params.wizform.previousFormName!}</Text>
-              </Group>
+                >{wizform!.previousForm == undefined ? 'Отсутствует' : wizform!.previousFormName!}</Text>
+              </div>
             </div>
-            <div style={{paddingTop: '5%'}}>
+            <div style={{paddingTop: '5%', width: '100%'}}>
               <Badge radius={0}>
                 Уровни магии
               </Badge>
-              <Carousel withControls>{params.wizform.magics.types.map((magic, index) => (
-                <Carousel.Slide key={index}>
-                  <div>
-                    <Text style={{fontFamily: 'Yanone Kaffeesatz', fontWeight: 'bolder', fontSize: '1.5rem'}}>{`Уровень ${magic.level}`}</Text>
-                    <div style={{paddingLeft: '25%'}}>
-                      <Stack gap={1}>
-                        <Group>
-                          <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Первое активное</Text>
-                          <ActiveMagicSlot slot={magic.firstActiveSlot}/>
-                        </Group>
-                        <Group>
-                          <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Первое пассивное</Text>
-                          <PassiveMagicSlot slot={magic.firstPassiveSlot}/>
-                        </Group>
-                        <Group>
-                          <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Второе активное</Text>
-                          <ActiveMagicSlot slot={magic.secondActiveSlot}/>
-                        </Group>
-                        <Group>
-                          <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Второе пассивное</Text>
-                          <PassiveMagicSlot slot={magic.secondPassiveSlot}/>
-                        </Group>
-                      </Stack>
+              <div style={{width: '90%'}}>
+                <Carousel orientation='horizontal' className="w-full max-w-xs" style={{width: '90%'}} opts={{loop: true, slidesToScroll: 1}}>
+                  <CarouselContent>{wizform!.magics.types.map((magic, index) => (
+                  <CarouselItem key={index}>
+                    <div>
+                      <Text style={{fontFamily: 'Yanone Kaffeesatz', fontWeight: 'bolder', fontSize: '1.5rem'}}>{`Уровень ${magic.level}`}</Text>
+                      <div style={{paddingLeft: '5%', justifyItems: 'center'}}>
+                        <Stack gap={1}>
+                          <Stack gap={1}>
+                            <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Первое активное</Text>
+                            <ActiveMagicSlot slot={magic.firstActiveSlot}/>
+                          </Stack>
+                          <Stack gap={1}>
+                            <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Первое пассивное</Text>
+                            <PassiveMagicSlot slot={magic.firstPassiveSlot}/>
+                          </Stack>
+                          <Stack gap={1}>
+                            <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Второе активное</Text>
+                            <ActiveMagicSlot slot={magic.secondActiveSlot}/>
+                          </Stack>
+                          <Stack gap={1}>
+                            <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>Второе пассивное</Text>
+                            <PassiveMagicSlot slot={magic.secondPassiveSlot}/>
+                          </Stack>
+                        </Stack>
+                      </div>
                     </div>
-                  </div>
-                </Carousel.Slide>
-              ))}
-              </Carousel>
+                  </CarouselItem>
+                ))}
+                </CarouselContent>
+                <CarouselPrevious/>
+                <CarouselNext/>
+                </Carousel>
+              </div>
             </div>
             {
-              params.permission != UserPermissionType.UnregisteredUser ?
-              <Group justify="flex-end" mt="md">
-                <Button onClick={() => {
-                  addToCollectionMutation.mutate({collectionId: params.currentCollection!, wizformId: params.wizform.id!})
-                }}
-                >Добавить в текущую коллекцию</Button>
-              </Group> :
-              null
+              params.permission != UserPermissionType.UnregisteredUser ? (
+                !wizform!.inCollectionId ?
+                <Group justify="flex-end" mt="md" pt="md">
+                  <Button color='lime' loading={addToCollectionMutation.isPending} onClick={() => {
+                    addToCollectionMutation.mutate({collectionId: params.currentCollection!, wizformId: wizform!.id!})
+                  }}
+                  >Добавить в текущую коллекцию</Button>
+                </Group> :
+                <Group justify="flex-end" mt="md" pt="md">
+                  <Button color='pink' loading={removeFromCollectionMutation.isPending} onClick={() => {
+                    removeFromCollectionMutation.mutate({data: {id: wizform!.inCollectionId!}})
+                  }}
+                  >Удалить из текущей коллекции</Button>
+                </Group>
+              ) : null
             }
           </div>
         </Modal.Body>

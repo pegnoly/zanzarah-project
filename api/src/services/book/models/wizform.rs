@@ -5,8 +5,7 @@ use uuid::Uuid;
 use crate::error::ZZApiError;
 
 use super::{
-    collection_entry,
-    magic::{Magics, MagicsInputModel},
+    collection_entry, location_wizform_entry, magic::{Magics, MagicsInputModel}
 };
 
 #[derive(
@@ -157,12 +156,20 @@ impl WizformModel {
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
     CollectionEntry,
+    LocationEntry
 }
 
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {
         match self {
-            Self::CollectionEntry => Entity::has_many(collection_entry::Entity).into(),
+            Self::CollectionEntry => Entity::has_many(collection_entry::Entity)
+                .from(Column::Id)
+                .to(collection_entry::Column::WizformId)
+                .into(),
+            Self::LocationEntry => Entity::has_many(location_wizform_entry::Entity)
+                .from(Column::Id)
+                .to(location_wizform_entry::Column::WizformId)
+                .into()
         }
     }
 }
@@ -170,6 +177,12 @@ impl RelationTrait for Relation {
 impl Related<collection_entry::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::CollectionEntry.def()
+    }
+}
+
+impl Related<location_wizform_entry::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::LocationEntry.def()
     }
 }
 
@@ -345,5 +358,32 @@ impl CollectionWizform {
 
     async fn in_collection_id(&self) -> Option<Uuid> {
         self.in_collection_id
+    }
+}
+
+#[derive(Debug, FromQueryResult, Serialize, Deserialize)]
+pub struct WizformSelectionModel {
+    pub id: Uuid,
+    pub name: String,
+    pub element: WizformElementType,
+    pub number: i16
+}
+
+#[async_graphql::Object]
+impl WizformSelectionModel {
+    async fn id(&self) -> async_graphql::ID {
+        self.id.into()
+    }
+
+    async fn name(&self) -> &String {
+        &self.name
+    }
+
+    async fn element(&self) -> WizformElementType {
+        self.element
+    }
+
+    async fn number(&self) -> i16 {
+        self.number
     }
 }

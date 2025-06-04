@@ -61,7 +61,7 @@ export function PassiveMagicSlot(schema: MagicSlotSchema) {
     }
 
     return (
-        <div style={{width: '40%', height: '20%', position: "relative", display: 'flex', flexDirection: 'row'}}>
+        <div style={{width: '40%', height: '20%', display: 'flex', flexDirection: 'row'}}>
             <img 
                 width={15} 
                 height={15} 

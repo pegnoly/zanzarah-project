@@ -7,17 +7,19 @@ type SignInResult = {
   newToken: string,
   passwordHash: string,
   permission: UserPermissionType,
-  registrationState: RegistrationState
+  registrationState: RegistrationState,
+  userId: string
 }
 
 const signInQuery = gql`
-    signInQuery($email: String!, $password: String!) {
+    query signInQuery($email: String!, $password: String!) {
         signIn(email: $email, password: $password) {
             emailHash,
             newToken,
             passwordHash,
             permission,
-            registrationState
+            registrationState,
+            userId
         }
     }
 `
@@ -28,16 +30,19 @@ type SignInQueryVariables = {
 }
 
 type SignInQueryResult = {
-    signIn: SignInQueryResult
+    signIn: SignInResult
 }
 
-const signIn = createServerFn({method: 'GET'})
+export const signIn = createServerFn({method: 'GET'})
     .validator((data: SignInQueryVariables) => data)
-    .handler(async({data}) => {
+    .handler(async({data}): Promise<SignInQueryResult | null> => {
         const result = await request<SignInQueryResult | null, SignInQueryVariables>(
             'https://zanzarah-project-api-lyaq.shuttle.app/',
             signInQuery,
             {email: data.email, password: data.password}
         );
         return result;
+        // .then((result) => { return result; })
+        // .catch((error) => { throw error; })
+        // .finally
     })

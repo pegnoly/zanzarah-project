@@ -34,7 +34,7 @@ const getUserClaims = createServerFn({method: 'GET'})
     const emailCookie = getCookie('zanzarah-project-user-email');
     const passwordCookie = getCookie('zanzarah-project-user-password');
     const tokenCookie = getCookie('zanzarah-project-auth-token');
-    console.log("User claims cookies: ", emailCookie, "; ", passwordCookie, "; ", tokenCookie);
+    // console.log("User claims cookies: ", emailCookie, "; ", passwordCookie, "; ", tokenCookie);
     if (emailCookie == undefined || passwordCookie == undefined) {
         return null;
     } else {
@@ -70,7 +70,7 @@ export const processAuth = async(): Promise<AuthProps> => {
           await setTokenCookie({data: updatedTokenData?.newToken!})
         }
     } else {
-      console.log("User claims not exist")
+      // console.log("User claims not exist")
     }
     return authProps;
 }

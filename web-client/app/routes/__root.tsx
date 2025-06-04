@@ -9,11 +9,13 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+import '@mantine/carousel/styles.css';
 import { QueryClient } from '@tanstack/react-query'
 import { MantineProvider } from "@mantine/core"
 import mantineCssUrl from '@mantine/core/styles.css?url'
-import '@mantine/notifications/styles.css';
 import { Notifications } from '@mantine/notifications';
+import appCss from "@/styles/app.css?url"
 
 export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
   head: () => ({
@@ -26,14 +28,15 @@ export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'Zanzarah project',
       },
     ],
     links: [
       { rel: 'stylesheet', href: mantineCssUrl },
+      { rel: 'stylesheet', href: appCss },
       { rel: 'preconnect', href: "https://fonts.googleapis.com"},
       { rel: 'preconnect', href: "https://fonts.gstatic.com", crossOrigin: 'true'},
-      { rel: 'stylesheet', href: "https://fonts.googleapis.com/css2?family=Yanone+Kaffeesatz:wght@200..700&family=Ysabeau+SC:wght@1..1000&display=swap"}
+      { rel: 'stylesheet', href: "https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Yanone+Kaffeesatz:wght@200..700&family=Ysabeau+SC:wght@1..1000&display=swap"}
     ]
   }),
   component: RootComponent,
@@ -53,7 +56,7 @@ function RootComponent() {
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html>
+    <html style={{backgroundColor: 'silver'}}>
       <head>
         <HeadContent />
       </head>
