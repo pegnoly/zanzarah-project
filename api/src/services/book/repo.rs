@@ -436,18 +436,49 @@ impl BookRepository {
         Ok(id)
     }
 
+    pub async fn add_location_wizform_comment(
+        &self,
+        db: &DatabaseConnection,
+        id: Uuid,
+        comment: String
+    ) -> Result<(), ZZApiError> {
+        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id).one(db).await? {
+            let mut model_to_update = existing_wizform.into_active_model();
+            model_to_update.comment = Set(Some(comment));
+            model_to_update.update(db).await?;
+        } 
+        Ok(())
+    }
+
+    pub async fn remove_location_wizform_comment(
+        &self,
+        db: &DatabaseConnection,
+        id: Uuid
+    ) -> Result<(), ZZApiError> {
+        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id).one(db).await? {
+            let mut model_to_update = existing_wizform.into_active_model();
+            model_to_update.comment = Set(None);
+            model_to_update.update(db).await?;
+        } 
+        Ok(())
+    }
+
     pub async fn update_location_wizform_comment(
         &self,
         db: &DatabaseConnection,
         id: Uuid,
-        new_comment: String
-    ) -> Result<(), ZZApiError> {
+        updated_comment: String
+    ) -> Result<Option<String>, ZZApiError> {
         if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id).one(db).await? {
+            let comment_value = if updated_comment.is_empty() { None } else { Some(updated_comment) };
             let mut model_to_update = existing_wizform.into_active_model();
-            model_to_update.comment = Set(if new_comment.is_empty() { None } else { Some(new_comment) });
+            model_to_update.comment = Set(comment_value.clone());
             model_to_update.update(db).await?;
-        } 
-        Ok(())
+            Ok(comment_value)
+        }
+        else {
+            Err(ZZApiError::SeaOrmError(DbErr::RecordNotFound("Location entry is not found".to_string())))
+        }
     }
 
     pub async fn delete_location_wizform(

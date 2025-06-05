@@ -75,7 +75,8 @@ pub struct LocationWizformFullEntry {
     pub id: Uuid,
     pub wizform_name: String,
     pub wizform_number: i16,
-    pub wizform_element: WizformElementType
+    pub wizform_element: WizformElementType,
+    pub comment: Option<String>
 }
 
 #[async_graphql::Object]
@@ -94,5 +95,9 @@ impl LocationWizformFullEntry {
 
     async fn wizform_element(&self) -> WizformElementType {
         self.wizform_element
+    }
+
+    async fn comment(&self) -> Option<String> {
+        self.comment.clone()
     }
 }

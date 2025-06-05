@@ -1,5 +1,4 @@
 import { Badge, Card, SimpleGrid, Text } from "@mantine/core";
-import { LocationSection } from "../../utils/queries/map";
 import classes from "./styles.module.css";
 import faeriesGarden from "../../assets/sections/fairyGardenMain.png";
 import forestMain from "../../assets/sections/forestMain.png";
@@ -12,6 +11,7 @@ import tiralinMain from "../../assets/sections/tiralinMain.png";
 import lavaCavesMain from "../../assets/sections/lavaCavesMain.png";
 import darkRealmsMain from "../../assets/sections/darkRealmMain.png";
 import { Link } from "@tanstack/react-router";
+import { LocationSection } from "@/utils/queries/map/types";
 
 const backgroundsData = new Map<string, string>([
   ["bd4fad88-37fd-4cd3-a6da-01424b823e40", faeriesGarden],

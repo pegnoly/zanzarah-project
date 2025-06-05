@@ -148,7 +148,6 @@ impl ProtectedMutation {
         Ok(created_id.into())
     }
 
-
     async fn remove_location_wizform(
         &self,
         context: &Context<'_>,
@@ -170,5 +169,76 @@ impl ProtectedMutation {
         })?;
         let deleted = service.delete_location_wizform(db, Uuid::from_str(&id.0)?).await?;
         Ok(deleted)
+    }
+
+    async fn add_location_wizform_comment(
+        &self,
+        context: &Context<'_>,
+        id: async_graphql::ID,
+        comment: String
+    ) -> Result<String, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        service.add_location_wizform_comment(db, Uuid::from_str(&id.0)?, comment).await?;
+        Ok("Comment added".to_string())
+    }
+
+    async fn remove_location_wizform_comment(
+        &self,
+        context: &Context<'_>,
+        id: async_graphql::ID
+    ) -> Result<String, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        service.remove_location_wizform_comment(db, Uuid::from_str(&id.0)?).await?;
+        Ok("Comment removed".to_string())
+    }
+
+    async fn update_location_wizform_comment(
+        &self,
+        context: &Context<'_>,
+        id: async_graphql::ID,
+        comment: String
+    ) -> Result<Option<String>, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let update_result = service.update_location_wizform_comment(db, Uuid::from_str(&id.0)?, comment).await?;
+        Ok(update_result)
     }
 }

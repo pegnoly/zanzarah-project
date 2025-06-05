@@ -1,20 +1,13 @@
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
-import { fetchLocationEntriesOptions, fetchLocationsOptions, fetchSelectableWizformsOptions, Location, LocationFullModel, LocationWizformEntry, SelectableWizform } from '../../utils/queries/map';
 import LocationsGrid from '../../components/map/locationGrid';
-import { fetchElementsOptions, WizformElement } from '../../utils/queries/elements';
-import { AuthProps, processAuth, RegistrationState, UserPermissionType } from '../../utils/auth/utils';
-import LocationFocused from '../../components/map/locationFocused';
-import { useCommonStore } from '../../stores/common';
 import { Button } from '@mantine/core';
 import { useShallow } from 'zustand/shallow';
 import useMapStore from '@/stores/map';
+import { Location } from '@/utils/queries/map/types';
+import { fetchLocationsOptions } from '@/utils/queries/map/locationsQuery';
 
 type LoaderData = {
-  locations: Location[] | undefined,
-  // elements: WizformElement [] | undefined,
-  // focused: LocationWizformEntry [] | undefined,
-  // auth: AuthProps | undefined,
-  // selectableWizforms: SelectableWizform [] | undefined
+  locations: Location[] | undefined
 }
 
 export const Route = createFileRoute('/map/$bookId/section/$id')({
