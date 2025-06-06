@@ -1,10 +1,22 @@
-import { queryOptions } from "@tanstack/react-query";
+import request, { gql } from "graphql-request";
+import { WizformSimpleModel } from "./types";
+import { WizformElementType } from "@/graphql/graphql";
 import { createServerFn } from "@tanstack/react-start";
-import { graphql } from "../../graphql";
-import { WizformElementType } from "../../graphql/graphql"
-import request from "graphql-request";
+import { queryOptions } from "@tanstack/react-query";
 
-const query = `
+type WizformsQueryResult = {
+    wizforms: WizformSimpleModel[]
+}
+
+type WizformsQueryVariables = {
+    bookId: string,
+    enabled?: boolean,
+    elementFilter?: WizformElementType,
+    nameFilter?: string,
+    collection: string | null
+}
+
+const wizformsQuery = gql`
     query wizformsQuery($bookId: ID!, $enabled: Boolean, $elementFilter: WizformElementType, $nameFilter: String, $collection: String) {
         wizforms(bookId: $bookId, enabled: $enabled, elementFilter: $elementFilter, nameFilter: $nameFilter, collection: $collection) {
             name,
@@ -16,36 +28,16 @@ const query = `
     }    
 `
 
-export type WizformSimpleModel = {
-    id: string,
-    name: string,
-    icon64: string,
-    number: number,
-    inCollectionId: string | null
-}
-
-export type WizformsModel = {
-    wizforms: WizformSimpleModel[]
-}
-
-export type WizformsQueryVariables = {
-    bookId: string,
-    enabled?: boolean,
-    elementFilter?: WizformElementType,
-    nameFilter?: string,
-    collection: string | null
-}
-
-export const fetchWizforms = createServerFn({method: 'GET'})
+const fetchWizforms = createServerFn({method: 'GET'})
     .validator((d: WizformsQueryVariables) => d)
     .handler(
         async ({data}) => {
-            const wizforms = await request<WizformsModel | undefined, WizformsQueryVariables>(
+            const result = await request<WizformsQueryResult | undefined, WizformsQueryVariables>(
                 'https://zanzarah-project-api-lyaq.shuttle.app/', 
-                query,
+                wizformsQuery,
                 data
             );
-            return wizforms;
+            return result?.wizforms;
         })
 
 export const fetchWizformsOptions = (variables: WizformsQueryVariables) => queryOptions({
@@ -55,9 +47,9 @@ export const fetchWizformsOptions = (variables: WizformsQueryVariables) => query
 
 export const fetchWizformsOptionsClient = (variables: WizformsQueryVariables) => queryOptions({
     queryKey: ['wizforms_client'],
-    queryFn: async() => request<WizformsModel | undefined, WizformsQueryVariables>({
+    queryFn: async() => request<WizformsQueryResult | undefined, WizformsQueryVariables>({
         url: 'https://zanzarah-project-api-lyaq.shuttle.app/', 
-        document: query,
+        document: wizformsQuery,
         variables: variables
     })
 }) 

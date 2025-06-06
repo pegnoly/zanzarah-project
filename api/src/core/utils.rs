@@ -15,5 +15,5 @@ pub struct StringOptionPayload {
 pub struct ApiManager {
     pub pool: sqlx::PgPool,
     pub encoding_key: EncodingKey,
-    pub decoding_key: DecodingKey
+    pub decoding_key: DecodingKey,
 }

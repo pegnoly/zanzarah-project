@@ -1,17 +1,19 @@
-import { Badge, Button, Card, Divider, Group, Loader, Modal, NumberInput, Popover, Select, SimpleGrid, Text, TextInput } from "@mantine/core";
+import { Badge, Button, Card, Divider, Group, Loader, Modal, Popover, Select, SimpleGrid, Text, TextInput } from "@mantine/core";
 import { useCommonStore } from "../../stores/common";
-import { useShallow } from "zustand/shallow";
-import { CollectionModel, createCollection, fetchCollections, getEntriesCount, setActiveCollection } from "../../utils/queries/collections";
 import { AuthProps, RegistrationState } from "../../utils/auth/utils";
 import RegistrationForm from "../auth/registrationForm";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { confirmCode } from "../../utils/auth/confirmCode";
+import { useState } from "react";
 import ConfirmationForm from "../auth/confirmationForm";
 import { useDisclosure } from "@mantine/hooks";
 import { BookFullModel } from "../../utils/queries/books";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import LoginForm from "../auth/loginForm";
+import { getEntriesCount } from "@/utils/queries/collections/entriesCountQuery";
+import { CollectionModel } from "@/utils/queries/collections/types";
+import { fetchCollections } from "@/utils/queries/collections/collectionsQuery";
+import { setActiveCollection } from "@/utils/queries/collections/setActiveCollectionMutation";
+import { createCollection } from "@/utils/queries/collections/createCollectionMutation";
 
 function fetchCollectionsOnClient(bookId: string, userId: string) {
     return useQuery({
@@ -99,7 +101,7 @@ function CollectionsRenderer(params: {
 
     async function onCollectionSelected() {
         const { status, data, error, isFetching } = fetchCollectionsOnClient(params.currentBook?.id!, params.auth.userId!);
-        setCollections(data?.collections!);
+        setCollections(data!);
     }
 
     return <>

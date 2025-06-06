@@ -1,10 +1,22 @@
 use super::models::{
-    book::{self, BookFullModel, BookModel}, collection::{self, CollectionFullModel}, collection_entry, element::{self, ElementModel}, location::{self, LocationNameModel, LocationWithEntriesCountModel}, location_section::{self, LocationSectionModel, LocationSectionWithCount}, location_wizform_entry::{self, LocationWizformEntryModel, LocationWizformFullEntry}, wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel}
+    book::{self, BookFullModel, BookModel},
+    collection::{self, CollectionFullModel},
+    collection_entry,
+    element::{self, ElementModel},
+    location::{LocationNameModel, LocationWithEntriesCountModel},
+    location_section::LocationSectionWithCount,
+    location_wizform_entry::{self, LocationWizformFullEntry},
+    wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel},
 };
 use crate::{error::ZZApiError, services::book::models::wizform::CollectionWizform};
-use itertools::Itertools;
 use sea_orm::{
-    prelude::Expr, sea_query::{OnConflict, SimpleExpr}, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Related, RelationTrait, SelectColumns, Statement, TransactionTrait
+    ActiveModelTrait,
+    ActiveValue::Set,
+    ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, FromQueryResult,
+    IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QuerySelect,
+    Statement, TransactionTrait,
+    prelude::Expr,
+    sea_query::OnConflict
 };
 use uuid::Uuid;
 
@@ -14,14 +26,15 @@ impl BookRepository {
     pub async fn get_wizforms(
         &self,
         book_id: Uuid,
-        enabled: Option<bool>,
+        _enabled: Option<bool>,
         element: Option<WizformElementType>,
         name: Option<String>,
         collection: Option<Uuid>,
         db: &DatabaseConnection,
     ) -> Result<Vec<CollectionWizform>, ZZApiError> {
-        let query = CollectionWizform::find_by_statement(Statement::from_sql_and_values(sea_orm::DatabaseBackend::Postgres,
-        r#"
+        let query = CollectionWizform::find_by_statement(Statement::from_sql_and_values(
+            sea_orm::DatabaseBackend::Postgres,
+            r#"
                 SELECT "w".*,
                     CASE 
                         WHEN "ce"."collection_id" = $1 THEN "ce"."id"
@@ -39,19 +52,21 @@ impl BookRepository {
                 ORDER BY 
                     "number"
             "#,
-            [collection.into(), collection.into(), book_id.into(), 
-                if name.is_some() { 
-                    format!("%{}%", name.unwrap()).into() 
+            [
+                collection.into(),
+                collection.into(),
+                book_id.into(),
+                if name.is_some() {
+                    format!("%{}%", name.unwrap()).into()
                 } else {
                     '%'.into()
-                }, 
-                element.into()
-            ]
-            ));
+                },
+                element.into(),
+            ],
+        ));
         //tracing::info!("{:#?}", &query.into_json());
 
-        let wizforms = query.all(db)
-            .await?;
+        let wizforms = query.all(db).await?;
         Ok(wizforms)
     }
 
@@ -62,7 +77,7 @@ impl BookRepository {
         db: &DatabaseConnection,
     ) -> Result<Option<CollectionWizform>, ZZApiError> {
         let wizform = CollectionWizform::find_by_statement(Statement::from_sql_and_values(
-            sea_orm::DatabaseBackend::Postgres, 
+            sea_orm::DatabaseBackend::Postgres,
             r#"
             SELECT "w".*,
                 CASE 
@@ -240,7 +255,9 @@ impl BookRepository {
         let book = book::Entity::find_by_id(book_id)
             .one(db)
             .await?
-            .ok_or(ZZApiError::Custom("No book found with given id".to_string()))?;
+            .ok_or(ZZApiError::Custom(
+                "No book found with given id".to_string(),
+            ))?;
 
         let model_to_insert = collection::ActiveModel {
             id: Set(Uuid::new_v4()),
@@ -266,9 +283,11 @@ impl BookRepository {
             left join "collection_entries" "ce" on ("ce"."collection_id" = "c"."id")
             where "book_id" = $1
             and "user_id" = $2
-            group by "c"."id""#, [book_id.into(), user_id.into()]))
-            .all(db)
-            .await?;
+            group by "c"."id""#,
+            [book_id.into(), user_id.into()],
+        ))
+        .all(db)
+        .await?;
         tracing::info!("Collections with entries found: {:#?}", &collections);
         Ok(collections)
     }
@@ -301,14 +320,14 @@ impl BookRepository {
         &self,
         db: &DatabaseConnection,
         user_id: Uuid,
-        book_id: Uuid
+        book_id: Uuid,
     ) -> Result<Option<Uuid>, ZZApiError> {
         if let Some(existing_collection) = collection::Entity::find()
             .filter(collection::Column::BookId.eq(book_id))
             .filter(collection::Column::UserId.eq(user_id))
             .filter(collection::Column::Active.eq(true))
             .one(db)
-            .await? 
+            .await?
         {
             Ok(Some(existing_collection.id))
         } else {
@@ -337,10 +356,7 @@ impl BookRepository {
         db: &DatabaseConnection,
         id: Uuid,
     ) -> Result<(), ZZApiError> {
-        if let Some(model_to_delete) = collection_entry::Entity::find_by_id(id)
-            .one(db)
-            .await?
-        {
+        if let Some(model_to_delete) = collection_entry::Entity::find_by_id(id).one(db).await? {
             model_to_delete.delete(db).await?;
         }
         Ok(())
@@ -349,7 +365,7 @@ impl BookRepository {
     pub async fn get_entries_count(
         &self,
         db: &DatabaseConnection,
-        collection_id: Uuid
+        collection_id: Uuid,
     ) -> Result<i64, ZZApiError> {
         let count = collection_entry::Entity::find()
             .left_join(collection::Entity)
@@ -362,38 +378,43 @@ impl BookRepository {
     pub async fn get_locations_sections(
         &self,
         db: &DatabaseConnection,
-        book_id: Uuid
+        book_id: Uuid,
     ) -> Result<Vec<LocationSectionWithCount>, ZZApiError> {
         let data = LocationSectionWithCount::find_by_statement(Statement::from_sql_and_values(
-            sea_orm::DatabaseBackend::Postgres, 
-        r#"
+            sea_orm::DatabaseBackend::Postgres,
+            r#"
                 SELECT "ls"."id", "ls"."name", COUNT("l"."id") as "locations_count" 
                 FROM "location_sections" "ls"
                 LEFT JOIN "locations" "l" on ("l"."section_id" = "ls"."id")
                 WHERE "ls"."book_id" = $1
                 GROUP BY "ls"."id"
                 ORDER BY "ls"."ordering"
-            "#, [book_id.into()]))
-            .all(db)
-            .await?;
+            "#,
+            [book_id.into()],
+        ))
+        .all(db)
+        .await?;
         Ok(data)
     }
 
     pub async fn get_locations(
         &self,
         db: &DatabaseConnection,
-        section_id: Uuid
+        section_id: Uuid,
     ) -> Result<Vec<LocationWithEntriesCountModel>, ZZApiError> {
-        let data = LocationWithEntriesCountModel::find_by_statement(Statement::from_sql_and_values(
-            sea_orm::DatabaseBackend::Postgres, 
-        r#"
+        let data =
+            LocationWithEntriesCountModel::find_by_statement(Statement::from_sql_and_values(
+                sea_orm::DatabaseBackend::Postgres,
+                r#"
                 SELECT "l"."id", "l"."name", COUNT("we"."id") AS "entries_count" 
                 FROM "locations" "l"
                 LEFT JOIN "location_wizform_entries" "we" ON ("l"."id" = "we"."location_id")
                 WHERE "l"."section_id" = $1
                 GROUP BY "l"."id"
                 ORDER BY "l"."ordering"
-            "#, [section_id.into()]))
+            "#,
+                [section_id.into()],
+            ))
             .all(db)
             .await?;
         Ok(data)
@@ -402,11 +423,14 @@ impl BookRepository {
     pub async fn get_location_wizforms(
         &self,
         db: &DatabaseConnection,
-        location_id: Uuid
+        location_id: Uuid,
     ) -> Result<Vec<LocationWizformFullEntry>, ZZApiError> {
         let data = location_wizform_entry::Entity::find()
             .select_only()
-            .columns([location_wizform_entry::Column::Id, location_wizform_entry::Column::Comment])
+            .columns([
+                location_wizform_entry::Column::Id,
+                location_wizform_entry::Column::Comment,
+            ])
             .left_join(wizform::Entity)
             .column_as(wizform::Column::Name, "wizform_name")
             .column_as(wizform::Column::Number, "wizform_number")
@@ -423,14 +447,14 @@ impl BookRepository {
         db: &DatabaseConnection,
         location_id: Uuid,
         wizform_id: Uuid,
-        comment: Option<String>
+        comment: Option<String>,
     ) -> Result<Uuid, ZZApiError> {
         let id = Uuid::new_v4();
         let model_to_insert = location_wizform_entry::ActiveModel {
             id: Set(id),
             location_id: Set(location_id),
             wizform_id: Set(wizform_id),
-            comment: Set(comment)
+            comment: Set(comment),
         };
         model_to_insert.insert(db).await?;
         Ok(id)
@@ -440,26 +464,32 @@ impl BookRepository {
         &self,
         db: &DatabaseConnection,
         id: Uuid,
-        comment: String
+        comment: String,
     ) -> Result<(), ZZApiError> {
-        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id).one(db).await? {
+        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id)
+            .one(db)
+            .await?
+        {
             let mut model_to_update = existing_wizform.into_active_model();
             model_to_update.comment = Set(Some(comment));
             model_to_update.update(db).await?;
-        } 
+        }
         Ok(())
     }
 
     pub async fn remove_location_wizform_comment(
         &self,
         db: &DatabaseConnection,
-        id: Uuid
+        id: Uuid,
     ) -> Result<(), ZZApiError> {
-        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id).one(db).await? {
+        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id)
+            .one(db)
+            .await?
+        {
             let mut model_to_update = existing_wizform.into_active_model();
             model_to_update.comment = Set(None);
             model_to_update.update(db).await?;
-        } 
+        }
         Ok(())
     }
 
@@ -467,35 +497,50 @@ impl BookRepository {
         &self,
         db: &DatabaseConnection,
         id: Uuid,
-        updated_comment: String
+        updated_comment: String,
     ) -> Result<Option<String>, ZZApiError> {
-        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id).one(db).await? {
-            let comment_value = if updated_comment.is_empty() { None } else { Some(updated_comment) };
+        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id)
+            .one(db)
+            .await?
+        {
+            let comment_value = if updated_comment.is_empty() {
+                None
+            } else {
+                Some(updated_comment)
+            };
             let mut model_to_update = existing_wizform.into_active_model();
             model_to_update.comment = Set(comment_value.clone());
             model_to_update.update(db).await?;
             Ok(comment_value)
-        }
-        else {
-            Err(ZZApiError::SeaOrmError(DbErr::RecordNotFound("Location entry is not found".to_string())))
+        } else {
+            Err(ZZApiError::SeaOrmError(DbErr::RecordNotFound(
+                "Location entry is not found".to_string(),
+            )))
         }
     }
 
     pub async fn delete_location_wizform(
         &self,
         db: &DatabaseConnection,
-        id: Uuid
+        id: Uuid,
     ) -> Result<Option<WizformSelectionModel>, ZZApiError> {
-        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id).one(db).await? {
+        if let Some(existing_wizform) = location_wizform_entry::Entity::find_by_id(id)
+            .one(db)
+            .await?
+        {
             let deleted_id = existing_wizform.wizform_id;
             existing_wizform.delete(db).await?;
             Ok(wizform::Entity::find_by_id(deleted_id)
                 .select_only()
-                .columns([wizform::Column::Id, wizform::Column::Name, wizform::Column::Element, wizform::Column::Number])
+                .columns([
+                    wizform::Column::Id,
+                    wizform::Column::Name,
+                    wizform::Column::Element,
+                    wizform::Column::Number,
+                ])
                 .into_model::<WizformSelectionModel>()
                 .one(db)
-                .await?
-            )
+                .await?)
         } else {
             Ok(None)
         }
@@ -505,11 +550,11 @@ impl BookRepository {
         &self,
         db: &DatabaseConnection,
         book_id: Uuid,
-        location_id: Uuid
+        location_id: Uuid,
     ) -> Result<Vec<WizformSelectionModel>, ZZApiError> {
         let data = WizformSelectionModel::find_by_statement(Statement::from_sql_and_values(
-            sea_orm::DatabaseBackend::Postgres, 
-        r#"
+            sea_orm::DatabaseBackend::Postgres,
+            r#"
                 SELECT "w"."id", "w"."name", "w"."element", "w"."number" 
                 FROM "wizforms" "w"
                 WHERE "w"."book_id" = $1 
@@ -520,28 +565,35 @@ impl BookRepository {
                     WHERE "lw"."wizform_id" = "w"."id" AND "lw"."location_id" = $2
                 )
                 ORDER BY "w"."number"
-            "#, [book_id.into(), location_id.into()]))
-            .all(db)
-            .await?;
+            "#,
+            [book_id.into(), location_id.into()],
+        ))
+        .all(db)
+        .await?;
         Ok(data)
     }
 
     pub async fn get_wizform_habitats(
         &self,
         db: &DatabaseConnection,
-        wizform_id: Uuid
+        wizform_id: Uuid,
     ) -> Result<Vec<LocationNameModel>, ZZApiError> {
-        let data = location_wizform_entry::Entity::find()
-            .left_join(location::Entity)
-            .column_as(location::Column::Name, "location_name")
-            .join(sea_orm::JoinType::LeftJoin, location::Relation::Section.def())
-            .column_as(location_section::Column::Name, "section_name")
-            .filter(location_wizform_entry::Column::WizformId.eq(wizform_id))
-            .order_by_asc(location_section::Column::Ordering)
-            .order_by_asc(location::Column::Ordering)
-            .into_model::<LocationNameModel>()
-            .all(db)
-            .await?;
+        let data = LocationNameModel::find_by_statement(Statement::from_sql_and_values(
+            sea_orm::DatabaseBackend::Postgres,
+            r#"
+                    SELECT l.name as location_name, s.name as section_name, lw.comment as comment
+                    FROM location_wizform_entries lw
+                    LEFT JOIN locations l ON lw.location_id = l.id
+                    LEFT JOIN location_sections s ON s.id = l.section_id
+                    WHERE lw.wizform_id = $1
+                    ORDER BY s.ordering, l.ordering
+            "#,
+            [wizform_id.into()],
+        ))
+        .into_model::<LocationNameModel>()
+        .all(db)
+        .await?;
+        tracing::info!("Wizform habitats: {:#?}", &data);
         Ok(data)
     }
 }

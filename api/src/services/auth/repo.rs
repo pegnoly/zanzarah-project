@@ -1,18 +1,30 @@
-use argon2::{password_hash::{rand_core::OsRng, PasswordHasher, SaltString}, Argon2, PasswordHash, PasswordVerifier};
+use argon2::{
+    Argon2, PasswordHash, PasswordVerifier,
+    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
+};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use mail_send::{SmtpClientBuilder, mail_builder::MessageBuilder};
 use rand::seq::IteratorRandom;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue::Set, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter
+    ActiveModelTrait, ActiveValue::Set, ColumnTrait, DatabaseConnection, EntityTrait,
+    IntoActiveModel, QueryFilter,
 };
 use shuttle_runtime::SecretStore;
 use totp_rs::TOTP;
 use uuid::Uuid;
 
-use crate::{error::ZZApiError, services::book::models::wizform::{self, WizformNameModel}};
+use crate::{
+    error::ZZApiError,
+    services::book::models::wizform::{self, WizformNameModel},
+};
 
-use super::{models::user::{self, RegistrationState, UserPermissionType}, 
-utils::{AuthorizationResult, EmailConfirmationResult, RegistrationResult, SignInResult, TokenUpdateResult, UserClaims}};
+use super::{
+    models::user::{self, RegistrationState, UserPermissionType},
+    utils::{
+        AuthorizationResult, EmailConfirmationResult, RegistrationResult, SignInResult,
+        TokenUpdateResult, UserClaims,
+    },
+};
 
 #[derive(Debug, Clone)]
 pub struct EmailConfig {
@@ -26,7 +38,7 @@ pub struct AuthRepository {
     email_config: EmailConfig,
     email_salt: String,
     encoding_key: EncodingKey,
-    decoding_key: DecodingKey
+    decoding_key: DecodingKey,
 }
 
 impl AuthRepository {
@@ -50,7 +62,7 @@ impl AuthRepository {
             },
             email_salt,
             encoding_key: EncodingKey::from_secret(jwt_validator.as_bytes()),
-            decoding_key: DecodingKey::from_secret(jwt_validator.as_bytes())
+            decoding_key: DecodingKey::from_secret(jwt_validator.as_bytes()),
         })
     }
 
@@ -74,22 +86,42 @@ impl AuthRepository {
         // generation of hashes
         let argon2 = Argon2::default();
         let salt = SaltString::generate(&mut OsRng);
-        let email_hash = argon2.hash_password(email.as_bytes(), &SaltString::from_b64(&self.email_salt)?)?.to_string();
+        let email_hash = argon2
+            .hash_password(email.as_bytes(), &SaltString::from_b64(&self.email_salt)?)?
+            .to_string();
 
-        if let Some(_existing_user) = user::Entity::find().filter(user::Column::Email.eq(email_hash.clone())).one(db).await? {
+        if let Some(_existing_user) = user::Entity::find()
+            .filter(user::Column::Email.eq(email_hash.clone()))
+            .one(db)
+            .await?
+        {
             return Err(ZZApiError::EmailAlreadyExists);
         }
 
-        let password_hash = argon2.hash_password(password.as_bytes(), &salt)?.to_string();
+        let password_hash = argon2
+            .hash_password(password.as_bytes(), &salt)?
+            .to_string();
         // generation of confirmation code
-        let totp = TOTP::new(totp_rs::Algorithm::SHA1,8,1,30, password.as_bytes().to_vec())?;
+        let totp = TOTP::new(
+            totp_rs::Algorithm::SHA1,
+            8,
+            1,
+            30,
+            password.as_bytes().to_vec(),
+        )?;
         let code = totp.generate(chrono::Local::now().timestamp_millis() as u64);
         // generate name
         let wizforms_names = wizform::Entity::find()
-            .filter(wizform::Column::Enabled.eq(true)).into_partial_model::<WizformNameModel>()
+            .filter(wizform::Column::Enabled.eq(true))
+            .into_partial_model::<WizformNameModel>()
             .all(db)
             .await?;
-        let name = wizforms_names.iter().choose(&mut rand::rng()).unwrap().name.clone();
+        let name = wizforms_names
+            .iter()
+            .choose(&mut rand::rng())
+            .unwrap()
+            .name
+            .clone();
         let model_to_insert = user::ActiveModel {
             id: Set(Uuid::new_v4()),
             name: Set(name),
@@ -98,7 +130,7 @@ impl AuthRepository {
             hashed_password: Set(password_hash.clone()),
             permission: Set(UserPermissionType::UnregisteredUser),
             registration_state: Set(RegistrationState::Unconfirmed),
-            confirmation_code: Set(Some(code.clone()))
+            confirmation_code: Set(Some(code.clone())),
         };
         let model = model_to_insert.insert(db).await?;
         self.send_confirmation_email(email.clone(), code).await?;
@@ -107,14 +139,15 @@ impl AuthRepository {
             password: password_hash.clone(),
             registration_state: RegistrationState::Unconfirmed,
             permission: UserPermissionType::UnregisteredUser,
-            exp: chrono::Local::now().timestamp() + 86400
+            exp: chrono::Local::now().timestamp() + 86400,
         };
-        let token = jsonwebtoken::encode(&Header::default(), &base_user_claims, &self.encoding_key)?;
+        let token =
+            jsonwebtoken::encode(&Header::default(), &base_user_claims, &self.encoding_key)?;
         Ok(RegistrationResult {
             user_id: model.id.into(),
             email_hash,
             password_hash,
-            token
+            token,
         })
     }
 
@@ -147,19 +180,26 @@ impl AuthRepository {
     pub async fn get_user_data_from_token(
         &self,
         db: &DatabaseConnection,
-        token: String
+        token: String,
     ) -> Result<AuthorizationResult, ZZApiError> {
         let validation_info = Validation::new(Algorithm::default());
-        let user_data = jsonwebtoken::decode::<UserClaims>(&token, &self.decoding_key, &validation_info)?;
-            tracing::info!("Got user data from token: {:#?}", &user_data);
-        if let Some(existing_user) = user::Entity::find().filter(user::Column::Email.eq(user_data.claims.email)).one(db).await? {
+        let user_data =
+            jsonwebtoken::decode::<UserClaims>(&token, &self.decoding_key, &validation_info)?;
+        tracing::info!("Got user data from token: {:#?}", &user_data);
+        if let Some(existing_user) = user::Entity::find()
+            .filter(user::Column::Email.eq(user_data.claims.email))
+            .one(db)
+            .await?
+        {
             Ok(AuthorizationResult {
                 user_id: existing_user.id.into(),
-                registration_state: user_data.claims.registration_state, 
-                permission: user_data.claims.permission 
+                registration_state: user_data.claims.registration_state,
+                permission: user_data.claims.permission,
             })
         } else {
-            Err(ZZApiError::Custom("No user to match this token data".to_string()))
+            Err(ZZApiError::Custom(
+                "No user to match this token data".to_string(),
+            ))
         }
     }
 
@@ -167,25 +207,31 @@ impl AuthRepository {
         &self,
         db: &DatabaseConnection,
         email_hash: String,
-        password_hash: String
+        password_hash: String,
     ) -> Result<TokenUpdateResult, ZZApiError> {
-        if let Some(existing_user) = user::Entity::find().filter(user::Column::Email.eq(email_hash.clone())).one(db).await? {
+        if let Some(existing_user) = user::Entity::find()
+            .filter(user::Column::Email.eq(email_hash.clone()))
+            .one(db)
+            .await?
+        {
             let claims = UserClaims {
                 email: email_hash,
                 password: password_hash,
                 registration_state: existing_user.registration_state,
                 permission: existing_user.permission,
-                exp: chrono::Local::now().timestamp() + 86400
+                exp: chrono::Local::now().timestamp() + 86400,
             };
             let token = jsonwebtoken::encode(&Header::default(), &claims, &self.encoding_key)?;
             Ok(TokenUpdateResult {
                 user_id: existing_user.id.into(),
                 new_token: token,
                 registration_state: existing_user.registration_state,
-                permission: existing_user.permission
+                permission: existing_user.permission,
             })
         } else {
-            Err(ZZApiError::SeaOrmError(sea_orm::DbErr::RecordNotFound("Can't find user id database".to_string())))
+            Err(ZZApiError::SeaOrmError(sea_orm::DbErr::RecordNotFound(
+                "Can't find user id database".to_string(),
+            )))
         }
     }
 
@@ -193,11 +239,17 @@ impl AuthRepository {
         &self,
         db: &DatabaseConnection,
         email: String,
-        password: String
+        password: String,
     ) -> Result<SignInResult, ZZApiError> {
         let argon2 = Argon2::default();
-        let email_hash = argon2.hash_password(email.as_bytes(), &SaltString::from_b64(&self.email_salt)?)?.to_string();
-        if let Some(existing_user) = user::Entity::find().filter(user::Column::Email.eq(email_hash.clone())).one(db).await? {
+        let email_hash = argon2
+            .hash_password(email.as_bytes(), &SaltString::from_b64(&self.email_salt)?)?
+            .to_string();
+        if let Some(existing_user) = user::Entity::find()
+            .filter(user::Column::Email.eq(email_hash.clone()))
+            .one(db)
+            .await?
+        {
             let password_hash = PasswordHash::new(&existing_user.hashed_password)?;
             if let Ok(()) = argon2.verify_password(password.as_bytes(), &password_hash) {
                 let claims = UserClaims {
@@ -205,7 +257,7 @@ impl AuthRepository {
                     password: existing_user.hashed_password.clone(),
                     registration_state: existing_user.registration_state,
                     permission: existing_user.permission,
-                    exp: chrono::Local::now().timestamp() + 86400
+                    exp: chrono::Local::now().timestamp() + 86400,
                 };
                 let token = jsonwebtoken::encode(&Header::default(), &claims, &self.encoding_key)?;
                 Ok(SignInResult {
@@ -214,13 +266,13 @@ impl AuthRepository {
                     password_hash: existing_user.hashed_password,
                     registration_state: existing_user.registration_state,
                     permission: existing_user.permission,
-                    user_id: existing_user.id.into()
+                    user_id: existing_user.id.into(),
                 })
             } else {
-                Err(ZZApiError::IncorrectPassword)  
+                Err(ZZApiError::IncorrectPassword)
             }
         } else {
-            Err(ZZApiError::IncorrectEmail)   
+            Err(ZZApiError::IncorrectEmail)
         }
     }
 
@@ -250,13 +302,17 @@ impl AuthRepository {
                                 password: existing_user.hashed_password.clone(),
                                 registration_state: RegistrationState::Confirmed,
                                 permission: UserPermissionType::User,
-                                exp: chrono::Local::now().timestamp() + 86400
+                                exp: chrono::Local::now().timestamp() + 86400,
                             };
-                            let token = jsonwebtoken::encode(&Header::default(), &updated_claims, &self.encoding_key)?;
+                            let token = jsonwebtoken::encode(
+                                &Header::default(),
+                                &updated_claims,
+                                &self.encoding_key,
+                            )?;
                             Ok(EmailConfirmationResult {
                                 new_token: token,
                                 permission: UserPermissionType::User,
-                                registration_state: RegistrationState::Confirmed
+                                registration_state: RegistrationState::Confirmed,
                             })
                         } else {
                             Err(ZZApiError::IncorrectCode)

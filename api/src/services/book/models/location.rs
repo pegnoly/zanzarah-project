@@ -1,6 +1,6 @@
+use sea_orm::{FromQueryResult, prelude::*};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use sea_orm::{prelude::*, FromQueryResult};
 
 use super::{book, location_section, location_wizform_entry};
 
@@ -11,7 +11,7 @@ pub struct Model {
     pub id: Uuid,
     pub section_id: Uuid,
     pub name: String,
-    pub ordering: i32
+    pub ordering: i32,
 }
 
 pub type LocationModel = Model;
@@ -19,7 +19,7 @@ pub type LocationModel = Model;
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
     Section,
-    LocationWizformEntry
+    LocationWizformEntry,
 }
 
 impl RelationTrait for Relation {
@@ -32,7 +32,7 @@ impl RelationTrait for Relation {
             Relation::LocationWizformEntry => Entity::has_many(location_wizform_entry::Entity)
                 .from(Column::Id)
                 .to(location_wizform_entry::Column::LocationId)
-                .into()
+                .into(),
         }
     }
 }
@@ -74,7 +74,7 @@ impl LocationModel {
 pub struct LocationWithEntriesCountModel {
     pub id: Uuid,
     pub name: String,
-    pub entries_count: i64
+    pub entries_count: i64,
 }
 
 #[async_graphql::Object]
@@ -95,5 +95,21 @@ impl LocationWithEntriesCountModel {
 #[derive(Debug, FromQueryResult, Serialize, Deserialize)]
 pub struct LocationNameModel {
     pub location_name: String,
-    pub section_name: String
+    pub section_name: String,
+    pub comment: Option<String>,
+}
+
+#[async_graphql::Object]
+impl LocationNameModel {
+    async fn location_name(&self) -> &String {
+        &self.location_name
+    }
+
+    async fn section_name(&self) -> &String {
+        &self.section_name
+    }
+
+    async fn comment(&self) -> Option<String> {
+        self.comment.clone()
+    }
 }

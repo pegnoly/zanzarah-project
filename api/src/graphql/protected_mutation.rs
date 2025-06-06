@@ -4,13 +4,19 @@ use async_graphql::Context;
 use sea_orm::DatabaseConnection;
 use uuid::Uuid;
 
-use crate::{error::ZZApiError, services::book::{models::{collection, wizform::WizformSelectionModel}, repo::BookRepository}};
+use crate::{
+    error::ZZApiError,
+    services::book::{
+        models::{collection, wizform::WizformSelectionModel},
+        repo::BookRepository,
+    },
+};
 
 use super::mutation::AddCollectionItemResponse;
 
 #[derive(async_graphql::SimpleObject)]
 pub struct CreateCollectionResponse {
-    pub created_id: async_graphql::ID
+    pub created_id: async_graphql::ID,
 }
 
 #[derive(Default)]
@@ -23,7 +29,7 @@ impl ProtectedMutation {
         context: &Context<'_>,
         user_id: async_graphql::ID,
         book_id: async_graphql::ID,
-        name: String
+        name: String,
     ) -> Result<collection::Model, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -40,14 +46,21 @@ impl ProtectedMutation {
             ZZApiError::Empty
         })?;
 
-        let result = service.create_collection(db, Uuid::from_str(&user_id.0)?, Uuid::from_str(&book_id.0)?, name).await?;
+        let result = service
+            .create_collection(
+                db,
+                Uuid::from_str(&user_id.0)?,
+                Uuid::from_str(&book_id.0)?,
+                name,
+            )
+            .await?;
         Ok(result)
     }
 
     async fn set_active_collection(
         &self,
         context: &Context<'_>,
-        collection_id: async_graphql::ID
+        collection_id: async_graphql::ID,
     ) -> Result<String, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -64,7 +77,9 @@ impl ProtectedMutation {
             ZZApiError::Empty
         })?;
 
-        service.set_active_collection(db, Uuid::from_str(&collection_id.0)?).await?;
+        service
+            .set_active_collection(db, Uuid::from_str(&collection_id.0)?)
+            .await?;
         Ok("Collection now active".to_string())
     }
 
@@ -72,7 +87,7 @@ impl ProtectedMutation {
         &self,
         context: &Context<'_>,
         collection_id: async_graphql::ID,
-        wizform_id: async_graphql::ID
+        wizform_id: async_graphql::ID,
     ) -> Result<AddCollectionItemResponse, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -89,14 +104,22 @@ impl ProtectedMutation {
             ZZApiError::Empty
         })?;
 
-        let insert_result = service.add_item_to_collection(db, Uuid::from_str(&collection_id)?, Uuid::from_str(&wizform_id)?).await?;
-        Ok(AddCollectionItemResponse { created_id: insert_result.into() })
+        let insert_result = service
+            .add_item_to_collection(
+                db,
+                Uuid::from_str(&collection_id)?,
+                Uuid::from_str(&wizform_id)?,
+            )
+            .await?;
+        Ok(AddCollectionItemResponse {
+            created_id: insert_result.into(),
+        })
     }
 
     async fn remove_collection_item(
         &self,
         context: &Context<'_>,
-        id: async_graphql::ID
+        id: async_graphql::ID,
     ) -> Result<String, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -113,7 +136,9 @@ impl ProtectedMutation {
             ZZApiError::Empty
         })?;
 
-        service.remove_item_from_collection(db, Uuid::from_str(&id)?).await?;
+        service
+            .remove_item_from_collection(db, Uuid::from_str(&id)?)
+            .await?;
         Ok("Wizform was removed from collection".to_string())
     }
 
@@ -122,7 +147,7 @@ impl ProtectedMutation {
         context: &Context<'_>,
         location_id: async_graphql::ID,
         wizform_id: async_graphql::ID,
-        comment: Option<String>
+        comment: Option<String>,
     ) -> Result<async_graphql::ID, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -139,19 +164,21 @@ impl ProtectedMutation {
             ZZApiError::Empty
         })?;
 
-        let created_id = service.add_location_wizform(
-            db, 
-            Uuid::from_str(&location_id.0)?, 
-            Uuid::from_str(&wizform_id.0)?, 
-            comment
-        ).await?;
+        let created_id = service
+            .add_location_wizform(
+                db,
+                Uuid::from_str(&location_id.0)?,
+                Uuid::from_str(&wizform_id.0)?,
+                comment,
+            )
+            .await?;
         Ok(created_id.into())
     }
 
     async fn remove_location_wizform(
         &self,
         context: &Context<'_>,
-        id: async_graphql::ID
+        id: async_graphql::ID,
     ) -> Result<Option<WizformSelectionModel>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -167,7 +194,9 @@ impl ProtectedMutation {
             );
             ZZApiError::Empty
         })?;
-        let deleted = service.delete_location_wizform(db, Uuid::from_str(&id.0)?).await?;
+        let deleted = service
+            .delete_location_wizform(db, Uuid::from_str(&id.0)?)
+            .await?;
         Ok(deleted)
     }
 
@@ -175,7 +204,7 @@ impl ProtectedMutation {
         &self,
         context: &Context<'_>,
         id: async_graphql::ID,
-        comment: String
+        comment: String,
     ) -> Result<String, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -191,14 +220,16 @@ impl ProtectedMutation {
             );
             ZZApiError::Empty
         })?;
-        service.add_location_wizform_comment(db, Uuid::from_str(&id.0)?, comment).await?;
+        service
+            .add_location_wizform_comment(db, Uuid::from_str(&id.0)?, comment)
+            .await?;
         Ok("Comment added".to_string())
     }
 
     async fn remove_location_wizform_comment(
         &self,
         context: &Context<'_>,
-        id: async_graphql::ID
+        id: async_graphql::ID,
     ) -> Result<String, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -214,7 +245,9 @@ impl ProtectedMutation {
             );
             ZZApiError::Empty
         })?;
-        service.remove_location_wizform_comment(db, Uuid::from_str(&id.0)?).await?;
+        service
+            .remove_location_wizform_comment(db, Uuid::from_str(&id.0)?)
+            .await?;
         Ok("Comment removed".to_string())
     }
 
@@ -222,7 +255,7 @@ impl ProtectedMutation {
         &self,
         context: &Context<'_>,
         id: async_graphql::ID,
-        comment: String
+        comment: String,
     ) -> Result<Option<String>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -238,7 +271,9 @@ impl ProtectedMutation {
             );
             ZZApiError::Empty
         })?;
-        let update_result = service.update_location_wizform_comment(db, Uuid::from_str(&id.0)?, comment).await?;
+        let update_result = service
+            .update_location_wizform_comment(db, Uuid::from_str(&id.0)?, comment)
+            .await?;
         Ok(update_result)
     }
 }

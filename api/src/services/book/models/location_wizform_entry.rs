@@ -1,8 +1,11 @@
-use sea_orm::{prelude::*, FromQueryResult};
+use sea_orm::{FromQueryResult, prelude::*};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::{location, wizform::{self, WizformElementType}};
+use super::{
+    location,
+    wizform::{self, WizformElementType},
+};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, DeriveEntityModel)]
 #[sea_orm(table_name = "location_wizform_entries")]
@@ -11,7 +14,7 @@ pub struct Model {
     pub id: Uuid,
     pub location_id: Uuid,
     pub wizform_id: Uuid,
-    pub comment: Option<String>
+    pub comment: Option<String>,
 }
 
 pub type LocationWizformEntryModel = Model;
@@ -19,7 +22,7 @@ pub type LocationWizformEntryModel = Model;
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
     Wizform,
-    Location
+    Location,
 }
 
 impl RelationTrait for Relation {
@@ -32,7 +35,7 @@ impl RelationTrait for Relation {
             Self::Location => Entity::belongs_to(location::Entity)
                 .from(Column::LocationId)
                 .to(location::Column::Id)
-                .into()
+                .into(),
         }
     }
 }
@@ -76,7 +79,7 @@ pub struct LocationWizformFullEntry {
     pub wizform_name: String,
     pub wizform_number: i16,
     pub wizform_element: WizformElementType,
-    pub comment: Option<String>
+    pub comment: Option<String>,
 }
 
 #[async_graphql::Object]

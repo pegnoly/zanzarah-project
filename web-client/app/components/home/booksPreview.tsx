@@ -1,9 +1,6 @@
-import { Badge, Button, Card, Modal, Popover, Select, Text } from "@mantine/core";
+import { Badge, Button, Popover, Select, Text } from "@mantine/core";
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie, setCookie } from "@tanstack/react-start/server";
-import { useCommonStore } from "../../stores/common";
-import { BookFullModel } from "../../utils/queries/books";
-import { useDisclosure } from "@mantine/hooks";
 
 export const setBookCookie = createServerFn({method: 'POST'})
     .validator((book: string) => book)

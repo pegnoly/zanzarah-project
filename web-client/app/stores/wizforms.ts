@@ -1,7 +1,6 @@
 import { create } from "zustand"
 import { WizformElementType } from "../graphql/graphql"
-import { WizformSimpleModel } from "../utils/queries/wizforms"
-import { WizformFull } from "../utils/queries/wizform"
+import { WizformFull, WizformSimpleModel } from "@/utils/queries/wizforms/types"
 
 type Data = {
     wizforms: WizformSimpleModel [] | undefined,

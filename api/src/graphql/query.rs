@@ -1,16 +1,24 @@
 use std::str::FromStr;
 
 use async_graphql::Context;
-use sea_orm::{sea_query::token, DatabaseConnection};
+use sea_orm::DatabaseConnection;
 use uuid::Uuid;
 
 use crate::{
     error::ZZApiError,
     services::{
-        auth::{prelude::{AuthRepository, UserModel}, utils::{AuthorizationResult, SignInResult}},
+        auth::{
+            prelude::{AuthRepository, UserModel},
+            utils::{AuthorizationResult, SignInResult},
+        },
         book::{
             models::{
-                book::{BookFullModel, BookModel}, collection::{self, CollectionModel}, element::ElementModel, location::LocationWithEntriesCountModel, location_section::LocationSectionWithCount, location_wizform_entry::{LocationWizformEntryModel, LocationWizformFullEntry}, wizform::{CollectionWizform, WizformElementType, WizformModel, WizformSelectionModel}
+                book::{BookFullModel, BookModel},
+                element::ElementModel,
+                location::{LocationNameModel, LocationWithEntriesCountModel},
+                location_section::LocationSectionWithCount,
+                location_wizform_entry::LocationWizformFullEntry,
+                wizform::{CollectionWizform, WizformElementType, WizformSelectionModel},
             },
             repo::BookRepository,
         },
@@ -96,8 +104,8 @@ impl Query {
             Err(error) => {
                 // tracing::error!(
                 //     "
-                //     Failed to fetch wizforms. 
-                //     Params: book id - {:?}, enabled - {:?}, element: - {:?}, name filter - {:?}. 
+                //     Failed to fetch wizforms.
+                //     Params: book id - {:?}, enabled - {:?}, element: - {:?}, name filter - {:?}.
                 //     Error message: {:?}",
                 //     book_id,
                 //     enabled,
@@ -114,7 +122,7 @@ impl Query {
         &self,
         context: &Context<'_>,
         #[graphql(desc = "Id of wizform to focus")] id: async_graphql::ID,
-        #[graphql(desc = "Optional current collection")] collection_id: Option<async_graphql::ID>
+        #[graphql(desc = "Optional current collection")] collection_id: Option<async_graphql::ID>,
     ) -> Result<Option<CollectionWizform>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -131,13 +139,18 @@ impl Query {
             ZZApiError::Empty
         })?;
 
-        match service.get_wizform(
-            Uuid::try_from(id.clone())?, 
-            if let Some(collection) = collection_id {
-                Some(Uuid::from_str(&collection.0)?)
-            } else {
-                None
-            }, db).await {
+        match service
+            .get_wizform(
+                Uuid::try_from(id.clone())?,
+                if let Some(collection) = collection_id {
+                    Some(Uuid::from_str(&collection.0)?)
+                } else {
+                    None
+                },
+                db,
+            )
+            .await
+        {
             Ok(wizform) => Ok(wizform),
             Err(error) => {
                 tracing::error!(
@@ -248,7 +261,7 @@ impl Query {
     async fn process_token(
         &self,
         context: &Context<'_>,
-        token: String
+        token: String,
     ) -> Result<AuthorizationResult, ZZApiError> {
         let service = context.data::<AuthRepository>().map_err(|error| {
             tracing::error!(
@@ -272,7 +285,7 @@ impl Query {
         &self,
         context: &Context<'_>,
         email: String,
-        password: String
+        password: String,
     ) -> Result<SignInResult, ZZApiError> {
         let service = context.data::<AuthRepository>().map_err(|error| {
             tracing::error!(
@@ -313,7 +326,9 @@ impl Query {
             ZZApiError::Empty
         })?;
 
-        let result = service.get_locations_sections(db, Uuid::from_str(&book_id.0)?).await?;
+        let result = service
+            .get_locations_sections(db, Uuid::from_str(&book_id.0)?)
+            .await?;
         Ok(result)
     }
 
@@ -337,14 +352,16 @@ impl Query {
             ZZApiError::Empty
         })?;
 
-        let result = service.get_locations(db, Uuid::from_str(&section_id.0)?).await?;
+        let result = service
+            .get_locations(db, Uuid::from_str(&section_id.0)?)
+            .await?;
         Ok(result)
     }
 
     async fn location_entries(
         &self,
         context: &Context<'_>,
-        location_id: async_graphql::ID
+        location_id: async_graphql::ID,
     ) -> Result<Vec<LocationWizformFullEntry>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -361,7 +378,9 @@ impl Query {
             ZZApiError::Empty
         })?;
 
-        let result = service.get_location_wizforms(db, Uuid::from_str(&location_id.0)?).await?;
+        let result = service
+            .get_location_wizforms(db, Uuid::from_str(&location_id.0)?)
+            .await?;
         Ok(result)
     }
 
@@ -369,7 +388,7 @@ impl Query {
         &self,
         context: &Context<'_>,
         book_id: async_graphql::ID,
-        location_id: async_graphql::ID
+        location_id: async_graphql::ID,
     ) -> Result<Vec<WizformSelectionModel>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -386,11 +405,39 @@ impl Query {
             ZZApiError::Empty
         })?;
 
-        let result = service.get_wizforms_for_selection(
-            db, 
-            Uuid::from_str(&book_id.0)?,
-            Uuid::from_str(&location_id.0)?
-        ).await?;
+        let result = service
+            .get_wizforms_for_selection(
+                db,
+                Uuid::from_str(&book_id.0)?,
+                Uuid::from_str(&location_id.0)?,
+            )
+            .await?;
+        Ok(result)
+    }
+
+    async fn wizform_habitats(
+        &self,
+        context: &Context<'_>,
+        wizform_id: async_graphql::ID,
+    ) -> Result<Vec<LocationNameModel>, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        let result = service
+            .get_wizform_habitats(db, Uuid::from_str(&wizform_id.0)?)
+            .await?;
         Ok(result)
     }
 }

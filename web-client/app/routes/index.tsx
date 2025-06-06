@@ -8,8 +8,9 @@ import BooksPreview, { getBookCookie, setBookCookie } from "../components/home/b
 import CollectionsPreview from "../components/home/collectionsPreview"
 import MapPreview from "../components/home/mapPreview"
 import { BookFullModel, BookSimpleModel, fetchBookOptions, fetchBooksOptions } from "../utils/queries/books"
-import { CollectionModel, fetchCollectionsOptions } from "../utils/queries/collections"
 import { AuthProps, processAuth, UserPermissionType, RegistrationState } from "../utils/auth/utils"
+import { fetchCollectionsOptions } from "@/utils/queries/collections/collectionsQuery"
+import { CollectionModel } from "@/utils/queries/collections/types"
 
 type LoaderData = {
   auth: AuthProps,
@@ -51,7 +52,7 @@ export const Route = createFileRoute('/')({
       const collectionsData = await context.queryClient.ensureQueryData(
         fetchCollectionsOptions({bookId: currentBookCookie, userId: loaderData.auth.userId})
       );
-      loaderData = {...loaderData, collections: collectionsData?.collections}
+      loaderData = {...loaderData, collections: collectionsData}
     }
 
     return loaderData;

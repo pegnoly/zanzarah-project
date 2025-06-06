@@ -31,7 +31,7 @@ impl CollectionEntryModel {
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
     Wizform,
-    Collection
+    Collection,
 }
 
 impl RelationTrait for Relation {
@@ -44,7 +44,7 @@ impl RelationTrait for Relation {
             Self::Collection => Entity::belongs_to(collection::Entity)
                 .from(Column::CollectionId)
                 .to(collection::Column::Id)
-                .into()
+                .into(),
         }
     }
 }

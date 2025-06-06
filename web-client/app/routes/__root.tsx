@@ -14,6 +14,7 @@ import '@mantine/carousel/styles.css';
 import { QueryClient } from '@tanstack/react-query'
 import { MantineProvider } from "@mantine/core"
 import mantineCssUrl from '@mantine/core/styles.css?url'
+import mantineNotificationsUrl from '@mantine/notifications/styles.css?url'
 import { Notifications } from '@mantine/notifications';
 import appCss from "@/styles/app.css?url"
 
@@ -32,6 +33,7 @@ export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
       },
     ],
     links: [
+      { rel: 'stylesheet', href: mantineNotificationsUrl},
       { rel: 'stylesheet', href: mantineCssUrl },
       { rel: 'stylesheet', href: appCss },
       { rel: 'preconnect', href: "https://fonts.googleapis.com"},

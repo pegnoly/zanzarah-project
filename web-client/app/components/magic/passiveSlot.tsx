@@ -15,7 +15,7 @@ import blankIcon from "../../assets/spells_passive/blank.png";
 
 
 import { useEffect, useState } from "react";
-import { MagicElementType, MagicSlot } from "../../utils/queries/wizform";
+import { MagicElementType, MagicSlot } from "@/utils/queries/wizforms/types";
 
 export interface MagicSlotSchema {
     slot: MagicSlot | undefined

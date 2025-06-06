@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import SectionsGrid from '../../components/map/sectionsGrid';
-import { useCommonStore } from '../../stores/common';
 import { Button } from '@mantine/core';
 import { LocationSection } from '@/utils/queries/map/types';
 import { fetchSectionsOptions } from '@/utils/queries/map/sectionsQuery';

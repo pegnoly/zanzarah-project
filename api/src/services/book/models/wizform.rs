@@ -5,7 +5,8 @@ use uuid::Uuid;
 use crate::error::ZZApiError;
 
 use super::{
-    collection_entry, location_wizform_entry, magic::{Magics, MagicsInputModel}
+    collection_entry, location_wizform_entry,
+    magic::{Magics, MagicsInputModel},
 };
 
 #[derive(
@@ -66,7 +67,7 @@ pub struct Model {
 #[derive(FromQueryResult, DerivePartialModel)]
 #[sea_orm(entity = "Entity")]
 pub struct WizformNameModel {
-    pub name: String
+    pub name: String,
 }
 
 pub type WizformModel = Model;
@@ -156,7 +157,7 @@ impl WizformModel {
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
     CollectionEntry,
-    LocationEntry
+    LocationEntry,
 }
 
 impl RelationTrait for Relation {
@@ -169,7 +170,7 @@ impl RelationTrait for Relation {
             Self::LocationEntry => Entity::has_many(location_wizform_entry::Entity)
                 .from(Column::Id)
                 .to(location_wizform_entry::Column::WizformId)
-                .into()
+                .into(),
         }
     }
 }
@@ -366,7 +367,7 @@ pub struct WizformSelectionModel {
     pub id: Uuid,
     pub name: String,
     pub element: WizformElementType,
-    pub number: i16
+    pub number: i16,
 }
 
 #[async_graphql::Object]
