@@ -9,7 +9,7 @@ function WizformHabitatsList(params: {
         params.habitats.length == 0 ?
         <Text>Для данной феи еще не отмечено ни одного места обитания</Text> :
         <List>{params.habitats.map((h, i) => (
-            <Group justify="space-between">
+            <Group key={i} justify="space-between">
                 <div style={{display: 'flex', flexDirection: 'column', gap: '3%', paddingTop: '2%'}}>
                     <Text style={{fontFamily: 'Comfortaa', fontSize: '0.85rem', color: 'gray', wordBreak: 'normal'}}>{`${h.sectionName}: `}</Text>
                     <Text style={{fontFamily: 'Comfortaa', fontSize: '0.85rem', fontWeight: 'bold', wordBreak: 'normal'}}>{h.locationName}</Text>

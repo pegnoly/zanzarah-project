@@ -25,7 +25,7 @@ function LocationEntryCommentCreator(params: {
     })
 
     return (
-        <Popover opened={opened}>
+        <Popover opened={opened} position="bottom">
             <PopoverTarget>
                 <Button onClick={open} c="green" size="compact-xs">
                     <IconWritingSign/>

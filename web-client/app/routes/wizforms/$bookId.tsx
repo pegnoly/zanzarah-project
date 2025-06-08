@@ -37,6 +37,17 @@ type LoaderData = {
 
 export const Route = createFileRoute('/wizforms/$bookId')({
     component: RouteComponent,
+    beforeLoad: async ({context, params}) => {
+      if (context.auth == undefined) {
+        const auth = await processAuth();
+        return {
+          auth: auth,
+          currentCollection: auth.userId ? 
+            await context.queryClient.ensureQueryData(fetchActiveCollectionOptions({bookId: params.bookId, userId: auth.userId})) :
+            null
+        }
+      }
+    },
     loader: async ({context, params}) : Promise<LoaderData> => {
       var loaderData: LoaderData = {
         nameFilter: undefined,

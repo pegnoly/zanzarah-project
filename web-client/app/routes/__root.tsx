@@ -17,8 +17,9 @@ import mantineCssUrl from '@mantine/core/styles.css?url'
 import mantineNotificationsUrl from '@mantine/notifications/styles.css?url'
 import { Notifications } from '@mantine/notifications';
 import appCss from "@/styles/app.css?url"
+import { AuthProps } from '@/utils/auth/utils';
 
-export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
+export const Route = createRootRouteWithContext<{queryClient: QueryClient, auth: AuthProps | undefined, currentCollection: string | null }>()({
   head: () => ({
     meta: [
       {
@@ -49,8 +50,8 @@ function RootComponent() {
     <RootDocument>
       <MantineProvider>
         <Notifications/>
-        <Outlet />
         <TanStackRouterDevtools/>
+        <Outlet />
       </MantineProvider>
     </RootDocument>
   )
