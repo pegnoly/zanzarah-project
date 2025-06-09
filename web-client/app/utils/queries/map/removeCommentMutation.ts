@@ -1,3 +1,4 @@
+import { config } from "@/utils/env"
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
 
@@ -19,7 +20,7 @@ export const removeLocationEntryComment = createServerFn({method: 'POST'})
     .validator((data: RemoveLocationEntryCommentMutationVariables) => data)
     .handler(async({data}) => {
         const result = await request<RemoveLocationEntryCommentMutationResult | undefined, RemoveLocationEntryCommentMutationVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/', 
+            config.api_endpoint, 
             removeLocationEntryCommentMutation,
             {id: data.id}
         );

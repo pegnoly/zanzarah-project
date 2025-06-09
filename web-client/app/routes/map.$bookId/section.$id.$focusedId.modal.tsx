@@ -30,7 +30,7 @@ export const Route = createFileRoute(
     const elements = await context.queryClient.ensureQueryData(fetchElementsOptions({bookId: params.bookId}));
     const auth = await processAuth();
     const entriesData = await context.queryClient.ensureQueryData(fetchLocationEntriesOptions({locationId: params.focusedId}));
-    loaderData = {...loaderData, auth: auth, elements: elements?.elements, entries: entriesData};
+    loaderData = {...loaderData, auth: auth, elements: elements, entries: entriesData};
     if (auth.userState == RegistrationState.Confirmed && (auth.userPermission == UserPermissionType.Editor || auth.userPermission == UserPermissionType.Admin)) {
       const selectableWizforms = await context.queryClient.ensureQueryData(fetchSelectableWizformsOptions({bookId: params.bookId, locationId: params.focusedId}));
       loaderData = {...loaderData, selectables: selectableWizforms};

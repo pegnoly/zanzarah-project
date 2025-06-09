@@ -2,6 +2,7 @@ import request, { gql } from "graphql-request"
 import { CollectionModel } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
+import { config } from "@/utils/env"
 
 type CollectionsQueryResult = {
     collections: CollectionModel []
@@ -29,7 +30,7 @@ export const fetchCollections = createServerFn({method: 'GET'})
     .validator((data: CollectionsQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<CollectionsQueryResult | null, CollectionsQueryVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            config.api_endpoint,
             collectionsQuery,
             {bookId: data.bookId, userId: data.userId}
         );

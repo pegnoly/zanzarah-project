@@ -41,7 +41,9 @@ async fn graphiql() -> impl IntoResponse {
 
 #[shuttle_runtime::main]
 async fn main(
-    #[shuttle_shared_db::Postgres] pool: sqlx::PgPool,
+    #[shuttle_shared_db::Postgres(
+        local_uri = "postgres://user_{secrets.POSTGRES_USER}:{secrets.POSTGRES_PASSWORD}@sharedpg-rds.shuttle.dev:5432/db_{secrets.POSTGRES_USER}"
+    )] pool: sqlx::PgPool,
     #[shuttle_runtime::Secrets] secrets: shuttle_runtime::SecretStore,
 ) -> shuttle_axum::ShuttleAxum {
     let jwt_validator = secrets.get("JWT_SECRET_VALIDATOR").unwrap();

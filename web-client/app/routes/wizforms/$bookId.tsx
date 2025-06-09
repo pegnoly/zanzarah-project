@@ -75,7 +75,7 @@ export const Route = createFileRoute('/wizforms/$bookId')({
         nameFilter: loaderData.nameFilter,
         enabled: true
       }));
-      loaderData = {...loaderData, elements: elementsData?.elements, wizforms: wizformsData};
+      loaderData = {...loaderData, elements: elementsData, wizforms: wizformsData};
       return loaderData;
     }
 });

@@ -2,6 +2,7 @@ import request, { gql } from "graphql-request"
 import { RegistrationState, UserPermissionType } from "./utils"
 import { createServerFn } from "@tanstack/react-start"
 import { getCookie } from "@tanstack/react-start/server"
+import { config } from "@/utils/env"
 
 type EmailConfirmationResult = {
   newToken: string,
@@ -33,7 +34,7 @@ export const confirmCode = createServerFn({method: 'POST'})
   .handler(async({data}) => {
     const emailCookie = getCookie('zanzarah-project-user-email')
     const result = await request<ConfirmCodeMutationResult | null, ConfirmCodeMutationVariables>(
-      'https://zanzarah-project-api-lyaq.shuttle.app/',
+      config.api_endpoint,
       confirmCodeMutation,
       {email: emailCookie!, code: data}
     );

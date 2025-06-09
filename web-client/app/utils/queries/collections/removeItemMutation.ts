@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
+import { config } from "@/utils/env"
 
 type RemoveCollectionItemMutationVariables = {
     id: string
@@ -19,7 +20,7 @@ export const removeCollectionItem = createServerFn({method: 'POST'})
     .validator((data: RemoveCollectionItemMutationVariables) => data)
     .handler(async({data}) => {
         const result = await request<RemoveCollectionItemMutationResult | null, RemoveCollectionItemMutationVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            config.api_endpoint,
             removeCollectionItemMutation,
             {id: data.id}
         );

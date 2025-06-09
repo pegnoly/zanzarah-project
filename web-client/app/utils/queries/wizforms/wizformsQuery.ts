@@ -3,6 +3,7 @@ import { WizformSimpleModel } from "./types";
 import { WizformElementType } from "@/graphql/graphql";
 import { createServerFn } from "@tanstack/react-start";
 import { queryOptions } from "@tanstack/react-query";
+import { config } from "@/utils/env"
 
 type WizformsQueryResult = {
     wizforms: WizformSimpleModel[]
@@ -33,7 +34,7 @@ const fetchWizforms = createServerFn({method: 'GET'})
     .handler(
         async ({data}) => {
             const result = await request<WizformsQueryResult | undefined, WizformsQueryVariables>(
-                'https://zanzarah-project-api-lyaq.shuttle.app/', 
+                config.api_endpoint, 
                 wizformsQuery,
                 data
             );
@@ -48,7 +49,7 @@ export const fetchWizformsOptions = (variables: WizformsQueryVariables) => query
 export const fetchWizformsOptionsClient = (variables: WizformsQueryVariables) => queryOptions({
     queryKey: ['wizforms_client'],
     queryFn: async() => request<WizformsQueryResult | undefined, WizformsQueryVariables>({
-        url: 'https://zanzarah-project-api-lyaq.shuttle.app/', 
+        url: config.api_endpoint, 
         document: wizformsQuery,
         variables: variables
     })

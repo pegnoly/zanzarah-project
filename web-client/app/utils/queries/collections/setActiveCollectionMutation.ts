@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
+import { config } from "@/utils/env"
 
 type SetActiveCollectionMutationVariables = {
     collectionId: string
@@ -19,7 +20,7 @@ export const setActiveCollection = createServerFn({method: 'POST'})
     .validator((data: SetActiveCollectionMutationVariables) => data)
     .handler(async({data}) => {
         const result = await request<SetActiveCollectionMutationResult | null, SetActiveCollectionMutationVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            config.api_endpoint,
             setActiveCollectionMutation,
             {collectionId: data.collectionId}
         );

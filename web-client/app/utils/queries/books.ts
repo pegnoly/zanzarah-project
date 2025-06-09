@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
+import { config } from "@/utils/env"
 
 const currentBookQuery = gql`
     query currentBookQuery($id: ID!) {
@@ -34,7 +35,7 @@ const fetchBook = createServerFn({method: 'GET'})
     .validator((id: string) => id)
     .handler(async({data}) => {
         const book = await request<BookQueryResult | undefined, BookQueryVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            config.api_endpoint,
             currentBookQuery,
             {id: data}
         );
@@ -72,7 +73,7 @@ const fetchBooks = createServerFn({method: 'GET'})
     .validator((available: boolean) => available)
     .handler(async({data}) => {
         const books = await request<BooksQueryResult | undefined, BooksQueryVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            config.api_endpoint,
             booksQuery,
             {available: data}
         );

@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
+import { config } from "@/utils/env"
 
 type ActiveCollectionQueryVariables = {
     userId: string,
@@ -21,7 +22,7 @@ const fetchActiveCollection = createServerFn({method: 'GET'})
     .validator((data: ActiveCollectionQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<ActiveCollectionQueryResult | null, ActiveCollectionQueryVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            config.api_endpoint,
             activeCollectionQuery,
             {bookId: data.bookId, userId: data.userId}
         );

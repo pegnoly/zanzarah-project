@@ -2,6 +2,7 @@ import request, { gql } from "graphql-request"
 import { WizformHabitatModel } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
+import { config } from "@/utils/env"
 
 type WizformHabitatsQueryResult = {
     wizformHabitats: WizformHabitatModel []
@@ -26,7 +27,7 @@ const fetchWizformHabitats = createServerFn({method: 'GET'})
     .handler(
         async ({data}) => {
             const result = await request<WizformHabitatsQueryResult | undefined, WizformHabitatsQueryVariables>(
-                'https://zanzarah-project-api-lyaq.shuttle.app/', 
+                config.api_endpoint, 
                 wizformHabitatsQuery,
                 data
             );

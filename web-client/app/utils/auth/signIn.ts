@@ -1,6 +1,7 @@
 import request, { gql } from "graphql-request"
 import { RegistrationState, UserPermissionType } from "./utils"
 import { createServerFn } from "@tanstack/react-start"
+import { config } from "@/utils/env"
 
 type SignInResult = {
   emailHash: string,
@@ -37,7 +38,7 @@ export const signIn = createServerFn({method: 'GET'})
     .validator((data: SignInQueryVariables) => data)
     .handler(async({data}): Promise<SignInQueryResult | null> => {
         const result = await request<SignInQueryResult | null, SignInQueryVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            config.api_endpoint,
             signInQuery,
             {email: data.email, password: data.password}
         );

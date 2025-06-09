@@ -2,6 +2,7 @@ import request, { gql } from "graphql-request"
 import { LocationSection } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
+import { config } from "@/utils/env"
 
 type LocationSectionsQueryVariables = {
     bookId: string
@@ -25,7 +26,7 @@ const getLocationSections = createServerFn({method: 'GET'})
     .validator((data: LocationSectionsQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<LocationSectionsQueryResult | undefined, LocationSectionsQueryVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/', 
+            config.api_endpoint, 
             locationSectionsQuery,
             {bookId: data.bookId}
         );

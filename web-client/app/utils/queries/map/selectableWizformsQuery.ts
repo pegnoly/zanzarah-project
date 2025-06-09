@@ -2,6 +2,7 @@ import request, { gql } from "graphql-request"
 import { SelectableWizform } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
+import { config } from "@/utils/env"
 
 type SelectableWizformsQueryVariables = {
     bookId: string,
@@ -27,7 +28,7 @@ const fetchSelectableWizforms = createServerFn({method: 'GET'})
     .validator((data: SelectableWizformsQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<SelectableWizformsQueryResult | undefined, SelectableWizformsQueryVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/', 
+            config.api_endpoint, 
             selectableWizformsQuery,
             {bookId: data.bookId, locationId: data.locationId}
         );

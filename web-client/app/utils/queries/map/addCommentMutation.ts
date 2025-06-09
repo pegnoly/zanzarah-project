@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
+import { config } from "@/utils/env"
 
 type AddLocationEntryCommentMutationVariables = {
     id: string,
@@ -20,7 +21,7 @@ export const addLocationEntryComment = createServerFn({method: 'POST'})
     .validator((data: AddLocationEntryCommentMutationVariables) => data)
     .handler(async({data}) => {
         const result = await request<AddLocationEntryCommentMutationResult | undefined, AddLocationEntryCommentMutationVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/', 
+            config.api_endpoint, 
             addLocationEntryCommentMutation,
             {id: data.id, comment: data.comment}
         );

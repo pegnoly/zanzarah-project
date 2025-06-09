@@ -2,6 +2,7 @@ import request, { gql } from "graphql-request"
 import { WizformFull, WizformHabitatModel } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
+import { config } from "@/utils/env"
 
 export type WizformCompleteQueryResult = {
     wizform: WizformFull,
@@ -70,7 +71,7 @@ const fetchWizformComplete = createServerFn({method: 'GET'})
     .validator((data: WizformCompleteQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<WizformCompleteQueryResult | undefined, WizformCompleteQueryVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/', 
+            config.api_endpoint, 
             wizformCompleteQuery,
             data
         );
