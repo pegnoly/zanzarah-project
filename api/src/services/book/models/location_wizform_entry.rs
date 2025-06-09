@@ -79,6 +79,7 @@ pub struct LocationWizformFullEntry {
     pub wizform_name: String,
     pub wizform_number: i16,
     pub wizform_element: WizformElementType,
+    pub icon: String,
     pub comment: Option<String>,
 }
 
@@ -102,5 +103,9 @@ impl LocationWizformFullEntry {
 
     async fn comment(&self) -> Option<String> {
         self.comment.clone()
+    }
+
+    async fn icon(&self) -> &String {
+        &self.icon
     }
 }

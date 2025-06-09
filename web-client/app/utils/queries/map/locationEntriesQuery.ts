@@ -19,7 +19,8 @@ const locationEntriesQuery = gql`
             wizformName,
             wizformElement,
             wizformNumber,
-            comment
+            comment,
+            icon
         }
     }
 `

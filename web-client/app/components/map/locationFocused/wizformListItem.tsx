@@ -1,7 +1,7 @@
 import { AuthProps, RegistrationState, UserPermissionType } from "@/utils/auth/utils";
 import { deleteLocationWizform } from "@/utils/queries/map/deleteEntryMutation";
 import { LocationWizformEntry, SelectableWizform } from "@/utils/queries/map/types";
-import { Button, ButtonGroup, Group, Popover, PopoverDropdown, PopoverTarget, Text, UnstyledButton } from "@mantine/core";
+import { Button, ButtonGroup, Group, Image, Popover, PopoverDropdown, PopoverTarget, Text, UnstyledButton } from "@mantine/core";
 import { IconQuestionMark, IconTrashFilled, IconWritingSignOff } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
@@ -57,7 +57,10 @@ function WizformsListItem(params: {
                         </PopoverDropdown>
                     </Popover>
                 </Group> :
-                <Text>{item.wizformName}</Text>
+                <div style={{width: '100%', display: 'flex', flexDirection: 'row', gap: '2%', alignItems: 'center'}}>
+                    <Image style={{width: 40, height: 40}} src={`data:image/bmp;base64,${item.icon}`}/>
+                    <Text>{item.wizformName}</Text>
+                </div>
             }
             {
                 params.auth.userState == RegistrationState.Confirmed &&

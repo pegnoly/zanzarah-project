@@ -435,6 +435,7 @@ impl BookRepository {
             .column_as(wizform::Column::Name, "wizform_name")
             .column_as(wizform::Column::Number, "wizform_number")
             .column_as(wizform::Column::Element, "wizform_element")
+            .column_as(wizform::Column::Icon64, "icon")
             .filter(location_wizform_entry::Column::LocationId.eq(location_id))
             .into_model::<LocationWizformFullEntry>()
             .all(db)

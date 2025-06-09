@@ -17,7 +17,8 @@ export type LocationWizformEntry = {
     wizformName: string,
     wizformElement: WizformElementType,
     wizformNumber: number,
-    comment: string | null
+    comment: string | null,
+    icon: string
 }
 
 export type LocationFullModel = {
