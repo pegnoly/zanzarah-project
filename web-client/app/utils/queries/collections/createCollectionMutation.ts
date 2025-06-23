@@ -2,6 +2,7 @@ import request, { gql } from "graphql-request"
 import { CollectionModel } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type CreateCollectionMutationVariables = {
     userId: string,
@@ -29,7 +30,7 @@ export const createCollection = createServerFn({method: 'POST'})
     .validator((data: CreateCollectionMutationVariables) => data)
     .handler(async({data}) => {
         const collection = await request<CreateCollectionMutationResult | null, CreateCollectionMutationVariables>(
-            config.api_endpoint,
+            API_ENDPOINT,
             createCollectionMutation,
             {bookId: data.bookId, userId: data.userId, name: data.name}
         );

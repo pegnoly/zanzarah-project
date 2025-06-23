@@ -3,6 +3,7 @@ import { WizformFull } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type WizformQueryResult = {
     wizform: WizformFull
@@ -68,7 +69,7 @@ const fetchWizform = createServerFn({method: 'POST'})
     async ({data}) => {
         //console.info(`Fetching wizform ${data}`);
         const wizform = await request<WizformQueryResult | undefined, WizformQueryVariables>(
-            config.api_endpoint, 
+            API_ENDPOINT, 
             wizformQuery,
             {id: data.id, collectionId: data.collectionId}
         );

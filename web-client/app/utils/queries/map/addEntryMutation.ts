@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type AddLocationEntryMutationVariables = {
     locationId: string,
@@ -22,7 +23,7 @@ export const addLocationWizform = createServerFn({method: 'POST'})
     .validator((data: AddLocationEntryMutationVariables) => data)
     .handler(async({data}) => {
         const result = await request<AddLocationEntryMutationResult | undefined, AddLocationEntryMutationVariables>(
-            config.api_endpoint, 
+            API_ENDPOINT, 
             addLocationWizformMutation,
             {locationId: data.locationId, wizformId: data.wizformId, comment: data.comment}
         );

@@ -1,6 +1,7 @@
 import { config } from "@/utils/env"
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
+import { API_ENDPOINT } from "../common"
 
 type RemoveLocationEntryCommentMutationVariables = {
     id: string
@@ -20,7 +21,7 @@ export const removeLocationEntryComment = createServerFn({method: 'POST'})
     .validator((data: RemoveLocationEntryCommentMutationVariables) => data)
     .handler(async({data}) => {
         const result = await request<RemoveLocationEntryCommentMutationResult | undefined, RemoveLocationEntryCommentMutationVariables>(
-            config.api_endpoint, 
+            API_ENDPOINT, 
             removeLocationEntryCommentMutation,
             {id: data.id}
         );

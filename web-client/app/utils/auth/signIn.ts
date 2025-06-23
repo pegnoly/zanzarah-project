@@ -2,6 +2,7 @@ import request, { gql } from "graphql-request"
 import { RegistrationState, UserPermissionType } from "./utils"
 import { createServerFn } from "@tanstack/react-start"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../queries/common"
 
 type SignInResult = {
   emailHash: string,
@@ -38,7 +39,7 @@ export const signIn = createServerFn({method: 'GET'})
     .validator((data: SignInQueryVariables) => data)
     .handler(async({data}): Promise<SignInQueryResult | null> => {
         const result = await request<SignInQueryResult | null, SignInQueryVariables>(
-            config.api_endpoint,
+            API_ENDPOINT,
             signInQuery,
             {email: data.email, password: data.password}
         );

@@ -3,6 +3,7 @@ import { WizformFull, WizformHabitatModel } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 export type WizformCompleteQueryResult = {
     wizform: WizformFull,
@@ -71,7 +72,7 @@ const fetchWizformComplete = createServerFn({method: 'GET'})
     .validator((data: WizformCompleteQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<WizformCompleteQueryResult | undefined, WizformCompleteQueryVariables>(
-            config.api_endpoint, 
+            API_ENDPOINT, 
             wizformCompleteQuery,
             data
         );

@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type EntriesCountQueryVariables = {
     collectionId: string
@@ -20,7 +21,7 @@ export const getEntriesCount = createServerFn({method: 'GET'})
     .validator((data: EntriesCountQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<EntriesCountQueryResult | null, EntriesCountQueryVariables>(
-            config.api_endpoint,
+            API_ENDPOINT,
             getEntriesCountQuery,
             {collectionId: data.collectionId}
         );

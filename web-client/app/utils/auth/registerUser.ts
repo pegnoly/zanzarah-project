@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../queries/common"
 
 type RegistrationResult = {
   userId: string,
@@ -32,7 +33,7 @@ export const registerUser = createServerFn({method: 'POST'})
   .validator((data: RegisterUserMutationVariables) => data)
   .handler(async({data}): Promise<RegistrationResult | null> => {
     const result = await request<RegisterUserMutationResponse | null, RegisterUserMutationVariables>(
-      config.api_endpoint,
+      API_ENDPOINT,
       registerUserMutation,
       {email: data.email, password: data.password}
     )

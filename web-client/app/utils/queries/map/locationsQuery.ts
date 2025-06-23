@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
 import { Location } from "./types"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type LocationsQueryVariables = {
     sectionId: string
@@ -26,7 +27,7 @@ const getLocations = createServerFn({method: 'GET'})
     .validator((data: LocationsQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<LocationsQueryResult | undefined, LocationsQueryVariables>(
-            config.api_endpoint, 
+            API_ENDPOINT, 
             locationsQuery,
             {sectionId: data.sectionId}
         );

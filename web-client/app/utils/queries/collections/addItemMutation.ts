@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type CreatedCollectionItem = {
     createdId: string
@@ -27,7 +28,7 @@ export const addCollectionItem = createServerFn({method: 'POST'})
     .validator((data: AddCollectionItemMutationVariables) => data)
     .handler(async({data}) => {
         const result = await request<AddCollectionItemMutationResult | null, AddCollectionItemMutationVariables>(
-            config.api_endpoint,
+            API_ENDPOINT,
             addCollectionItemMutation,
             {collectionId: data.collectionId, wizformId: data.wizformId}
         );

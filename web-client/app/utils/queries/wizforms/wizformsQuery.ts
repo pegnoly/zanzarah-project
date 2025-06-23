@@ -4,6 +4,7 @@ import { WizformElementType } from "@/graphql/graphql";
 import { createServerFn } from "@tanstack/react-start";
 import { queryOptions } from "@tanstack/react-query";
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common";
 
 type WizformsQueryResult = {
     wizforms: WizformSimpleModel[]
@@ -34,7 +35,7 @@ const fetchWizforms = createServerFn({method: 'GET'})
     .handler(
         async ({data}) => {
             const result = await request<WizformsQueryResult | undefined, WizformsQueryVariables>(
-                config.api_endpoint, 
+                API_ENDPOINT, 
                 wizformsQuery,
                 data
             );
@@ -49,7 +50,7 @@ export const fetchWizformsOptions = (variables: WizformsQueryVariables) => query
 export const fetchWizformsOptionsClient = (variables: WizformsQueryVariables) => queryOptions({
     queryKey: ['wizforms_client'],
     queryFn: async() => request<WizformsQueryResult | undefined, WizformsQueryVariables>({
-        url: config.api_endpoint, 
+        url: API_ENDPOINT, 
         document: wizformsQuery,
         variables: variables
     })

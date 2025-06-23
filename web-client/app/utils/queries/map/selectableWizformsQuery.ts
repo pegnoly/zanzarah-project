@@ -3,6 +3,7 @@ import { SelectableWizform } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type SelectableWizformsQueryVariables = {
     bookId: string,
@@ -28,7 +29,7 @@ const fetchSelectableWizforms = createServerFn({method: 'GET'})
     .validator((data: SelectableWizformsQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<SelectableWizformsQueryResult | undefined, SelectableWizformsQueryVariables>(
-            config.api_endpoint, 
+            API_ENDPOINT, 
             selectableWizformsQuery,
             {bookId: data.bookId, locationId: data.locationId}
         );

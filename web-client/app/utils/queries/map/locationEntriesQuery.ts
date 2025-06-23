@@ -3,6 +3,7 @@ import { LocationWizformEntry } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type LocationEntriesQueryVariables = {
     locationId: string
@@ -29,7 +30,7 @@ const fetchLocationEntries = createServerFn({method: 'GET'})
     .validator((data: LocationEntriesQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<LocationEntriesQueryResult | undefined, LocationEntriesQueryVariables>(
-            config.api_endpoint, 
+            API_ENDPOINT, 
             locationEntriesQuery,
             {locationId: data.locationId}
         );

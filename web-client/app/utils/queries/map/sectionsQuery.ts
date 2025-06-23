@@ -3,6 +3,7 @@ import { LocationSection } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type LocationSectionsQueryVariables = {
     bookId: string
@@ -26,7 +27,7 @@ const getLocationSections = createServerFn({method: 'GET'})
     .validator((data: LocationSectionsQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<LocationSectionsQueryResult | undefined, LocationSectionsQueryVariables>(
-            config.api_endpoint, 
+            API_ENDPOINT, 
             locationSectionsQuery,
             {bookId: data.bookId}
         );

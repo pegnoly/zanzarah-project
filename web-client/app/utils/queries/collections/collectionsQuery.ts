@@ -3,6 +3,7 @@ import { CollectionModel } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type CollectionsQueryResult = {
     collections: CollectionModel []
@@ -30,7 +31,7 @@ export const fetchCollections = createServerFn({method: 'GET'})
     .validator((data: CollectionsQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<CollectionsQueryResult | null, CollectionsQueryVariables>(
-            config.api_endpoint,
+            API_ENDPOINT,
             collectionsQuery,
             {bookId: data.bookId, userId: data.userId}
         );

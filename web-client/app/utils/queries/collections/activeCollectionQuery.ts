@@ -2,6 +2,7 @@ import { queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type ActiveCollectionQueryVariables = {
     userId: string,
@@ -22,7 +23,7 @@ const fetchActiveCollection = createServerFn({method: 'GET'})
     .validator((data: ActiveCollectionQueryVariables) => data)
     .handler(async({data}) => {
         const result = await request<ActiveCollectionQueryResult | null, ActiveCollectionQueryVariables>(
-            config.api_endpoint,
+            API_ENDPOINT,
             activeCollectionQuery,
             {bookId: data.bookId, userId: data.userId}
         );

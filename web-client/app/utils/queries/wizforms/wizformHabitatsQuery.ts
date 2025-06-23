@@ -3,6 +3,7 @@ import { WizformHabitatModel } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { queryOptions } from "@tanstack/react-query"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type WizformHabitatsQueryResult = {
     wizformHabitats: WizformHabitatModel []
@@ -27,7 +28,7 @@ const fetchWizformHabitats = createServerFn({method: 'GET'})
     .handler(
         async ({data}) => {
             const result = await request<WizformHabitatsQueryResult | undefined, WizformHabitatsQueryVariables>(
-                config.api_endpoint, 
+                API_ENDPOINT, 
                 wizformHabitatsQuery,
                 data
             );

@@ -14,6 +14,7 @@ import { Link } from "@tanstack/react-router";
 import { LocationSection } from "@/utils/queries/map/types";
 
 const backgroundsData = new Map<string, string>([
+  // global
   ["bd4fad88-37fd-4cd3-a6da-01424b823e40", faeriesGarden],
   ["0b2926b3-9606-4298-8b74-4f7685c11446", forestMain],
   ["43db90ee-5a3d-479e-8266-d7152da2e3ae", swampsMain],
@@ -23,7 +24,18 @@ const backgroundsData = new Map<string, string>([
   ["e93ad43c-60cc-469f-bdca-5eb8d24c892a", cloudRealmsMain],
   ["63823939-702d-4baa-9060-452e7badbdd2", tiralinMain],
   ["976f22d1-f96f-4a73-b43e-9f60d3a02447", lavaCavesMain],
-  ["120a5c00-e98b-447b-b1b5-158eb53361c9", darkRealmsMain]
+  ["120a5c00-e98b-447b-b1b5-158eb53361c9", darkRealmsMain],
+  // unbended
+  ["ac9d0208-2f01-46fa-b040-399eccf9211f", faeriesGarden],
+  ["87248f52-d199-4d32-bbaa-6604fa9bff5b", forestMain],
+  ["8ba1624e-e391-4f3d-8812-f703730a09cb", swampsMain],
+  ["10ea9d83-fb4d-4c2b-9bb4-70bbf5d9af19", mountainsMain],
+  ["b391f56e-e59d-4b9c-bce4-47e38a2c977c", snowPeaksMain],
+  ["e2f79645-9e29-46b6-9d53-1852d8ebf702", darkCavesMain],
+  ["95fdcc61-32a4-472f-bf58-79328a19cb98", cloudRealmsMain],
+  ["77c03879-7304-4698-83df-cacdec5c3bf8", tiralinMain],
+  ["2a7c9922-65f5-401f-b8ef-95b94bda4da2", lavaCavesMain],
+  ["f59b9583-0250-48d6-bd7d-376d0d4c0342", darkRealmsMain]
 ]);
 
 function SectionsGrid(params: {

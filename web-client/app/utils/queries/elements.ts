@@ -3,6 +3,7 @@ import { WizformElementType } from "../../graphql/graphql";
 import { queryOptions } from "@tanstack/react-query";
 import { config } from "@/utils/env"
 import { createServerFn } from "@tanstack/react-start";
+import { API_ENDPOINT } from "./common";
 
 const elementsQuery = gql`
     query elementsQuery($bookId: ID!) {
@@ -34,7 +35,7 @@ const fetchElements = createServerFn({method: 'GET'})
     .validator((data: ElementsQueryVariables) => data)
     .handler(async({data}) => {
         let result = await request<ElementsQueryResult | null, ElementsQueryVariables>(
-            config.api_endpoint, 
+            API_ENDPOINT, 
             elementsQuery,
             {bookId: data.bookId}
         );

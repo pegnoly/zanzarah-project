@@ -2,6 +2,7 @@ import request, { gql } from "graphql-request"
 import { SelectableWizform } from "./types"
 import { createServerFn } from "@tanstack/react-start"
 import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../common"
 
 type DeleteLocationEntryMutationVariables = {
     id: string
@@ -26,7 +27,7 @@ export const deleteLocationWizform = createServerFn({method: 'POST'})
     .validator((data: DeleteLocationEntryMutationVariables) => data)
     .handler(async({data}) => {
         const result = await request<DeleteLocationEntryMutationResult | undefined, DeleteLocationEntryMutationVariables>(
-            config.api_endpoint, 
+            API_ENDPOINT, 
             deleteLocationEntryMutation,
             {id: data.id}
         );
