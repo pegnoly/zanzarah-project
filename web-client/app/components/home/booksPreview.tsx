@@ -1,9 +1,7 @@
-import { Badge, Button, Card, Modal, Popover, Select, Text } from "@mantine/core";
+import { Badge, Button, Popover, Select, Text } from "@mantine/core";
+import { useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie, setCookie } from "@tanstack/react-start/server";
-import { useCommonStore } from "../../stores/common";
-import { BookFullModel } from "../../utils/queries/books";
-import { useDisclosure } from "@mantine/hooks";
 
 export const setBookCookie = createServerFn({method: 'POST'})
     .validator((book: string) => book)
@@ -69,6 +67,13 @@ function BookSelector(params: {
 
     current: string | undefined
 }) {
+    const navigate = useNavigate();
+
+    async function bookSelected(value: string) {
+        await setBookCookie({data: value});
+        navigate({to: ".", reloadDocument: true})
+    }
+
     return <Popover>
         <Popover.Target>
             <Button>Выбрать книгу</Button>
@@ -78,6 +83,7 @@ function BookSelector(params: {
                 label="Список книг"
                 placeholder="Выберите активную книгу"
                 value={params.current}
+                onChange={bookSelected}
                 data={params.books?.map((book) => ({label: book.name, value: book.id}))}
             />
         </Popover.Dropdown>

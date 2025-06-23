@@ -1,16 +1,17 @@
-use std::str::FromStr;
-
 use async_graphql::Context;
 use itertools::Itertools;
 use sea_orm::DatabaseConnection;
-use uuid::Uuid;
-
 use crate::{
     error::ZZApiError,
     services::{
-        auth::{prelude::AuthRepository, utils::{AuthorizationResult, EmailConfirmationResult, RegistrationResult, TokenUpdateResult}},
+        auth::{
+            prelude::AuthRepository,
+            utils::{
+                EmailConfirmationResult, RegistrationResult, TokenUpdateResult,
+            },
+        },
         book::{
-            models::wizform::{WizformInputModel, WizformModel, WizformUpdateModel},
+            models::{book::BookModel, wizform::{WizformInputModel, WizformModel, WizformUpdateModel}},
             repo::BookRepository,
         },
     },
@@ -41,11 +42,36 @@ pub struct UpdateWizformResponse {
 
 #[derive(async_graphql::SimpleObject)]
 pub struct AddCollectionItemResponse {
-    pub created_id: async_graphql::ID
+    pub created_id: async_graphql::ID,
 }
 
 #[async_graphql::Object]
 impl Mutation {
+    async fn create_book(
+        &self,
+        context: &Context<'_>,
+        name: String,
+        directory: String,
+        version: String
+    ) -> Result<BookModel, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        service.create_book(db, name, directory, version).await
+    }
+
     async fn insert_wizforms_bulk(
         &self,
         context: &Context<'_>,
@@ -126,43 +152,6 @@ impl Mutation {
         }
     }
 
-    // async fn confirm_email(
-    //     &self,
-    //     context: &Context<'_>,
-    //     email: String,
-    //     code: String,
-    // ) -> Result<EmailConfirmationResponse, ZZApiError> {
-    //     let repo = context.data::<AuthRepository>().map_err(|error| {
-    //         tracing::error!("Failed to get auth repo from context. {}", &error.message);
-    //         ZZApiError::Empty
-    //     })?;
-    //     let db = context.data::<DatabaseConnection>().map_err(|error| {
-    //         tracing::error!(
-    //             "Failed to get database connection from context. {}",
-    //             &error.message
-    //         );
-    //         ZZApiError::Empty
-    //     })?;
-
-    //     let error_params = format!(
-    //         "
-    //         Failed to confirm email.
-    //         Params: email: {:#?}, confirmation code: {:#?}.
-    //     ",
-    //         &email, &code
-    //     );
-
-    //     match repo.confirm_email(db, email, code).await {
-    //         Ok(()) => Ok(EmailConfirmationResponse {
-    //             message: "Email successfully confirmed".to_string(),
-    //         }),
-    //         Err(error) => {
-    //             tracing::info!("{}. Error: {:#?}.", &error_params, &error);
-    //             Err(error)
-    //         }
-    //     }
-    // }
-
     async fn update_wizform(
         &self,
         context: &Context<'_>,
@@ -208,7 +197,7 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         email: String,
-        password: String
+        password: String,
     ) -> Result<TokenUpdateResult, ZZApiError> {
         let repo = context.data::<AuthRepository>().map_err(|error| {
             tracing::error!("Failed to get auth repo from context. {}", &error.message);
@@ -230,7 +219,7 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         email: String,
-        code: String
+        code: String,
     ) -> Result<EmailConfirmationResult, ZZApiError> {
         let repo = context.data::<AuthRepository>().map_err(|error| {
             tracing::error!("Failed to get auth repo from context. {}", &error.message);
@@ -245,6 +234,6 @@ impl Mutation {
         })?;
 
         let result = repo.confirm_email(db, email, code).await?;
-        Ok(result)   
+        Ok(result)
     }
 }

@@ -1,4 +1,4 @@
-use sea_orm::{prelude::*, FromQueryResult};
+use sea_orm::{FromQueryResult, prelude::*};
 use serde::{Deserialize, Serialize};
 
 use super::collection_entry;
@@ -65,7 +65,7 @@ impl RelationTrait for Relation {
             Self::CollectionEntry => Entity::has_many(collection_entry::Entity)
                 .from(Column::Id)
                 .to(collection_entry::Column::CollectionId)
-                .into()
+                .into(),
         }
     }
 }
@@ -98,7 +98,7 @@ pub struct CollectionFullModel {
     pub created_on_version: String,
     pub name: String,
     pub active: bool,
-    pub entries_count: i64
+    pub entries_count: i64,
 }
 
 #[async_graphql::Object]
@@ -126,7 +126,7 @@ impl CollectionFullModel {
     async fn active(&self) -> bool {
         self.active
     }
-    
+
     async fn entries_count(&self) -> i64 {
         self.entries_count
     }

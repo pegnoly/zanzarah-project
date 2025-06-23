@@ -19,7 +19,7 @@ pub struct ElementsQueryVariables {
 }
 
 #[derive(Debug, cynic::QueryFragment)]
-#[cynic(graphql_type = "Query", variables = "ElementsQueryVariables")]
+#[cynic(graphql_type = "QueryRoot", variables = "ElementsQueryVariables")]
 pub struct ElementsQuery {
     #[arguments(bookId: $book_id, enabled: $enabled)]
     pub elements: Vec<ElementModel>

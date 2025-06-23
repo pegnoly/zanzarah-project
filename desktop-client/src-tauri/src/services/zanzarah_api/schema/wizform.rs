@@ -71,14 +71,14 @@ pub struct InsertWizformsResponse {
 }
 
 #[derive(Debug, cynic::QueryFragment)]
-#[cynic(graphql_type = "Mutation", variables = "WizformsBulkInsertMutationArguments")]
+#[cynic(graphql_type = "MutationRoot", variables = "WizformsBulkInsertMutationArguments")]
 pub struct WizformsBulkInsertMutation {
     #[arguments(wizforms: $wizforms)]
     pub insert_wizforms_bulk: InsertWizformsResponse
 }
 
 #[derive(Debug, cynic::QueryFragment, Serialize, Clone)]
-#[cynic(graphql_type = "WizformModel")]
+#[cynic(graphql_type = "CollectionWizform")]
 pub struct WizformSimpleModel {
     pub id: cynic::Id,
     pub name: String,
@@ -94,14 +94,14 @@ pub struct WizformsQueryVariables {
 }
 
 #[derive(Debug, cynic::QueryFragment)]
-#[cynic(graphql_type = "Query", variables = "WizformsQueryVariables")]
+#[cynic(graphql_type = "QueryRoot", variables = "WizformsQueryVariables")]
 pub struct WizformsQuery {
     #[arguments(bookId: $book_id, elementFilter: $element, nameFilter: $name)]
     pub wizforms: Vec<WizformSimpleModel>
 }
 
 #[derive(Debug, cynic::QueryFragment, Serialize, Clone)]
-#[cynic(graphql_type = "WizformModel")]
+#[cynic(graphql_type = "CollectionWizform")]
 pub struct WizformEditableModel {
     pub id: cynic::Id,
     pub enabled: bool,
@@ -116,7 +116,7 @@ pub struct WizformQueryVariables {
 }
 
 #[derive(Debug, cynic::QueryFragment)]
-#[cynic(graphql_type = "Query", variables = "WizformQueryVariables")]
+#[cynic(graphql_type = "QueryRoot", variables = "WizformQueryVariables")]
 pub struct WizformQuery {
     #[arguments(id: $id)]
     pub wizform: Option<WizformEditableModel>
@@ -142,7 +142,7 @@ pub struct WizformUpdateMutationArguments {
 }
 
 #[derive(Debug, cynic::QueryFragment)]
-#[cynic(graphql_type = "Mutation", variables = "WizformUpdateMutationArguments")]
+#[cynic(graphql_type = "MutationRoot", variables = "WizformUpdateMutationArguments")]
 pub struct WizformUpdateMutation {
     #[arguments(updateModel: $update_model)]
     pub update_wizform: UpdateWizformResponse

@@ -1,6 +1,8 @@
 import request, { gql } from "graphql-request"
 import { RegistrationState, UserPermissionType } from "./utils"
 import { createServerFn } from "@tanstack/react-start"
+import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../queries/common"
 
 type AuthorizationResult = {
   userId: string,
@@ -30,7 +32,7 @@ export const requestTokenData = createServerFn({method: 'GET'})
   .validator((data: ProcessTokenQueryVariables) => data)
   .handler(async({data}) => {
     const result = await request<ProcessTokenQueryResult | null, ProcessTokenQueryVariables>(
-      'https://zanzarah-project-api-lyaq.shuttle.app/',
+      API_ENDPOINT,
       processTokenQuery,
       {token: data.token}
     );

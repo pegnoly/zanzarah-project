@@ -13,7 +13,7 @@ pub struct Model {
     pub hashed_password: String,
     pub registration_state: RegistrationState,
     pub permission: UserPermissionType,
-    pub confirmation_code: Option<String>
+    pub confirmation_code: Option<String>,
 }
 
 pub type UserModel = Model;
@@ -25,7 +25,18 @@ pub enum ModType {
     Redux,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Copy, DeriveActiveEnum, EnumIter, async_graphql::Enum)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    Copy,
+    DeriveActiveEnum,
+    EnumIter,
+    async_graphql::Enum,
+)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum UserPermissionType {
     #[sea_orm(string_value = "UNREGISTERED_USER")]
@@ -35,10 +46,21 @@ pub enum UserPermissionType {
     #[sea_orm(string_value = "EDITOR")]
     Editor,
     #[sea_orm(string_value = "ADMIN")]
-    Admin
+    Admin,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Copy, DeriveActiveEnum, EnumIter, async_graphql::Enum)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    Copy,
+    DeriveActiveEnum,
+    EnumIter,
+    async_graphql::Enum,
+)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum RegistrationState {
     #[sea_orm(string_value = "UNREGISTERED")]
@@ -94,7 +116,7 @@ impl UserModel {
         &self.hashed_password
     }
 
-    async fn registration_state(&self) -> RegistrationState{
+    async fn registration_state(&self) -> RegistrationState {
         self.registration_state
     }
 

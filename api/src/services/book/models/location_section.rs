@@ -1,6 +1,6 @@
+use sea_orm::{FromQueryResult, prelude::*};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use sea_orm::{prelude::*, FromQueryResult};
 
 use super::{book, location};
 
@@ -11,7 +11,7 @@ pub struct Model {
     pub id: Uuid,
     pub book_id: Uuid,
     pub name: String,
-    pub ordering: i32
+    pub ordering: i32,
 }
 
 pub type LocationSectionModel = Model;
@@ -19,7 +19,7 @@ pub type LocationSectionModel = Model;
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
     Book,
-    Location
+    Location,
 }
 
 impl RelationTrait for Relation {
@@ -32,7 +32,7 @@ impl RelationTrait for Relation {
             Relation::Location => Entity::has_many(location::Entity)
                 .from(Column::Id)
                 .to(location::Column::SectionId)
-                .into()
+                .into(),
         }
     }
 }
@@ -74,7 +74,7 @@ impl LocationSectionModel {
 pub struct LocationSectionWithCount {
     pub id: Uuid,
     pub name: String,
-    pub locations_count: i64
+    pub locations_count: i64,
 }
 
 #[async_graphql::Object]

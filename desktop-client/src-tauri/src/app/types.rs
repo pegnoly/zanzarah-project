@@ -12,9 +12,7 @@ pub struct BookFrontendModel {
     pub directory: String,
     pub initialized: bool,
     pub available: bool,
-    pub major_version: i32,
-    pub minor_version: i32,
-    pub patch_version: i32
+    pub version: String
 }
 
 impl TryFrom<BookFullModel> for BookFrontendModel {
@@ -26,9 +24,7 @@ impl TryFrom<BookFullModel> for BookFrontendModel {
             directory: value.directory,
             initialized: value.initialized,
             available: value.available,
-            major_version: value.major_version,
-            minor_version: value.minor_version,
-            patch_version: value.patch_version
+            version: value.version
         })
     }
 }

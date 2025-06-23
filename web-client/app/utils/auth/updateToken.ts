@@ -1,6 +1,8 @@
 import request, { gql } from "graphql-request"
 import { RegistrationState, UserPermissionType } from "./utils"
 import { createServerFn } from "@tanstack/react-start"
+import { config } from "@/utils/env"
+import { API_ENDPOINT } from "../queries/common"
 
 type TokenUpdateResult = {
   userId: string,
@@ -33,7 +35,7 @@ export const updateToken = createServerFn({method: 'POST'})
     .validator((data: TokenUpdateMutationVariables) => data)
     .handler(async({data}) => {
         const result = await request<TokenUpdateMutationResult | null, TokenUpdateMutationVariables>(
-            'https://zanzarah-project-api-lyaq.shuttle.app/',
+            API_ENDPOINT,
             updateTokenMutation,
             {email: data.email, password: data.password}
         );

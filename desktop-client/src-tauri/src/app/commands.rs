@@ -6,7 +6,7 @@ use serde::de;
 use tauri::State;
 use uuid::Uuid;
 
-use crate::{error::ZZParserError, services::prelude::{BookFullModel, ConfirmEmailPayload, ElementModel, ElementsPayload, FilterWizformsPayload, ParseProcessor, RegisterUserPayload, UpdateWizformPayload, WizformEditableModel, WizformElementType, WizformSimpleModel, ZanzarahApiService}};
+use crate::{error::ZZParserError, services::prelude::{BookFullModel, CreateBookPayload, ElementModel, ElementsPayload, FilterWizformsPayload, ParseProcessor, RegisterUserPayload, UpdateWizformPayload, WizformEditableModel, WizformElementType, WizformSimpleModel, ZanzarahApiService}};
 
 use super::{config::{AppConfig, BookConfigSchema}, types::BookFrontendModel, utils::check_local_book};
 
@@ -53,6 +53,20 @@ pub async fn load_current_book(
 }
 
 #[tauri::command]
+pub async fn create_book(
+    zanzarah_service: State<'_, ZanzarahApiService>,
+    name: String,
+    directory: String,
+    version: String
+) -> Result<Option<BookFrontendModel>, ZZParserError> {
+    if let Some(book) = zanzarah_service.create_book(CreateBookPayload { name, directory, version }).await? {
+        Ok(Some(BookFrontendModel::try_from(book)?))
+    } else {
+        Ok(None)
+    }
+}
+
+#[tauri::command]
 pub async fn test(
     zanzarah_service: State<'_, ZanzarahApiService>
 ) -> Result<(), ()> {
@@ -70,45 +84,45 @@ pub async fn test(
     Ok(())
 }
 
-#[tauri::command]
-pub async fn try_register_user(
-    zanzarah_service: State<'_, ZanzarahApiService>,
-    email: String,
-    password: String
-) -> Result<String, ZZParserError> {
-    let hash_generator = Argon2::default();
-    let salt = SaltString::generate(&mut OsRng);
-    let hash = hash_generator.hash_password(password.as_bytes(), &salt).unwrap().to_string();
-    let payload = RegisterUserPayload {email, password: hash};
-    match zanzarah_service.register_user(payload).await {
-        Ok(response) => {
-            Ok(response.message)
-        },
-        Err(error) => {
-            log::error!("Failed to register user: {:#?}", &error);
-            Err(error)
-        }
-    }
-}
+// #[tauri::command]
+// pub async fn try_register_user(
+//     zanzarah_service: State<'_, ZanzarahApiService>,
+//     email: String,
+//     password: String
+// ) -> Result<String, ZZParserError> {
+//     let hash_generator = Argon2::default();
+//     let salt = SaltString::generate(&mut OsRng);
+//     let hash = hash_generator.hash_password(password.as_bytes(), &salt).unwrap().to_string();
+//     let payload = RegisterUserPayload {email, password: hash};
+//     match zanzarah_service.register_user(payload).await {
+//         Ok(response) => {
+//             Ok(response.message)
+//         },
+//         Err(error) => {
+//             log::error!("Failed to register user: {:#?}", &error);
+//             Err(error)
+//         }
+//     }
+// }
 
-#[tauri::command]
-pub async fn try_confirm_email(
-    zanzarah_service: State<'_, ZanzarahApiService>,
-    email: String,
-    code: String
-) -> Result<String, ZZParserError> {
-    println!("Email: {}, code: {}", &email, &code);
-    let payload = ConfirmEmailPayload { email, code };
-    match zanzarah_service.confirm_email(payload).await {
-        Ok(response) => {
-            Ok(response.message)
-        },
-        Err(error) => {
-            log::error!("Failed to confirm email: {:#?}", &error);
-            Err(error)
-        }
-    }
-}
+// #[tauri::command]
+// pub async fn try_confirm_email(
+//     zanzarah_service: State<'_, ZanzarahApiService>,
+//     email: String,
+//     code: String
+// ) -> Result<String, ZZParserError> {
+//     println!("Email: {}, code: {}", &email, &code);
+//     let payload = ConfirmEmailPayload { email, code };
+//     match zanzarah_service.confirm_email(payload).await {
+//         Ok(response) => {
+//             Ok(response.message)
+//         },
+//         Err(error) => {
+//             log::error!("Failed to confirm email: {:#?}", &error);
+//             Err(error)
+//         }
+//     }
+// }
 
 #[tauri::command]
 pub async fn start_parsing(
@@ -120,7 +134,7 @@ pub async fn start_parsing(
     parser
         .parse_texts(PathBuf::from(current_book_config.directory.clone()))
         .inspect_err(|error| {
-            log::error!("Failed to parse texts: {:#?}", error);
+            log::error!("Failed to parse texts: {error:#?}");
         })?;
     let wizforms = parser
         .parse_wizforms(PathBuf::from(current_book_config.directory.clone()), app_config.current_book)

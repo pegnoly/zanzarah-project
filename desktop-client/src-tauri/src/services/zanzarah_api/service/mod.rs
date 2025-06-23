@@ -3,16 +3,17 @@ pub mod prelude;
 
 use cynic::{http::ReqwestExt, MutationBuilder, QueryBuilder};
 use payloads::RegisterUserPayload;
-use prelude::{ConfirmEmailPayload, ElementsPayload, FilterWizformsPayload, UpdateWizformPayload};
+use prelude::{ElementsPayload, FilterWizformsPayload, UpdateWizformPayload};
 use reqwest::Client;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::error::ZZParserError;
+use crate::{error::ZZParserError, services::prelude::{CreateBookMutation, CreateBookMutationArguments, CreateBookPayload}};
 
-use super::prelude::{BookFullModel, BooksQuery, BooksQueryArguments, ConfirmEmailMutation, ConfirmEmailMutationVariables, ElementModel, ElementsQuery, ElementsQueryVariables, EmailConfirmationResponse, InsertWizformsResponse, RegisterUserMutation, RegisterUserMutationVariables, RegisterUserResponse, UpdateWizformResponse, WizformEditableModel, WizformInputModel, WizformQuery, WizformQueryVariables, WizformSimpleModel, WizformUpdateMutation, WizformUpdateMutationArguments, WizformsBulkInsertMutation, WizformsBulkInsertMutationArguments, WizformsQuery, WizformsQueryVariables};
+use super::prelude::{BookFullModel, BooksQuery, BooksQueryArguments, ElementModel, ElementsQuery, ElementsQueryVariables, InsertWizformsResponse, UpdateWizformResponse, WizformEditableModel, WizformInputModel, WizformQuery, WizformQueryVariables, WizformSimpleModel, WizformUpdateMutation, WizformUpdateMutationArguments, WizformsBulkInsertMutation, WizformsBulkInsertMutationArguments, WizformsQuery, WizformsQueryVariables};
 
-const ZANZARAH_API_URL: &str = "https://zanzarah-project-api-lyaq.shuttle.app/";
+// const ZANZARAH_API_URL: &str = "https://zanzarah-project-api-lyaq.shuttle.app/";
+const ZANZARAH_API_URL: &str = "http://127.0.0.1:8000/";
 
 pub struct ZanzarahApiService {
     client: RwLock<Client>
@@ -23,35 +24,35 @@ impl ZanzarahApiService {
         ZanzarahApiService { client: RwLock::new(client) }
     }
 
-    pub async fn register_user(&self, payload: RegisterUserPayload) -> Result<RegisterUserResponse, ZZParserError> {
-        let client = self.client.read().await;
-        let mutation = RegisterUserMutation::build(RegisterUserMutationVariables::from(payload));
-        let response = client.post(ZANZARAH_API_URL)
-            .run_graphql(mutation)
-            .await?;
-        if let Some(data) = response.data {
-            Ok(data.try_register_user)
-        } else if let Some(errors) = response.errors {
-            Err(ZZParserError::GraphQLErrorsArray { route: "Register user".to_string(), errors })
-        } else {
-            Err(ZZParserError::UnknownGraphQLError)
-        }
-    }
+    // pub async fn register_user(&self, payload: RegisterUserPayload) -> Result<RegisterUserResponse, ZZParserError> {
+    //     let client = self.client.read().await;
+    //     let mutation = RegisterUserMutation::build(RegisterUserMutationVariables::from(payload));
+    //     let response = client.post(ZANZARAH_API_URL)
+    //         .run_graphql(mutation)
+    //         .await?;
+    //     if let Some(data) = response.data {
+    //         Ok(data.try_register_user)
+    //     } else if let Some(errors) = response.errors {
+    //         Err(ZZParserError::GraphQLErrorsArray { route: "Register user".to_string(), errors })
+    //     } else {
+    //         Err(ZZParserError::UnknownGraphQLError)
+    //     }
+    // }
 
-    pub async fn confirm_email(&self, payload: ConfirmEmailPayload) -> Result<EmailConfirmationResponse, ZZParserError> {
-        let client = self.client.read().await;
-        let mutation = ConfirmEmailMutation::build(ConfirmEmailMutationVariables::from(payload));
-        let response = client.post(ZANZARAH_API_URL)
-            .run_graphql(mutation)
-            .await?;
-        if let Some(data) = response.data {
-            Ok(data.confirm_email)
-        } else if let Some(errors) = response.errors {
-            Err(ZZParserError::GraphQLErrorsArray { route: "Confirm email".to_string(), errors })
-        } else {
-            Err(ZZParserError::UnknownGraphQLError)
-        }
-    }
+    // pub async fn confirm_email(&self, payload: ConfirmEmailPayload) -> Result<EmailConfirmationResponse, ZZParserError> {
+    //     let client = self.client.read().await;
+    //     let mutation = ConfirmEmailMutation::build(ConfirmEmailMutationVariables::from(payload));
+    //     let response = client.post(ZANZARAH_API_URL)
+    //         .run_graphql(mutation)
+    //         .await?;
+    //     if let Some(data) = response.data {
+    //         Ok(data.confirm_email)
+    //     } else if let Some(errors) = response.errors {
+    //         Err(ZZParserError::GraphQLErrorsArray { route: "Confirm email".to_string(), errors })
+    //     } else {
+    //         Err(ZZParserError::UnknownGraphQLError)
+    //     }
+    // }
 
     pub async fn get_books(&self) -> Result<Option<Vec<BookFullModel>>, ZZParserError> {
         let client = self.client.read().await;
@@ -66,6 +67,21 @@ impl ZanzarahApiService {
         } else {
             Err(ZZParserError::UnknownGraphQLError)
         }
+    }
+
+    pub async fn create_book(&self, payload: CreateBookPayload) -> Result<Option<BookFullModel>, ZZParserError> {
+        let client = self.client.read().await;
+        let query = CreateBookMutation::build(CreateBookMutationArguments::from(payload));
+        let response = client.post(ZANZARAH_API_URL)
+            .run_graphql(query)
+            .await?;
+        if let Some(data) = response.data {
+            Ok(data.create_book)
+        } else if let Some(errors) = response.errors {
+            Err(ZZParserError::GraphQLErrorsArray { route: "Create book".to_string(), errors })
+        } else {
+            Err(ZZParserError::UnknownGraphQLError)
+        }  
     }
 
     pub async fn upload_wizforms(&self, wizforms: Vec<WizformInputModel>) -> Result<InsertWizformsResponse, ZZParserError> {

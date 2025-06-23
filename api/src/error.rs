@@ -35,7 +35,7 @@ pub enum ZZApiError {
     #[error("CodeAlreadyUsed")]
     CodeAlreadyUsed,
     #[error("UserAlreadyConfirmed")]
-    UserAlreadyConfirmed
+    UserAlreadyConfirmed,
 }
 
 impl From<argon2::password_hash::Error> for ZZApiError {

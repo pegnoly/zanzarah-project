@@ -1,4 +1,4 @@
-import { Location, LocationWizformEntry, SelectableWizform } from "@/utils/queries/map"
+import { Location, LocationWizformEntry, SelectableWizform } from "@/utils/queries/map/types"
 import { create } from "zustand"
 
 type Data = {

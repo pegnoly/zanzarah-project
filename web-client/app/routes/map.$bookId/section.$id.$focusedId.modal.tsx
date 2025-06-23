@@ -3,7 +3,9 @@ import { useCommonStore } from '@/stores/common'
 import useMapStore from '@/stores/map'
 import { AuthProps, processAuth, RegistrationState, UserPermissionType } from '@/utils/auth/utils'
 import { fetchElementsOptions, WizformElement } from '@/utils/queries/elements'
-import { fetchLocationEntriesOptions, fetchSelectableWizformsOptions, LocationWizformEntry, SelectableWizform } from '@/utils/queries/map'
+import { fetchLocationEntriesOptions } from '@/utils/queries/map/locationEntriesQuery'
+import { fetchSelectableWizformsOptions } from '@/utils/queries/map/selectableWizformsQuery'
+import { LocationWizformEntry, SelectableWizform } from '@/utils/queries/map/types'
 import { createFileRoute } from '@tanstack/react-router'
 import { useShallow } from 'zustand/shallow'
 
@@ -28,7 +30,7 @@ export const Route = createFileRoute(
     const elements = await context.queryClient.ensureQueryData(fetchElementsOptions({bookId: params.bookId}));
     const auth = await processAuth();
     const entriesData = await context.queryClient.ensureQueryData(fetchLocationEntriesOptions({locationId: params.focusedId}));
-    loaderData = {...loaderData, auth: auth, elements: elements?.elements, entries: entriesData};
+    loaderData = {...loaderData, auth: auth, elements: elements, entries: entriesData};
     if (auth.userState == RegistrationState.Confirmed && (auth.userPermission == UserPermissionType.Editor || auth.userPermission == UserPermissionType.Admin)) {
       const selectableWizforms = await context.queryClient.ensureQueryData(fetchSelectableWizformsOptions({bookId: params.bookId, locationId: params.focusedId}));
       loaderData = {...loaderData, selectables: selectableWizforms};

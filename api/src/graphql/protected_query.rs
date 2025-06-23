@@ -4,7 +4,13 @@ use async_graphql::Context;
 use sea_orm::DatabaseConnection;
 use uuid::Uuid;
 
-use crate::{error::ZZApiError, services::book::{models::collection::{CollectionFullModel, CollectionModel}, repo::BookRepository}};
+use crate::{
+    error::ZZApiError,
+    services::book::{
+        models::collection::CollectionFullModel,
+        repo::BookRepository,
+    },
+};
 
 #[derive(Default)]
 pub struct ProtectedQuery;
@@ -31,14 +37,12 @@ impl ProtectedQuery {
             );
             ZZApiError::Empty
         })?;
-        let collections = service.get_collections_for_user(db, Uuid::from_str(&user_id.0)?, Uuid::from_str(&book_id)?).await;
+        let collections = service
+            .get_collections_for_user(db, Uuid::from_str(&user_id.0)?, Uuid::from_str(&book_id)?)
+            .await;
         match collections {
-            Ok(collections) => {
-                Ok(collections)
-            },
-            Err(error) => {
-                Err(error)
-            }
+            Ok(collections) => Ok(collections),
+            Err(error) => Err(error),
         }
     }
 
@@ -46,7 +50,7 @@ impl ProtectedQuery {
         &self,
         context: &Context<'_>,
         book_id: async_graphql::ID,
-        user_id: async_graphql::ID
+        user_id: async_graphql::ID,
     ) -> Result<Option<async_graphql::ID>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -62,7 +66,14 @@ impl ProtectedQuery {
             );
             ZZApiError::Empty
         })?;
-        if let Some(collection_id) = service.get_active_collection_for_user(db, Uuid::from_str(&user_id.0)?, Uuid::from_str(&book_id.0)?).await? {
+        if let Some(collection_id) = service
+            .get_active_collection_for_user(
+                db,
+                Uuid::from_str(&user_id.0)?,
+                Uuid::from_str(&book_id.0)?,
+            )
+            .await?
+        {
             Ok(Some(collection_id.into()))
         } else {
             Ok(None)
@@ -72,7 +83,7 @@ impl ProtectedQuery {
     async fn entries_count(
         &self,
         context: &Context<'_>,
-        collection_id: async_graphql::ID
+        collection_id: async_graphql::ID,
     ) -> Result<i64, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
@@ -89,7 +100,9 @@ impl ProtectedQuery {
             ZZApiError::Empty
         })?;
 
-        let count = service.get_entries_count(db, Uuid::from_str(&collection_id.0)?).await?;
+        let count = service
+            .get_entries_count(db, Uuid::from_str(&collection_id.0)?)
+            .await?;
         Ok(count)
     }
 }

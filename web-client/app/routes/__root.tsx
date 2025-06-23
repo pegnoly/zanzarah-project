@@ -14,10 +14,12 @@ import '@mantine/carousel/styles.css';
 import { QueryClient } from '@tanstack/react-query'
 import { MantineProvider } from "@mantine/core"
 import mantineCssUrl from '@mantine/core/styles.css?url'
+import mantineNotificationsUrl from '@mantine/notifications/styles.css?url'
 import { Notifications } from '@mantine/notifications';
 import appCss from "@/styles/app.css?url"
+import { AuthProps } from '@/utils/auth/utils';
 
-export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
+export const Route = createRootRouteWithContext<{queryClient: QueryClient, auth: AuthProps | undefined, currentCollection: string | null }>()({
   head: () => ({
     meta: [
       {
@@ -32,6 +34,7 @@ export const Route = createRootRouteWithContext<{queryClient: QueryClient}>()({
       },
     ],
     links: [
+      { rel: 'stylesheet', href: mantineNotificationsUrl},
       { rel: 'stylesheet', href: mantineCssUrl },
       { rel: 'stylesheet', href: appCss },
       { rel: 'preconnect', href: "https://fonts.googleapis.com"},
@@ -47,8 +50,8 @@ function RootComponent() {
     <RootDocument>
       <MantineProvider>
         <Notifications/>
-        <Outlet />
         <TanStackRouterDevtools/>
+        <Outlet />
       </MantineProvider>
     </RootDocument>
   )
