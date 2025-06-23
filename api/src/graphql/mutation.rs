@@ -11,7 +11,7 @@ use crate::{
             },
         },
         book::{
-            models::wizform::{WizformInputModel, WizformModel, WizformUpdateModel},
+            models::{book::BookModel, wizform::{WizformInputModel, WizformModel, WizformUpdateModel}},
             repo::BookRepository,
         },
     },
@@ -47,6 +47,31 @@ pub struct AddCollectionItemResponse {
 
 #[async_graphql::Object]
 impl Mutation {
+    async fn create_book(
+        &self,
+        context: &Context<'_>,
+        name: String,
+        directory: String,
+        version: String
+    ) -> Result<BookModel, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        service.create_book(db, name, directory, version).await
+    }
+
     async fn insert_wizforms_bulk(
         &self,
         context: &Context<'_>,

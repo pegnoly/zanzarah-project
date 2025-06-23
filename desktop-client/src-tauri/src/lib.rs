@@ -1,7 +1,9 @@
-use app::prelude::{load_books, load_current_book, load_elements, load_wizform_for_edit, load_wizforms, start_parsing, test, try_confirm_email, try_register_user, update_wizform_display_status, update_wizform_element, AppConfig};
+use app::prelude::{load_books, load_current_book, load_elements, load_wizform_for_edit, load_wizforms, start_parsing, test, update_wizform_display_status, update_wizform_element, AppConfig};
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use reqwest::Client;
 use services::prelude::ZanzarahApiService;
+
+use crate::app::prelude::create_book;
 
 mod app;
 mod services;
@@ -22,9 +24,10 @@ pub async fn run() {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             test,
-            try_register_user,
-            try_confirm_email,
+            // try_register_user,
+            // try_confirm_email,
             load_books,
+            create_book,
             load_current_book,
             start_parsing,
             load_wizforms,

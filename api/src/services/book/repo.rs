@@ -8,7 +8,7 @@ use super::models::{
     location_wizform_entry::{self, LocationWizformFullEntry},
     wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel},
 };
-use crate::{error::ZZApiError, services::book::models::wizform::CollectionWizform};
+use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, wizform::CollectionWizform}};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::Set,
@@ -150,6 +150,25 @@ impl BookRepository {
         } else {
             Ok(None)
         }
+    }
+
+    pub async fn create_book(
+        &self,
+        db: &DatabaseConnection,
+        name: String,
+        directory: String,
+        version: String
+    ) -> Result<BookModel, ZZApiError> {
+        let model_to_insert = book::ActiveModel {
+            id: Set(Uuid::new_v4()),
+            name: Set(name),
+            directory: Set(directory),
+            version: Set(version.clone()),
+            initialized: Set(false),
+            available: Set(false),
+            compatible_with: Set(CompatibleVersions { versions: vec![version] })
+        };
+        Ok(model_to_insert.insert(db).await?)
     }
 
     pub async fn insert_wizforms_bulk(

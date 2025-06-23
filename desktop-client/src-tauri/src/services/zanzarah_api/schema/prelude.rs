@@ -21,5 +21,11 @@ pub use super::element:: {
     ElementsQueryVariables,
     ElementsQuery
 };
-pub use super::book::{BookFullModel, BooksQuery, BooksQueryArguments};
-pub use super::user::{RegisterUserMutation, RegisterUserMutationVariables, RegisterUserResponse, ConfirmEmailMutation, ConfirmEmailMutationVariables, EmailConfirmationResponse};
+pub use super::book::{
+    BookFullModel, 
+    BooksQuery, 
+    BooksQueryArguments,
+    CreateBookMutationArguments,
+    CreateBookMutation
+};
+// pub use super::user::{RegisterUserMutation, RegisterUserMutationVariables, RegisterUserResponse, ConfirmEmailMutation, ConfirmEmailMutationVariables, EmailConfirmationResponse};
