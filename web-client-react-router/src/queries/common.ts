@@ -1,0 +1,1 @@
+export const API_ENDPOINT = "https://zanzarah-project-api-lyaq.shuttle.app/"
