@@ -3,17 +3,17 @@ import { Link, Route, Routes, useNavigate, useParams } from 'react-router'
 import { useWizform, type WizformCompleteQueryResult } from './queries/wizforms/wizformCompleteQuery';
 import { useEffect, useState } from 'react';
 import { type WizformHabitatModel, type WizformFull } from './queries/wizforms/types';
+import WizformsMain from './components/wizforms';
 
 function App() {
   return (
     <>
       <div>Home page</div>
-      <Link to="/focused/1cab78e7-3344-49fb-b7e5-3c642169d621">
-        Test link
-      </Link>
       <Routes>
-        <Route path='/'/>
-        <Route path='/focused/:id' element={<Test/>}/>
+        <Route path="/">
+          <Route path='/wizforms' element={<WizformsMain/>}/>
+          <Route path='/focused/:id' element={<Test/>}/>
+        </Route>
       </Routes>
     </>
   )

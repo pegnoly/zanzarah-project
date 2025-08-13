@@ -1,10 +1,8 @@
 import request, { gql } from "graphql-request";
-import { WizformSimpleModel } from "./types";
-import { WizformElementType } from "@/graphql/graphql";
-import { createServerFn } from "@tanstack/react-start";
-import { queryOptions } from "@tanstack/react-query";
-import { config } from "@/utils/env"
+import { useQuery } from "@tanstack/react-query";
 import { API_ENDPOINT } from "../common";
+import type { WizformSimpleModel } from "./types";
+import type { WizformElementType } from "../../graphql/graphql";
 
 type WizformsQueryResult = {
     wizforms: WizformSimpleModel[]
@@ -18,7 +16,7 @@ type WizformsQueryVariables = {
     collection: string | null
 }
 
-const wizformsQuery = gql`
+const document = gql`
     query wizformsQuery($bookId: ID!, $enabled: Boolean, $elementFilter: WizformElementType, $nameFilter: String, $collection: String) {
         wizforms(bookId: $bookId, enabled: $enabled, elementFilter: $elementFilter, nameFilter: $nameFilter, collection: $collection) {
             name,
@@ -30,28 +28,13 @@ const wizformsQuery = gql`
     }    
 `
 
-const fetchWizforms = createServerFn({method: 'GET'})
-    .validator((d: WizformsQueryVariables) => d)
-    .handler(
-        async ({data}) => {
-            const result = await request<WizformsQueryResult | undefined, WizformsQueryVariables>(
-                API_ENDPOINT, 
-                wizformsQuery,
-                data
-            );
-            return result?.wizforms;
+export function useWizforms(variables: WizformsQueryVariables) {
+    return useQuery({
+        queryKey: ['wizforms', variables.bookId, variables.collection, variables.nameFilter, variables.elementFilter],
+        queryFn: async() => request<WizformsQueryResult | undefined, WizformsQueryVariables>({
+            url: API_ENDPOINT, 
+            document: document,
+            variables: variables
         })
-
-export const fetchWizformsOptions = (variables: WizformsQueryVariables) => queryOptions({
-    queryKey: ['wizforms'],
-    queryFn: () => fetchWizforms({data: variables}),
-});
-
-export const fetchWizformsOptionsClient = (variables: WizformsQueryVariables) => queryOptions({
-    queryKey: ['wizforms_client'],
-    queryFn: async() => request<WizformsQueryResult | undefined, WizformsQueryVariables>({
-        url: API_ENDPOINT, 
-        document: wizformsQuery,
-        variables: variables
     })
-}) 
+}
