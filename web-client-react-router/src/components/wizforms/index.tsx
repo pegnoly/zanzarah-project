@@ -5,9 +5,12 @@ import { useWizforms } from "../../queries/wizforms/wizformsQuery";
 import WizformsList from "./list";
 
 function WizformsMain() {
+    console.log("Route wizforms?")
     const [nameFilter, setNameFilter] = useState<string>("");
-    const [elementFilter, setElementFilter] = useState<WizformElementType>(WizformElementType.None);
+    const [elementFilter, setElementFilter] = useState<WizformElementType>(WizformElementType.Air);
     const [wizforms, setWizforms] = useState<WizformSimpleModel[] | undefined>(undefined);
+
+    console.log(wizforms);
 
     return (
         <>

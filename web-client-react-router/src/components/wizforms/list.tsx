@@ -16,7 +16,7 @@ function WizformsList({models}: {models: WizformSimpleModel[] | undefined}) {
                 cols={{ base: 1, sm: 2, md: 3, lg: 4 }} 
             >{models!.map((w, _i) => (
                 <Link 
-                    to={`/focused/${w.id}`}
+                    to={`focused/${w.id}`}
                     // to="/wizforms/$bookId/$focusedId/modal"
                     // params={{bookId: params.bookId, focusedId: w.id}}
                     key={w.id}

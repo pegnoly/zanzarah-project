@@ -8,11 +8,12 @@ import WizformsMain from './components/wizforms';
 function App() {
   return (
     <>
-      <div>Home page</div>
       <Routes>
         <Route path="/">
-          <Route path='/wizforms' element={<WizformsMain/>}/>
-          <Route path='/focused/:id' element={<Test/>}/>
+          <Route path='/wizforms'>
+            <Route index element={<WizformsMain/>}/>
+            <Route path='focused/:id' element={<Test/>}/>
+          </Route>
         </Route>
       </Routes>
     </>
