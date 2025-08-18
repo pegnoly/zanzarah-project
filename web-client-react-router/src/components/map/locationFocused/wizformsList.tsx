@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { IconQuestionMark, IconTrashFilled, IconWritingSignOff } from "@tabler/icons-react";
 import WizformsListItem from "./wizformListItem";
 import type { LocationWizformEntry } from "@/queries/map/types";
+import { CommonStore } from "@/stores/common";
 
 function WizformsList({entries}: {
     entries: LocationWizformEntry[] | undefined
@@ -12,11 +13,12 @@ function WizformsList({entries}: {
     // commentAddedCallback: (id: string, comment: string) => void,
     // commentDeletedCallback: (id: string) => void
 }) {
+    const elements = CommonStore.useElements();
     // const elements = useCommonStore(useShallow((state) => state.elements));
     // const entries = useMapStore(useShallow((state) => state.entriesData?.get(params.currentLocation)));
     // console.log("Entries: ", entries);
 
-    // const presentedElements = [...new Set(entries?.map(m => m.wizformElement))];
+    const presentedElements = [...new Set(entries?.map(m => m.wizformElement))];
     
     // async function itemDeleted(id: string, selectable: SelectableWizform) {
     //     params.modelRemovedCallback(id, selectable);
@@ -32,28 +34,28 @@ function WizformsList({entries}: {
 
     return <>
     {
-        entries == undefined ? <Loader/> : 
-        <List>{entries!
-            // .filter(m => m.wizformElement == e)
-            .map(m => (
-            <WizformsListItem 
-                key={m.id} 
-                item={m} 
-                // auth={params.auth} 
-                // deletedCallback={itemDeleted} 
-                // commentAddedCallback={commentAdded}
-                // commentDeletedCallback={commentDeleted}
-            />
-        ))}</List> 
-    }
-        {/* <Accordion>{presentedElements.map((e, i) => (
+        entries == undefined || elements == undefined ? <Loader/> : 
+        <Accordion>{presentedElements.map((e, i) => (
             <Accordion.Item key={i} value={e}>
                 <Accordion.Control style={{backgroundColor: 'silver'}}>{elements?.find(el => el.element == e)?.name}</Accordion.Control>
-                <Accordion.Panel> */}
-                {/* </Accordion.Panel>
+                <Accordion.Panel>
+                <List>{entries!
+                    .filter(m => m.wizformElement == e)
+                    .map(m => (
+                    <WizformsListItem 
+                        key={m.id} 
+                        item={m} 
+                        // auth={params.auth} 
+                        // deletedCallback={itemDeleted} 
+                        // commentAddedCallback={commentAdded}
+                        // commentDeletedCallback={commentDeleted}
+                    />
+                ))}</List> 
+                </Accordion.Panel>
             </Accordion.Item>
         ))}
-        </Accordion> */}
+        </Accordion>
+    }
     </>
 }
 

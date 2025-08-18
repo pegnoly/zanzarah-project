@@ -1,6 +1,6 @@
 import type { LocationSection } from "@/queries/map/types";
 import { useEffect, useState } from "react";
-import { Outlet, useParams } from "react-router";
+import { useParams } from "react-router";
 import SectionsGrid from "./sectionsGrid";
 import { useSections } from "@/queries/map/sectionsQuery";
 
