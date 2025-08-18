@@ -1,4 +1,4 @@
-import { WizformFull } from "@/utils/queries/wizforms/types";
+import type { WizformFull } from "@/queries/wizforms/types";
 import { Badge, Group, Text } from "@mantine/core";
 
 type WizformBasePropsSchema = Omit<WizformFull, "magics">;

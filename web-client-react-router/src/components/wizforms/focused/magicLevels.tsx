@@ -1,7 +1,7 @@
 import { ActiveMagicSlot } from "@/components/magic/activeSlot";
 import { PassiveMagicSlot } from "@/components/magic/passiveSlot";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Magics } from "@/utils/queries/wizforms/types";
+import type { Magics } from "@/queries/wizforms/types";
 import { Stack, Text } from "@mantine/core";
 
 function WizformMagics(params: {

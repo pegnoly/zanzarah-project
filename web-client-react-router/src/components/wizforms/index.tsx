@@ -3,6 +3,8 @@ import { WizformElementType } from "../../graphql/graphql";
 import type { WizformSimpleModel } from "../../queries/wizforms/types";
 import { useWizforms } from "../../queries/wizforms/wizformsQuery";
 import WizformsList from "./list";
+import { Box } from "@mantine/core";
+import { Outlet } from "react-router";
 
 function WizformsMain() {
     console.log("Route wizforms?")
@@ -13,13 +15,16 @@ function WizformsMain() {
     console.log(wizforms);
 
     return (
-        <>
+        <Box>
             <WizformsList models={wizforms}/>
             <WizformsLoader 
                 nameFilter={nameFilter} 
                 elementFilter={elementFilter} 
                 onLoad={setWizforms}/>
-        </>
+            <Box mt="xl">
+                <Outlet/>
+            </Box>
+        </Box>
     )
 }
 
