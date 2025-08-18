@@ -3,6 +3,9 @@ import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import WizformsMain from "./components/wizforms";
 import Home from "./home";
 import WizformFocused from "./components/wizforms/focused";
+import WizformsMapMain from "./components/map";
+import MapLocationsMain from "./components/map/locations";
+import LocationFocused from "./components/map/locationFocused";
 
 const router = createBrowserRouter([
   {
@@ -28,11 +31,23 @@ const router = createBrowserRouter([
             element: (
               <WizformFocused />
             ),
-            // This ensures the modal is rendered without unmounting parent
           },
         ],
       },
-      // Optional: Redirect unknown routes
+      {
+        path: 'map/:bookId',
+        element: <WizformsMapMain />
+      },
+      {
+        path: 'map/:bookId/locations/:sectionId',
+        element: <MapLocationsMain/>,
+        children: [
+          {
+            path: 'focused/:locationId',
+            element: <LocationFocused />
+          }
+        ]
+      },
       {
         path: '*',
         element: <Navigate to="/" />,

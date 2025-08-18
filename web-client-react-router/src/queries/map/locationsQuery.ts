@@ -1,9 +1,7 @@
-import { queryOptions } from "@tanstack/react-query"
-import { createServerFn } from "@tanstack/react-start"
+import { useQuery } from "@tanstack/react-query"
 import request, { gql } from "graphql-request"
-import { Location } from "./types"
-import { config } from "@/utils/env"
 import { API_ENDPOINT } from "../common"
+import type { Location } from "./types"
 
 type LocationsQueryVariables = {
     sectionId: string
@@ -13,7 +11,7 @@ type LocationsQueryResult = {
     locations: Location []
 }
 
-const locationsQuery = gql`
+const document = gql`
     query locationsQuery($sectionId: ID!) {
         locations(sectionId: $sectionId) {
             id, 
@@ -23,18 +21,15 @@ const locationsQuery = gql`
     }
 `
 
-const getLocations = createServerFn({method: 'GET'})
-    .validator((data: LocationsQueryVariables) => data)
-    .handler(async({data}) => {
-        const result = await request<LocationsQueryResult | undefined, LocationsQueryVariables>(
-            API_ENDPOINT, 
-            locationsQuery,
-            {sectionId: data.sectionId}
-        );
-        return result?.locations;
-    });
-
-export const fetchLocationsOptions = (data: LocationsQueryVariables) => queryOptions({
-    queryKey: ['locations', data.sectionId],
-    queryFn: () => getLocations({data})
-})
+export function useLocations(sectionId: string) {
+    return useQuery({
+        queryKey: ['locations', sectionId],
+        queryFn: async() => {
+            return request<LocationsQueryResult | undefined, LocationsQueryVariables>(
+                API_ENDPOINT, 
+                document,
+                {sectionId: sectionId}
+            )
+        }
+    })
+}

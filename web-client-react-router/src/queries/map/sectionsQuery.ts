@@ -1,9 +1,7 @@
 import request, { gql } from "graphql-request"
-import { LocationSection } from "./types"
-import { createServerFn } from "@tanstack/react-start"
-import { queryOptions } from "@tanstack/react-query"
-import { config } from "@/utils/env"
+import { useQuery } from "@tanstack/react-query"
 import { API_ENDPOINT } from "../common"
+import type { LocationSection } from "./types"
 
 type LocationSectionsQueryVariables = {
     bookId: string
@@ -13,7 +11,7 @@ type LocationSectionsQueryResult = {
     sections: LocationSection []
 }
 
-const locationSectionsQuery = gql`
+const document = gql`
     query locationSectionQuery($bookId: ID!) {
         sections(bookId: $bookId) {
             id, 
@@ -22,19 +20,15 @@ const locationSectionsQuery = gql`
         }
     }
 `
-
-const getLocationSections = createServerFn({method: 'GET'})
-    .validator((data: LocationSectionsQueryVariables) => data)
-    .handler(async({data}) => {
-        const result = await request<LocationSectionsQueryResult | undefined, LocationSectionsQueryVariables>(
-            API_ENDPOINT, 
-            locationSectionsQuery,
-            {bookId: data.bookId}
-        );
-        return result?.sections;
-    });
-
-export const fetchSectionsOptions = (data: LocationSectionsQueryVariables) => queryOptions({
-    queryKey: ['sections', data.bookId],
-    queryFn: () => getLocationSections({data})
-})
+export function useSections(bookId: string) {
+    return useQuery({
+        queryKey: ['sections', bookId],
+        queryFn: async() => {
+            return request<LocationSectionsQueryResult | undefined, LocationSectionsQueryVariables>(
+                API_ENDPOINT, 
+                document,
+                {bookId: bookId}
+            );
+        },
+    })
+}

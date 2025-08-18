@@ -1,9 +1,7 @@
 import request, { gql } from "graphql-request"
-import { LocationWizformEntry } from "./types"
-import { createServerFn } from "@tanstack/react-start"
-import { queryOptions } from "@tanstack/react-query"
-import { config } from "@/utils/env"
+import { useQuery } from "@tanstack/react-query"
 import { API_ENDPOINT } from "../common"
+import type { LocationWizformEntry } from "./types"
 
 type LocationEntriesQueryVariables = {
     locationId: string
@@ -13,7 +11,7 @@ type LocationEntriesQueryResult = {
     locationEntries: LocationWizformEntry []
 }
 
-const locationEntriesQuery = gql`
+const document = gql`
     query locationEntriesQuery($locationId: ID!) {
         locationEntries(locationId: $locationId) {
             id,
@@ -26,18 +24,15 @@ const locationEntriesQuery = gql`
     }
 `
 
-const fetchLocationEntries = createServerFn({method: 'GET'})
-    .validator((data: LocationEntriesQueryVariables) => data)
-    .handler(async({data}) => {
-        const result = await request<LocationEntriesQueryResult | undefined, LocationEntriesQueryVariables>(
-            API_ENDPOINT, 
-            locationEntriesQuery,
-            {locationId: data.locationId}
-        );
-        return result?.locationEntries;
-    });
-
-export const fetchLocationEntriesOptions = (data: LocationEntriesQueryVariables) => queryOptions({
-    queryKey: ['location_entries', data.locationId],
-    queryFn: () => fetchLocationEntries({data})
-});
+export function useLocationEntries(locationId: string) {
+    return useQuery({
+        queryKey: ['location_entries', locationId],
+        queryFn: async() => {
+            return request<LocationEntriesQueryResult | undefined, LocationEntriesQueryVariables>(
+                API_ENDPOINT, 
+                document,
+                {locationId: locationId}
+            )
+        }
+    })
+}
