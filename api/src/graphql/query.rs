@@ -18,7 +18,7 @@ use crate::{
                 location::{LocationNameModel, LocationWithEntriesCountModel},
                 location_section::LocationSectionWithCount,
                 location_wizform_entry::LocationWizformFullEntry,
-                wizform::{CollectionWizform, WizformElementType, WizformSelectionModel},
+                wizform::{CollectionWizform, WizformElementType, WizformListModel, WizformSelectionModel},
             },
             repo::BookRepository,
         },
@@ -74,7 +74,7 @@ impl Query {
         #[graphql(desc = "Optional element of wizform")] element_filter: Option<WizformElementType>,
         #[graphql(desc = "Optional name filter")] name_filter: Option<String>,
         #[graphql(desc = "Optional active collection")] collection: Option<Uuid>,
-    ) -> Result<Vec<CollectionWizform>, ZZApiError> {
+    ) -> Result<Vec<WizformListModel>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {
             tracing::error!(
                 "Failed to get wizform service from context. {}",

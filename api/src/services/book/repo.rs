@@ -8,7 +8,7 @@ use super::models::{
     location_wizform_entry::{self, LocationWizformFullEntry},
     wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel},
 };
-use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, wizform::CollectionWizform}};
+use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, wizform::{CollectionWizform, WizformListModel}}};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::Set,
@@ -31,29 +31,26 @@ impl BookRepository {
         name: Option<String>,
         collection: Option<Uuid>,
         db: &DatabaseConnection,
-    ) -> Result<Vec<CollectionWizform>, ZZApiError> {
-        let query = CollectionWizform::find_by_statement(Statement::from_sql_and_values(
+    ) -> Result<Vec<WizformListModel>, ZZApiError> {
+        let query = WizformListModel::find_by_statement(Statement::from_sql_and_values(
             sea_orm::DatabaseBackend::Postgres,
             r#"
-                SELECT "w".*,
-                    CASE 
-                        WHEN "ce"."collection_id" = $1 THEN "ce"."id"
-                        ELSE NULL
-                    END AS "in_collection_id"
+                SELECT 
+                    w.id, w.name, w.icon64, w.number, ce.id AS in_collection_id
                 FROM 
-                    "wizforms" "w"
+                    wizforms w
                 LEFT JOIN 
-                    "collection_entries" "ce" ON "w"."id" = "ce"."wizform_id" AND "ce"."collection_id" = $2
-                WHERE
-                    "book_id" = $3 and
-                    "name" LIKE $4 and
-                    "element" = $5 and
-                    "enabled" = true
+                    collection_entries ce ON w.id = ce.wizform_id AND ce.collection_id = $1
+                WHERE 
+                    w.book_id = $2
+                    AND w.name LIKE $3
+                    AND w.element = $4
+                    AND w.enabled
                 ORDER BY 
-                    "number"
+                    w.number;
             "#,
             [
-                collection.into(),
+                // collection.into(),
                 collection.into(),
                 book_id.into(),
                 if name.is_some() {
@@ -79,18 +76,19 @@ impl BookRepository {
         let wizform = CollectionWizform::find_by_statement(Statement::from_sql_and_values(
             sea_orm::DatabaseBackend::Postgres,
             r#"
-            SELECT "w".*,
-                CASE 
-                    WHEN "ce"."collection_id" = $1 THEN "ce"."id"
-                    ELSE NULL
-                END AS "in_collection_id"
-            FROM 
-                "wizforms" "w"
-            LEFT JOIN 
-                "collection_entries" "ce" ON "w"."id" = "ce"."wizform_id" AND "ce"."collection_id" = $2
-            WHERE
-	            "w"."id" = $3"#, 
-                [collection_id.into(), collection_id.into(), id.into()]))
+                SELECT 
+                    w.*,
+                    ce.id AS in_collection_id
+                FROM 
+                    wizforms w
+                LEFT JOIN 
+                    collection_entries ce 
+                    ON ce.wizform_id = w.id 
+                    AND ce.collection_id = $1
+                WHERE 
+                    w.id = $2
+                "#,
+                [collection_id.into(), id.into()]))
             .one(db)
             .await?;
         Ok(wizform)

@@ -388,3 +388,35 @@ impl WizformSelectionModel {
         self.number
     }
 }
+
+#[derive(Debug, FromQueryResult, Serialize, Deserialize)]
+pub struct WizformListModel {
+    pub id: Uuid,
+    pub name: String,
+    pub icon64: String,
+    pub number: i16,
+    pub in_collection_id: Option<Uuid>
+}
+
+#[async_graphql::Object]
+impl WizformListModel {
+    async fn id(&self) -> async_graphql::ID {
+        self.id.into()
+    }
+
+    async fn name(&self) -> &String {
+        &self.name
+    }
+
+    async fn icon64(&self) -> &String {
+        &self.icon64
+    }
+
+    async fn number(&self) -> i16 {
+        self.number
+    }
+
+    async fn in_collection_id(&self) -> Option<Uuid> {
+        self.in_collection_id
+    }
+}
