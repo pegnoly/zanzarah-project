@@ -1,16 +1,32 @@
-import { Button, Title, Container } from '@mantine/core';
-import { Link } from 'react-router';
+import { Container, SimpleGrid, Box, Card } from '@mantine/core';
+import BooksPreview from './components/home/booksPreview';
+import WizformsPreview from './components/home/wizformsPreview';
+import MapPreview from './components/home/mapPreview';
+import CollectionsPreview from './components/home/collectionsPreview';
 
 const Home = () => {
   return (
     <Container>
-      <Title order={1} mb="xl">Welcome to WizForms</Title>
-      <Button component={Link} to="/wizforms/123" variant="outline">
-        Go to Wizform ID: 123
-      </Button>
-      <Button component={Link} to="/map/5a5247c2-273b-41e9-8224-491e02f77d8d" variant="outline">
-        Go to Wizforms map: 123
-      </Button>
+       <SimpleGrid 
+        cols={{ base: 1, sm: 2}} 
+        spacing="xl" 
+        verticalSpacing="xl"
+      >
+          <Box>
+              <Card w="100%" h="100%" withBorder radius={0}>
+                <BooksPreview/>
+              </Card>
+          </Box>
+          <Box>
+            <WizformsPreview/>
+          </Box>        
+          <Box>
+            <CollectionsPreview/>
+          </Box>
+          <Box>
+            <MapPreview/>
+          </Box>
+      </SimpleGrid>
     </Container>
   );
 };

@@ -1,5 +1,5 @@
 import type { WizformHabitatModel } from "@/queries/wizforms/types";
-import { Button, Group, List, Popover, PopoverDropdown, PopoverTarget, Text, UnstyledButton } from "@mantine/core";
+import { Group, List, Popover, PopoverDropdown, PopoverTarget, Text, UnstyledButton } from "@mantine/core";
 import { IconQuestionMark } from "@tabler/icons-react";
 
 function WizformHabitatsList(params: {

@@ -1,7 +1,4 @@
-import { queryOptions } from "@tanstack/react-query"
-import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
-import { config } from "@/utils/env"
 import { API_ENDPOINT } from "./common"
 
 const currentBookQuery = gql`
@@ -24,7 +21,7 @@ export type BookFullModel = {
     activeWizformsCount: number
 }
 
-export type BookQueryVariables = {
+type BookQueryVariables = {
     id: string
 } 
 
@@ -32,21 +29,15 @@ export type BookQueryResult = {
     currentBook: BookFullModel | null
 }
 
-const fetchBook = createServerFn({method: 'GET'})
-    .validator((id: string) => id)
-    .handler(async({data}) => {
-        const book = await request<BookQueryResult | undefined, BookQueryVariables>(
-            API_ENDPOINT,
-            currentBookQuery,
-            {id: data}
-        );
-        return book; 
-    });
+export const fetchBook = async(data: BookQueryVariables) => {
+    const book = await request<BookQueryResult | undefined, BookQueryVariables>(
+        API_ENDPOINT,
+        currentBookQuery,
+        {id: data.id}
+    );
+    return book; 
+};
 
-export const fetchBookOptions = (id: string) => queryOptions({
-    queryKey: ['current_book', id],
-    queryFn: () => fetchBook({data: id})
-});
 
 const booksQuery = gql`
     query booksQuery($available: Boolean!) {
@@ -62,7 +53,7 @@ export type BookSimpleModel = {
     name: string
 }
 
-export type BooksQueryResult = {
+type BooksQueryResult = {
     books: BookSimpleModel []
 }
 
@@ -70,18 +61,11 @@ export type BooksQueryVariables = {
     available: boolean
 }
 
-const fetchBooks = createServerFn({method: 'GET'})
-    .validator((available: boolean) => available)
-    .handler(async({data}) => {
-        const books = await request<BooksQueryResult | undefined, BooksQueryVariables>(
-            API_ENDPOINT,
-            booksQuery,
-            {available: data}
-        );
-        return books; 
-    });
-
-export const fetchBooksOptions = (available: boolean) => queryOptions({
-    queryKey: ['available_books'],
-    queryFn: () => fetchBooks({data: available})
-});
+export const fetchBooks = async(data: BooksQueryVariables) => {
+    const books = await request<BooksQueryResult | undefined, BooksQueryVariables>(
+        API_ENDPOINT,
+        booksQuery,
+        {available: data.available}
+    );
+    return books; 
+};
