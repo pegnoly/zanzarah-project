@@ -1,6 +1,4 @@
-import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
-import { config } from "@/utils/env"
 import { API_ENDPOINT } from "../common"
 
 type SetActiveCollectionMutationVariables = {
@@ -17,13 +15,11 @@ const setActiveCollectionMutation = gql`
     }
 `
 
-export const setActiveCollection = createServerFn({method: 'POST'})
-    .validator((data: SetActiveCollectionMutationVariables) => data)
-    .handler(async({data}) => {
-        const result = await request<SetActiveCollectionMutationResult | null, SetActiveCollectionMutationVariables>(
-            API_ENDPOINT,
-            setActiveCollectionMutation,
-            {collectionId: data.collectionId}
-        );
-        return result;
-    })
+export const setActiveCollection = async(data: SetActiveCollectionMutationVariables) => {
+    const result = await request<SetActiveCollectionMutationResult | null, SetActiveCollectionMutationVariables>(
+        API_ENDPOINT,
+        setActiveCollectionMutation,
+        {collectionId: data.collectionId}
+    );
+    return result;
+};

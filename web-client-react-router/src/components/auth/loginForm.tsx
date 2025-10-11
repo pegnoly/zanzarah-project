@@ -6,6 +6,7 @@ import { zodResolver } from 'mantine-form-zod-resolver';
 import { registrationValidationSchema } from "./registrationForm";
 import { useNavigate } from "react-router";
 import { signIn } from "@/queries/auth/signIn";
+import { useAuth } from "@/contexts/auth";
 
 export enum AuthError {
     IncorrectEmail = "IncorrectEmail",
@@ -21,6 +22,7 @@ type FormValues = z.infer<typeof registrationValidationSchema>;
 function LoginForm() {
     const [opened, {open, close}] = useDisclosure(false);
     const navigate = useNavigate();
+    const auth = useAuth();
 
     const form = useForm<FormValues>({
         mode: 'controlled',
@@ -35,15 +37,9 @@ function LoginForm() {
         await signIn({email: email, password: password})
             .then(async(result) => {
                 if (result) {
-                    // await saveRegisterInfoCookies({data: {
-                    //     emailHash: result.signIn.emailHash,
-                    //     passwordHash: result.signIn.passwordHash,
-                    //     token: result.signIn.newToken,
-                    //     userId: result.signIn.userId
-                    // }});
-                    // setPermission(result.signIn.permission);
-                    // setRegistrationState(result.signIn.registrationState);
-                    // navigate({to: ".", reloadDocument: true});
+                    auth?.signIn(result.signIn);
+                    close();
+                    navigate(0);
                 }
             })
             .catch((error) => {

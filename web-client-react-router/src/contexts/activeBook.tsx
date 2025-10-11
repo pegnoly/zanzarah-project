@@ -42,15 +42,15 @@ function ActiveBookProvider({children}: {children: ReactNode}) {
 
 
 function ElementsLoader({id, onLoad}: {id: string, onLoad: (data: WizformElement[]) => void}) {
-  const { data } = useElements(id);
-  
-  useEffect(() => {
-    if (data != undefined) {
-      onLoad(data.elements);
-    }
-  }, [data])
+    const { data } = useElements(id);
+    
+    useEffect(() => {
+        if (data != undefined) {
+            onLoad(data.elements);
+        }
+    }, [data])
 
-  return null;
+    return null;
 }
 
 export const useActiveBook = (): ActiveBookContextType | undefined => {

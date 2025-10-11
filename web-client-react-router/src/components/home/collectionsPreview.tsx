@@ -1,30 +1,28 @@
 import { Badge, Button, Card, Divider, Group, Loader, Modal, Popover, Select, SimpleGrid, Text, TextInput } from "@mantine/core";
 import { RegistrationState, useAuth } from "@/contexts/auth";
 import AuthForm from "../auth/authForm";
+import { useEffect, useState } from "react";
+import type { CollectionModel } from "@/queries/collections/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchCollections } from "@/queries/collections/collectionsQuery";
+import { useActiveBook } from "@/contexts/activeBook";
+import { setActiveCollection } from "@/queries/collections/setActiveCollectionMutation";
+import { useDisclosure } from "@mantine/hooks";
+import { CurrentBookStore } from "@/stores/currentBook";
+import { createCollection } from "@/queries/collections/createCollectionMutation";
+import { getEntriesCount } from "@/queries/collections/entriesCountQuery";
 
-// function fetchCollectionsOnClient(bookId: string, userId: string) {
-//     return useQuery({
-//         queryKey: ['collections'],
-//         queryFn: async() => {
-//             const data = await fetchCollections({data: {bookId: bookId, userId: userId}});
-//             return data;
-//         },
-//     });
-// }
-
-// function useEntriesCount(collectionId: string) {
-//     return useQuery({
-//         queryKey: ['collection_entries_count'],
-//         queryFn: async() => {
-//             const data = await getEntriesCount({data: {collectionId: collectionId}});
-//             // console.log("Got data: ")
-//             return data;
-//         }
-//     })
-// }
+function useEntriesCount(collectionId: string) {
+    return useQuery({
+        queryKey: ['collection_entries_count', collectionId],
+        queryFn: async() => {
+            const data = await getEntriesCount({collectionId: collectionId});
+            return data;
+        }
+    })
+}
 
 function CollectionsPreview() {
-
     const auth = useAuth();
 
     return <Card w="100%" h="100%" withBorder radius={0}>
@@ -36,12 +34,7 @@ function CollectionsPreview() {
                 {
                     auth?.registrationState != RegistrationState.Confirmed ?
                     <AuthForm/> :
-                    null
-                    // <CollectionsRenderer 
-                    //     currentBook={params.currentBook} 
-                    //     collections={params?.currentCollections} 
-                    //     auth={params.authData} 
-                    // />
+                    <CollectionsRenderer/>
                 }
                 <CollectionsInfo/>
             </SimpleGrid>
@@ -76,150 +69,192 @@ function CollectionsInfo() {
     </div>
 }
 
-// function CollectionsRenderer(params: {
-//     collections: CollectionModel [] | undefined,
-//     currentBook: BookFullModel | null,
-//     auth: AuthProps,
-// }) {
-//     const [collections, setCollections] = useState<CollectionModel []>(params.collections!);
+function CollectionsRenderer() {
+    const activeBook = useActiveBook();
+    const [collections, setCollections] = useState<CollectionModel [] | undefined>(undefined);
 
-//     async function onCollectionCreated(value: CollectionModel) {
-//         setCollections([...collections, value]);
-//     }
+    async function onCollectionCreated(value: CollectionModel) {
+        setCollections([...collections!, value]);
+    }
 
-//     async function onCollectionSelected() {
-//         const { status, data, error, isFetching } = fetchCollectionsOnClient(params.currentBook?.id!, params.auth.userId!);
-//         setCollections(data!);
-//     }
+    async function onCollectionSelected(updated: string) {
+        const updatedCollections = collections?.map(c => {
+            if (c.id == updated) {
+                c.active = true;
+                return c;
+            } else {
+                c.active = false;
+                return c;
+            }
+        });
+        setCollections(updatedCollections);
+    }
 
-//     return <>
-//         {
-//             params.currentBook == null ? 
-//             <>
-//                 Необходимо выбрать книгу, чтобы создать коллекцию
-//             </> :
-//             <div style={{display: 'flex', flexDirection: 'column', justifyItems: 'center', gap: '4%'}}>
-//                 <CollectionSelector models={collections} selectCallback={onCollectionSelected}/>
-//                 <CollectionCreator bookData={params.currentBook} currentUser={params.auth.userId!} collectionCreatedCallback={onCollectionCreated}/>
-//                 <CurrentCollection model={collections.find(c => c.active)}/>
-//             </div>
-//         }
-//     </>
-// }
+    return <>
+        {
+            activeBook?.id == undefined ? 
+            <>
+                Необходимо выбрать книгу, чтобы создать коллекцию
+            </> :
+            <div style={{display: 'flex', flexDirection: 'column', justifyItems: 'center', gap: '4%'}}>
+                {
+                    collections == undefined ? null :
+                    <>
+                        <CollectionSelector models={collections!} selectCallback={onCollectionSelected}/>
+                        <CollectionCreator collectionCreatedCallback={onCollectionCreated}/>
+                        <CurrentCollection model={collections?.find(c => c.active)}/>
+                    </>
+                }
+            </div>
+        }
+        {
+            activeBook?.id == undefined ? null : <CollectionsLoader onLoad={setCollections}/> 
+        }
+    </>
+}
 
-// function CurrentCollection(params: {
-//     model: CollectionModel | undefined
-// }) {
+function useCollections(userId: string, bookId: string) {
+    return useQuery({
+        queryKey: ['collections', userId, bookId],
+        queryFn: async() => {
+            return fetchCollections({userId: userId, bookId: bookId});
+        }
+    })
+}
 
-//     if (params.model == undefined) {
-//         return <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1rem'}}>Нет активной коллекции</Text>
-//     }
+function CollectionsLoader({onLoad}: {onLoad: (data: CollectionModel[]) => void}) {
+    const auth = useAuth();
+    const activeBook = useActiveBook();
 
-//     const { data, status } = useEntriesCount(params.model.id);
+    const { data } = useCollections(auth?.userId!, activeBook?.id!);
+    
+    useEffect(() => {
+        if (data != undefined) {
+            onLoad(data);
+        }
+    }, [data]);
 
-//     return <>
-//         <div style={{display: 'flex', flexDirection: 'row', gap: '3%'}}>
-//             <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem',}}>{`Текущая коллекция: `}</Text>
-//             <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem', color: 'green'}}>{params.model.name}</Text>
-//         </div>
-//         <div style={{display: 'flex', flexDirection: 'row', gap: '3%'}}>
-//             <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem'}}>Фей в коллекции: </Text>
-//             {
-//                 status === 'pending' ?
-//                 <Loader size="xs"/> :
-//                 <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem', color: 'green'}}>{data}</Text>
-//             }
-//         </div>
-//     </>
-// }
+    return null;
+}
 
-// function CollectionSelector(params: {
-//     models: CollectionModel [],
-//     selectCallback: () => void
-// }) { 
-//     const navigate = useNavigate();
-//     const [currentCollection, setCurrentCollection] = useState<string | null>(params.models.find(c => c.active)?.id!)
+function CurrentCollection({model}: {
+    model: CollectionModel | undefined
+}) {
 
-//     const setActiveCollectionMutation = useMutation({
-//         mutationFn: setActiveCollection,
-//         onSuccess: (data) => {
-//             // я ебал мать
-//             navigate({to: ".", reloadDocument: true});
-//         }
-//     })
+    if (model == undefined) {
+        return <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1rem'}}>Нет активной коллекции</Text>
+    }
 
-//     async function updateCurrentCollection(value: string) {
-//         setCurrentCollection(value);
-//         setActiveCollectionMutation.mutate({data: {collectionId: value!}});
-//     }
+    const { data, status } = useEntriesCount(model.id);
 
-//     return (
-//         <Popover>
-//             <Popover.Target>
-//                 <Button>Выбрать коллекцию</Button>
-//             </Popover.Target>
-//             <Popover.Dropdown>
-//                 <Select
-//                     label="Список коллекций текущей книги"
-//                     placeholder="Установите активную коллекцию"
-//                     value={currentCollection}
-//                     onChange={updateCurrentCollection}
-//                     data={params.models.map((c) => ({
-//                         label: c.name, value: c.id
-//                     }))}
-//                 />
-//             </Popover.Dropdown>
-//         </Popover>
-//     )
-// }
+    return <>
+        <div style={{display: 'flex', flexDirection: 'row', gap: '3%'}}>
+            <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem',}}>{`Текущая коллекция: `}</Text>
+            <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem', color: 'green'}}>{model.name}</Text>
+        </div>
+        <div style={{display: 'flex', flexDirection: 'row', gap: '3%'}}>
+            <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem'}}>Фей в коллекции: </Text>
+            {
+                status === 'pending' ?
+                <Loader size="xs"/> :
+                <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.4rem', color: 'green'}}>{data}</Text>
+            }
+        </div>
+    </>
+}
 
-// function CollectionCreator(params: {
-//     bookData: BookFullModel,
-//     currentUser: string,
-//     collectionCreatedCallback: (value: CollectionModel) => void
-// }) {
-//     const [opened, {open, close}] = useDisclosure(false);
-//     const [name, setName] = useState<string>("");
+function CollectionSelector({models, selectCallback}: {
+    models: CollectionModel [],
+    selectCallback: (updated: string) => void
+}) { 
+    const [currentCollection, setCurrentCollection] = useState<string | null>(models.find(c => c.active)?.id!)
 
-//     const createCollectionMutation = useMutation({
-//         mutationFn: createCollection,
-//         onSuccess: (data) => {
-//             if (data != undefined) {
-//                 params.collectionCreatedCallback(data);
-//             }
-//         }
-//     })
+    const setActiveCollectionMutation = useMutation({
+        mutationFn: setActiveCollection,
+        onSuccess(_data, variables, _context) {
+            selectCallback(variables.collectionId)
+        },
+    })
 
-//     return <>
-//         <Button onClick={open}>Создать новую коллекцию</Button>
-//         <Modal.Root opened={opened} onClose={close} centered={true}>
-//             <Modal.Overlay/>
-//             <Modal.Content>
-//                 <Modal.Header>
-//                     <Modal.Title style={{fontSize: 25}}>{`Создание коллекции для книги ${params.bookData.name} версии ${params.bookData.version}`}</Modal.Title>
-//                     <Modal.CloseButton/>
-//                 </Modal.Header>
-//                 <Modal.Body>
-//                     <TextInput 
-//                         value={name} 
-//                         onChange={(e) => setName(e.currentTarget.value)}
-//                         placeholder="Введите имя коллекции"
-//                         label="Имя новой коллекции"
-//                     />
-//                     <Group justify="flex-end" mt="md">
-//                         <Button 
-//                             onClick={
-//                                 () => {
-//                                     createCollectionMutation.mutate({data: {bookId: params.bookData.id, userId: params.currentUser!, name: name}});
-//                                     close();
-//                                 }
-//                             } 
-//                             type="submit">Создать</Button>
-//                     </Group>
-//                 </Modal.Body>
-//             </Modal.Content>
-//         </Modal.Root>
-//     </>
-// }
+    async function updateCurrentCollection(value: string | null) {
+        if (value) {
+            setCurrentCollection(value);
+            setActiveCollectionMutation.mutate({collectionId: value!});
+        }
+    }
+
+    return (
+        <Popover>
+            <Popover.Target>
+                <Button radius={0}>Выбрать коллекцию</Button>
+            </Popover.Target>
+            <Popover.Dropdown>
+                <Select
+                    radius={0}
+                    label="Список коллекций текущей книги"
+                    placeholder="Установите активную коллекцию"
+                    value={currentCollection}
+                    onChange={updateCurrentCollection}
+                    data={models.map((c) => ({
+                        label: c.name, value: c.id
+                    }))}
+                />
+            </Popover.Dropdown>
+        </Popover>
+    )
+}
+
+function CollectionCreator({collectionCreatedCallback}: {
+    collectionCreatedCallback: (value: CollectionModel) => void
+}) {
+    const [opened, {open, close}] = useDisclosure(false);
+    const [name, setName] = useState<string>("");
+
+    const activeBook = useActiveBook();
+    const bookName = CurrentBookStore.useName();
+    const bookVersion = CurrentBookStore.useVersion();
+
+    const auth = useAuth();
+
+    const createCollectionMutation = useMutation({
+        mutationFn: createCollection,
+        onSuccess: (data) => {
+            if (data != undefined) {
+                collectionCreatedCallback(data);
+            }
+        }
+    })
+
+    return <>
+        <Button radius={0} onClick={open}>Создать новую коллекцию</Button>
+        <Modal.Root opened={opened} onClose={close} centered={true}>
+            <Modal.Overlay/>
+            <Modal.Content>
+                <Modal.Header>
+                    <Modal.Title style={{fontSize: 25}}>{`Создание коллекции для книги ${bookName} версии ${bookVersion}`}</Modal.Title>
+                    <Modal.CloseButton/>
+                </Modal.Header>
+                <Modal.Body>
+                    <TextInput 
+                        value={name} 
+                        onChange={(e) => setName(e.currentTarget.value)}
+                        placeholder="Введите имя коллекции"
+                        label="Имя новой коллекции"
+                    />
+                    <Group justify="flex-end" mt="md">
+                        <Button 
+                            onClick={
+                                () => {
+                                    createCollectionMutation.mutate({bookId: activeBook?.id!, userId: auth?.userId!, name: name});
+                                    close();
+                                }
+                            } 
+                            type="submit">Создать</Button>
+                    </Group>
+                </Modal.Body>
+            </Modal.Content>
+        </Modal.Root>
+    </>
+}
 
 export default CollectionsPreview;

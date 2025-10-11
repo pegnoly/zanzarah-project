@@ -1,7 +1,8 @@
 import { createContext, use, useEffect, useState, type ReactNode } from "react";
-import Cookie from "js-cookie";
 import { updateToken } from "@/queries/auth/updateToken";
 import { requestTokenData } from "@/queries/auth/processToken";
+import type { SignInResult } from "@/graphql/graphql";
+import Cookies from "js-cookie";
 
 export enum RegistrationState {
     Unregistered = "UNREGISTERED",
@@ -20,7 +21,7 @@ export enum UserPermissionType {
 export type AuthProps = {
   userId: string | null,
   userState: RegistrationState,
-  userPermission: UserPermissionType | null
+  userPermission: UserPermissionType | null,
 }
 
 export type UserClaims = {
@@ -31,7 +32,8 @@ export type UserClaims = {
 export interface AuthContextType {
   registrationState: RegistrationState | undefined,
   userPermission: UserPermissionType | undefined,
-  userId: string | undefined
+  userId: string | undefined,
+  signIn: (data: SignInResult) => void
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,9 +48,9 @@ function AuthProvider({children}: {children: ReactNode}) {
     }, [])
 
     const getAuthState = async() => {
-      const token = Cookie.get("zanzarah-project-auth-token");
-      const email = Cookie.get("zanzarah-project-email");
-      const password = Cookie.get("zanzarah-project-password");
+      const token = Cookies.get("zanzarah-project-auth-token");
+      const email = Cookies.get("zanzarah-project-user-email");
+      const password = Cookies.get("zanzarah-project-user-password");
       if (token == undefined) {
         if (email != undefined && password != undefined) {
           const updateTokenResult = await updateToken({email: email, password: password});
@@ -56,7 +58,7 @@ function AuthProvider({children}: {children: ReactNode}) {
             setRegistrationState(updateTokenResult.registrationState);
             setUserId(updateTokenResult.userId)
             setPermission(updateTokenResult.permission);
-            Cookie.set("zanzarah_project-auth-token", updateTokenResult.newToken, {expires: 86400});
+            Cookies.set("zanzarah_project-auth-token", updateTokenResult.newToken, {expires: 86400});
           }
         } else {
           setPermission(UserPermissionType.UnregisteredUser);
@@ -72,8 +74,23 @@ function AuthProvider({children}: {children: ReactNode}) {
       }
     }
 
+    const processSignIn = async(data: SignInResult) => {
+        Cookies.set('zanzarah-project-user-email', data.emailHash, {expires: 10000000});
+        Cookies.set('zanzarah-project-user-password', data.passwordHash, {expires: 10000000});
+        Cookies.set('zanzarah-project-auth-token', data.newToken, {maxAge: 86400});
+
+        setPermission(data.permission);
+        setRegistrationState(data.registrationState);
+        setUserId(data.userId);
+    }
+
     return (
-      <AuthContext.Provider value={{registrationState: registrationState, userId: userId, userPermission: permission}}>
+      <AuthContext.Provider value={{
+        registrationState: registrationState, 
+        userId: userId, 
+        userPermission: permission,
+        signIn: processSignIn 
+      }}>
         {children}
       </AuthContext.Provider>
     )
