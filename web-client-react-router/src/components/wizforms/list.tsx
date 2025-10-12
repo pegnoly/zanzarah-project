@@ -1,20 +1,19 @@
 import { Card, Image, LoadingOverlay, SimpleGrid, Text } from "@mantine/core";
-import type { WizformSimpleModel } from "../../queries/wizforms/types";
 import { Link } from "react-router";
+import { useWizformsList } from "@/contexts/wizformsList";
 
-function WizformsList({models}: {models: WizformSimpleModel[] | undefined}) {
-    // const wizformsDisabled = useCommonStore(useShallow((state) => state.wizformsDisabled));
-    // const wizforms = useWizformsStore(useShallow((state) => state.wizforms));
+function WizformsList() {
+    const wizformsList = useWizformsList();
 
     return (
     <>
         {
-            models == undefined ?
+            wizformsList?.items == undefined ?
             <LoadingOverlay/> :
             <SimpleGrid
                 style={{padding: '3%'}}
                 cols={{ base: 1, sm: 2, md: 3, lg: 4 }} 
-            >{models!.map((w, _i) => (
+            >{wizformsList?.items!.map((w, _i) => (
                 <Link 
                     to={`focused/${w.id}`}
                     // to="/wizforms/$bookId/$focusedId/modal"

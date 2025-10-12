@@ -3,27 +3,34 @@ import { WizformElementType } from "../../graphql/graphql";
 import type { WizformSimpleModel } from "../../queries/wizforms/types";
 import { useWizforms } from "../../queries/wizforms/wizformsQuery";
 import WizformsList from "./list";
-import { Box } from "@mantine/core";
+import { Box, Loader, Overlay } from "@mantine/core";
 import { Outlet } from "react-router";
+import { useActiveBook } from "@/contexts/activeBook";
+import WizformsListProvider from "@/contexts/wizformsList";
 
 function WizformsMain() {
-    console.log("Route wizforms?")
     const [nameFilter, setNameFilter] = useState<string>("");
     const [elementFilter, setElementFilter] = useState<WizformElementType>(WizformElementType.Air);
     const [wizforms, setWizforms] = useState<WizformSimpleModel[] | undefined>(undefined);
 
-    console.log(wizforms);
-
     return (
         <Box>
-            <WizformsList models={wizforms}/>
+            {
+                wizforms == undefined ? <Loader/> :
+                <>
+                    <WizformsListProvider initialItems={wizforms}>
+                        <WizformsList/>
+                        <Box mt="xl">
+                            <Outlet/>
+                        </Box>
+                    </WizformsListProvider>
+                </>
+            }
             <WizformsLoader 
                 nameFilter={nameFilter} 
                 elementFilter={elementFilter} 
-                onLoad={setWizforms}/>
-            <Box mt="xl">
-                <Outlet/>
-            </Box>
+                onLoad={setWizforms}
+            />
         </Box>
     )
 }
@@ -33,12 +40,14 @@ function WizformsLoader({nameFilter, elementFilter, onLoad}: {
     elementFilter: WizformElementType,
     onLoad: (values: WizformSimpleModel []) => void
 }) {
+    const activeBook = useActiveBook();
+
     const { data } = useWizforms({
-        bookId: '5a5247c2-273b-41e9-8224-491e02f77d8d', 
+        bookId: activeBook?.id!, 
         enabled: true, 
         nameFilter: nameFilter, 
         elementFilter: elementFilter,
-        collection: null
+        collection: activeBook?.currentCollection!
     });
 
     useEffect(() => {

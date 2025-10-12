@@ -1,48 +1,33 @@
-import useWizformsStore from "@/stores/wizforms";
-import { addCollectionItem } from "@/utils/queries/collections/addItemMutation";
-import { removeCollectionItem } from "@/utils/queries/collections/removeItemMutation";
+import { useActiveBook } from "@/contexts/activeBook";
+import { RegistrationState, useAuth } from "@/contexts/auth";
+import { useWizformsList } from "@/contexts/wizformsList";
+import { addCollectionItem } from "@/queries/collections/addItemMutation";
+import { removeCollectionItem } from "@/queries/collections/removeItemMutation";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useMutation } from "@tanstack/react-query";
-import { useShallow } from "zustand/shallow";
+import { useState } from "react";
 
-function CollectionsField(params: {
-    currentCollection: string,
+function CollectionsField({wizformId, inCollectionId}: {
     wizformId: string,
     inCollectionId: string | null
 }) {
-    const [wizforms, setWizforms, wizformId, setWizformId, collectionId, setCollectionId] = useWizformsStore(useShallow((state) => [
-        state.wizforms,
-        state.setWizforms,
-        state.focusedWizformId,
-        state.setFocusedWizformId,
-        state.focusedWizformCollectionId,
-        state.setFocusedWizformCollectionId
-    ]));
+    const wizformsList = useWizformsList();
+    const auth = useAuth();
+    const activeBook = useActiveBook();
 
-    if (wizformId == undefined || wizformId != params.wizformId) {
-        setWizformId(params.wizformId);
-    }
+    const [localCollectionId, setLocalCollectionId] = useState<string | null>(inCollectionId);
 
-    if (collectionId == undefined || (collectionId != undefined && wizformId != params.wizformId)) {
-        setCollectionId(params.inCollectionId);
+    if (auth?.registrationState != RegistrationState.Confirmed || activeBook?.currentCollection == null) {
+        return null;
     }
 
     const addToCollectionMutation = useMutation({
         mutationFn: addCollectionItem,
-        onSuccess(data, variables, context) {
+        onSuccess(data, _variables, _context) {
             if (data) {
-                setWizforms(
-                    wizforms?.map(w => {
-                        if (w.id == params.wizformId) { 
-                            w.inCollectionId = "optimistically_updated";
-                            return w;
-                        } else {
-                            return w;
-                        }
-                    })!
-                );
-                setCollectionId(data.createdId);
+                wizformsList?.addItemToCollection(wizformId, data.createdId);
+                setLocalCollectionId(data.createdId);
                 notifications.show({
                     message: "Фея добавлена в коллекцию",
                     color: 'green',
@@ -56,17 +41,8 @@ function CollectionsField(params: {
         mutationFn: removeCollectionItem,
         onSuccess: (data) => {
             if (data) {
-                setWizforms(
-                    wizforms?.map(w => {
-                        if (w.id == params.wizformId) { 
-                            w.inCollectionId = null;
-                            return w;
-                        } else {
-                            return w;
-                        }
-                    })!
-                );
-                setCollectionId(null);
+                wizformsList?.removeItemFromCollection(wizformId);
+                setLocalCollectionId(null);
                 notifications.show({
                     message: "Фея удалена из коллекции",
                     color: 'red',
@@ -77,16 +53,16 @@ function CollectionsField(params: {
     })
 
     return (
-        !collectionId ?
+        !localCollectionId ?
         <Group justify="flex-end" mt="md" pt="md">
             <Button color='lime' loading={addToCollectionMutation.isPending} onClick={() => {
-                addToCollectionMutation.mutate({data:{collectionId: params.currentCollection!, wizformId: params.wizformId!}})
+                addToCollectionMutation.mutate({collectionId: activeBook.currentCollection!, wizformId: wizformId!})
             }}
             >Добавить в текущую коллекцию</Button>
         </Group> :
         <Group justify="flex-end" mt="md" pt="md">
             <Button color='pink' loading={removeFromCollectionMutation.isPending} onClick={() => {
-                removeFromCollectionMutation.mutate({data: {id: collectionId}})
+                removeFromCollectionMutation.mutate({id: localCollectionId})
             }}
             >Удалить из текущей коллекции</Button>
         </Group>

@@ -7,7 +7,8 @@ import { useNavigate, useParams } from "react-router";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { WizformFull, WizformHabitatModel } from "@/queries/wizforms/types";
 import { useWizform, type WizformCompleteQueryResult } from "@/queries/wizforms/wizformCompleteQuery";
-import { CommonStore } from "@/stores/common";
+import { useActiveBook } from "@/contexts/activeBook";
+import CollectionsField from "./collectionsField";
 
 enum FocusedWizformMode {
     BaseProps = "BaseProps",
@@ -22,7 +23,7 @@ function WizformFocused() {
     const [wizform, setWizform] = useState<WizformFull | undefined>(undefined);
     const [habitats, setHabitats] = useState<WizformHabitatModel [] | undefined>(undefined);
 
-    const elements = CommonStore.useElements();
+    const activeBook = useActiveBook();
 
     async function wizformLoaded(value: WizformCompleteQueryResult) {
         setWizform(value.wizform);
@@ -35,7 +36,7 @@ function WizformFocused() {
                 <DialogContent className="rounded-none">
                     <DialogHeader>
                         <DialogTitle style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem'}}>{wizform == undefined ? <Loader/> : wizform.name}</DialogTitle>
-                        <DialogDescription>{wizform == undefined ? "" : `${elements?.find(e => e.element == wizform.element)?.name} №${wizform.number}`}</DialogDescription>
+                        <DialogDescription>{wizform == undefined ? "" : `${activeBook?.elements?.find(e => e.element == wizform.element)?.name} №${wizform.number}`}</DialogDescription>
                     </DialogHeader>
                     <Accordion defaultValue={FocusedWizformMode.BaseProps}>
                         <Accordion.Item value={FocusedWizformMode.BaseProps}>
@@ -63,19 +64,13 @@ function WizformFocused() {
                             </Accordion.Panel>
                         </Accordion.Item>
                     </Accordion>
-                    {/* {
-                        (params.auth.userPermission != UserPermissionType.UnregisteredUser && params.collectionId) ? 
-                        <Await promise={params.model} fallback={<Loader style={{display: "flex", justifySelf: 'end'}}/>}>{(data) => {
-                            return (
-                                <CollectionsField
-                                    wizformId={data?.wizform!.id!}
-                                    inCollectionId={data?.wizform.inCollectionId!}
-                                    currentCollection={params.collectionId!}
-                                />
-                            ) 
-                        }}</Await> :
-                        null
-                    } */}
+                    {
+                        wizform == undefined ? null :
+                        <CollectionsField
+                            wizformId={wizform!.id!}
+                            inCollectionId={wizform!.inCollectionId!}
+                        />
+                    }
                 </DialogContent>
             </Dialog>
             <WizformLoader id={focusedId!} onLoad={wizformLoaded}/>
@@ -84,7 +79,10 @@ function WizformFocused() {
 }
 
 function WizformLoader({id, onLoad}: {id: string, onLoad: (value: WizformCompleteQueryResult) => void}) {
-    const { data } = useWizform({wizformId: id, collectionId: null});
+
+    const activeBook = useActiveBook();
+
+    const { data } = useWizform({wizformId: id, collectionId: activeBook?.currentCollection!});
     useEffect(() => {
         if (data != undefined) {
             onLoad(data);

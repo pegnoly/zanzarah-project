@@ -1,17 +1,15 @@
-import { createServerFn } from "@tanstack/react-start"
 import request, { gql } from "graphql-request"
-import { config } from "@/utils/env"
 import { API_ENDPOINT } from "../common"
 
 type CreatedCollectionItem = {
     createdId: string
 }
 
-export type AddCollectionItemMutationResult = {
+type AddCollectionItemMutationResult = {
     addCollectionItem: CreatedCollectionItem
 }
 
-export type AddCollectionItemMutationVariables = {
+type AddCollectionItemMutationVariables = {
     collectionId: string,
     wizformId: string
 }
@@ -24,13 +22,11 @@ const addCollectionItemMutation = gql`
     }
 `
 
-export const addCollectionItem = createServerFn({method: 'POST'})
-    .validator((data: AddCollectionItemMutationVariables) => data)
-    .handler(async({data}) => {
-        const result = await request<AddCollectionItemMutationResult | null, AddCollectionItemMutationVariables>(
-            API_ENDPOINT,
-            addCollectionItemMutation,
-            {collectionId: data.collectionId, wizformId: data.wizformId}
-        );
-        return result?.addCollectionItem;
-    });
+export const addCollectionItem = async(data: AddCollectionItemMutationVariables) => {
+    const result = await request<AddCollectionItemMutationResult | null, AddCollectionItemMutationVariables>(
+        API_ENDPOINT,
+        addCollectionItemMutation,
+        {collectionId: data.collectionId, wizformId: data.wizformId}
+    );
+    return result?.addCollectionItem;
+};
