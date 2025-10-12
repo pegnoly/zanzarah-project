@@ -1,9 +1,7 @@
-import { Accordion, Button, ButtonGroup, Group, List, Loader, Popover, PopoverDropdown, PopoverTarget, Text, UnstyledButton } from "@mantine/core";
-import { useMutation } from "@tanstack/react-query";
-import { IconQuestionMark, IconTrashFilled, IconWritingSignOff } from "@tabler/icons-react";
+import { Accordion, List, Loader } from "@mantine/core";
 import WizformsListItem from "./wizformListItem";
 import type { LocationWizformEntry } from "@/queries/map/types";
-import { CommonStore } from "@/stores/common";
+import { useActiveBook } from "@/contexts/activeBook";
 
 function WizformsList({entries}: {
     entries: LocationWizformEntry[] | undefined
@@ -13,7 +11,7 @@ function WizformsList({entries}: {
     // commentAddedCallback: (id: string, comment: string) => void,
     // commentDeletedCallback: (id: string) => void
 }) {
-    const elements = CommonStore.useElements();
+    const activeBook = useActiveBook();
     // const elements = useCommonStore(useShallow((state) => state.elements));
     // const entries = useMapStore(useShallow((state) => state.entriesData?.get(params.currentLocation)));
     // console.log("Entries: ", entries);
@@ -34,10 +32,10 @@ function WizformsList({entries}: {
 
     return <>
     {
-        entries == undefined || elements == undefined ? <Loader/> : 
+        entries == undefined || activeBook?.elements == undefined ? <Loader/> : 
         <Accordion>{presentedElements.map((e, i) => (
             <Accordion.Item key={i} value={e}>
-                <Accordion.Control style={{backgroundColor: 'silver'}}>{elements?.find(el => el.element == e)?.name}</Accordion.Control>
+                <Accordion.Control style={{backgroundColor: 'silver'}}>{activeBook.elements?.find(el => el.element == e)?.name}</Accordion.Control>
                 <Accordion.Panel>
                 <List>{entries!
                     .filter(m => m.wizformElement == e)

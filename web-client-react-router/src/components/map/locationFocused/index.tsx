@@ -1,6 +1,6 @@
 import WizformsList from "./wizformsList";
 import { useNavigate, useParams } from "react-router";
-import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { LocationWizformEntry } from "@/queries/map/types";
 import { useEffect, useState } from "react";
 import { useLocationEntries } from "@/queries/map/locationEntriesQuery";
@@ -8,7 +8,7 @@ import { DialogTitle } from "@radix-ui/react-dialog";
 
 function LocationFocused() {
     const navigate = useNavigate();
-    const { bookId, sectionId, locationId } = useParams();
+    const { locationId } = useParams();
 
     const [entries, setEntries] = useState<LocationWizformEntry[] | undefined>(undefined);
     // const [entries, setEntries, selectables, setSelectables] = useMapStore(useShallow((state) => [
@@ -69,9 +69,9 @@ function LocationFocused() {
 
     return <>
     <Dialog open={true} onOpenChange={() => navigate(-1)}>
-        <DialogContent>
+        <DialogContent className="rounded-none">
             <DialogTitle>Феи локации</DialogTitle>
-            <DialogDescription>Desc</DialogDescription>
+            {/* <DialogDescription>Desc</DialogDescription> */}
             <WizformsList entries={entries}/>
         </DialogContent>
     </Dialog>

@@ -11,7 +11,7 @@ function WizformsMapMain() {
 
     return (
         <>
-            <SectionsGrid bookId={bookId!} sections={sections}/>
+            <SectionsGrid sections={sections}/>
             <SectionsLoader bookId={bookId!} onLoad={setSections}/>
         </>
     )

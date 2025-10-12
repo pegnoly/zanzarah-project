@@ -4,12 +4,17 @@ import { createContext, use, useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "./auth";
 import { useQuery } from "@tanstack/react-query";
 import { fetchActiveCollection } from "@/queries/collections/activeCollectionQuery";
+import { WizformElementType } from "@/graphql/graphql";
 
 export interface ActiveBookContextType {
     id: string | undefined,
+    currentNameFilter: string | undefined,
+    currentElementFilter: WizformElementType | undefined,
     elements: WizformElement [] | undefined,
     currentCollection: string | null,
     updateId: (newId: string) => void,
+    updateNameFilter: (newFilter: string) => void,
+    updateElementFilter: (newFilter: WizformElementType) => void,
     updateCurrentCollection: (newCollection: string | null) => void
 }
 
@@ -24,10 +29,30 @@ const getActiveBook = () => {
     return existing;
 }
 
+const getNameFilter = () => {
+    const existing = Cookies.get("zanzarah-project-name-filter");
+    if (existing == undefined) {
+        Cookies.set("zanzarah-project-name-filter", "", {expires: 10000000});
+        return "";
+    }
+    return existing;
+}
+
+const getElementFilter = () => {
+    const existing = Cookies.get("zanzarah-project-element-filter");
+    if (existing == undefined) {
+        Cookies.set("zanzarah-project-element-filter", WizformElementType.Nature, {expires: 10000000});
+        return WizformElementType.Nature;
+    }
+    return existing as WizformElementType;
+}
+
 function ActiveBookProvider({children}: {children: ReactNode}) {
     const [activeBook, setActiveBook] = useState<string | undefined>(getActiveBook());
     const [elements, setElements] = useState<WizformElement[] | undefined>(undefined);
     const [collection, setCollection] = useState<string | null>(null);
+    const [nameFilter, setNameFilter] = useState<string>(getNameFilter());
+    const [elementFilter, setElementFilter] = useState<WizformElementType>(getElementFilter());
 
     async function updateActiveBook(newId: string) {
         Cookies.set("zanzarah-project-current-book", newId, {expires: 10000000});
@@ -38,14 +63,28 @@ function ActiveBookProvider({children}: {children: ReactNode}) {
         setCollection(newCollection);
     }
 
+    async function updateNameFilter(newFilter: string) {
+        Cookies.set("zanzarah-project-name-filter", newFilter, {expires: 10000000});
+        setNameFilter(newFilter);
+    }
+
+    async function updateElementFilter(newFilter: WizformElementType) {
+        Cookies.set("zanzarah-project-element-filter", newFilter, {expires: 10000000});
+        setElementFilter(newFilter);
+    }
+
     return (
         <>
             <ActiveBookContext.Provider value={{
-                id: activeBook, 
+                id: activeBook,
+                currentNameFilter: nameFilter,
+                currentElementFilter: elementFilter,
                 elements: elements,
                 currentCollection: collection,
                 updateId: updateActiveBook,
-                updateCurrentCollection: updateCollection
+                updateCurrentCollection: updateCollection,
+                updateElementFilter: updateElementFilter,
+                updateNameFilter: updateNameFilter
             }}>
                 {children}
             </ActiveBookContext.Provider>

@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, Group, Image, Popover, PopoverDropdown, PopoverTarget, Text, UnstyledButton } from "@mantine/core";
+import { Group, Image, Popover, PopoverDropdown, PopoverTarget, Text, UnstyledButton } from "@mantine/core";
 import { IconQuestionMark,} from "@tabler/icons-react";
 import { useState } from "react";
 import type { LocationWizformEntry } from "@/queries/map/types";
@@ -10,7 +10,7 @@ function WizformsListItem(params: {
     // commentAddedCallback: (id: string, comment: string) => void,
     // commentDeletedCallback: (id: string) => void
 }) {
-    const [item, setItem] = useState<LocationWizformEntry>(params.item);
+    const [item, _] = useState<LocationWizformEntry>(params.item);
 
     // const deleteLocationEntryMutation = useMutation({
     //     mutationFn: deleteLocationWizform,

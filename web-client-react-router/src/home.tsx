@@ -1,12 +1,13 @@
-import { Container, SimpleGrid, Box, Card } from '@mantine/core';
+import { SimpleGrid, Box, Card } from '@mantine/core';
 import BooksPreview from './components/home/booksPreview';
 import WizformsPreview from './components/home/wizformsPreview';
 import MapPreview from './components/home/mapPreview';
 import CollectionsPreview from './components/home/collectionsPreview';
+import classes from "./styles/main.module.css";
 
 const Home = () => {
   return (
-    <Container>
+    <Box className={classes.root}>
        <SimpleGrid 
         cols={{ base: 1, sm: 2}} 
         spacing="xl" 
@@ -27,7 +28,7 @@ const Home = () => {
             <MapPreview/>
           </Box>
       </SimpleGrid>
-    </Container>
+    </Box>
   );
 };
 

@@ -9,7 +9,7 @@ const config: CodegenConfig = {
       preset: 'client',
       config: {
         documentMode: 'string'
-      }
+      },
     },
     './schema.graphql': {
       plugins: ['schema-ast'],

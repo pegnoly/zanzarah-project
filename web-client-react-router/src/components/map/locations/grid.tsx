@@ -4,10 +4,10 @@ import { Link } from "react-router";
 import { locationBackgroundsData } from "./imports";
 import type { Location } from "@/queries/map/types";
 
-function LocationsGrid({locations, sectionId, bookId}: {
+function LocationsGrid({locations}: {
     locations: Location[] | undefined,
-    sectionId: string,
-    bookId: string
+    // sectionId: string,
+    // bookId: string
 }) {
 
     return (

@@ -38,9 +38,9 @@ const backgroundsData = new Map<string, string>([
   ["f59b9583-0250-48d6-bd7d-376d0d4c0342", darkRealmsMain]
 ]);
 
-function SectionsGrid({sections, bookId}: {
+function SectionsGrid({sections}: {
     sections: LocationSection[] | undefined,
-    bookId: string
+    // bookId: string
 }) {
 
     return (

@@ -1,4 +1,4 @@
-import { Card, Image, LoadingOverlay, SimpleGrid, Text } from "@mantine/core";
+import { Card, Image, Overlay, SimpleGrid, Text } from "@mantine/core";
 import { Link } from "react-router";
 import { useWizformsList } from "@/contexts/wizformsList";
 
@@ -8,18 +8,14 @@ function WizformsList() {
     return (
     <>
         {
-            wizformsList?.items == undefined ?
-            <LoadingOverlay/> :
+            wizformsList?.items == undefined ? <Overlay/> :
             <SimpleGrid
                 style={{padding: '3%'}}
                 cols={{ base: 1, sm: 2, md: 3, lg: 4 }} 
             >{wizformsList?.items!.map((w, _i) => (
                 <Link 
                     to={`focused/${w.id}`}
-                    // to="/wizforms/$bookId/$focusedId/modal"
-                    // params={{bookId: params.bookId, focusedId: w.id}}
                     key={w.id}
-                    // disabled={wizformsDisabled}
                     style={{textDecoration: 'none'}}
                 >
                     <Card shadow='sm' padding='lg' withBorder style={{height: '100%', backgroundColor: w.inCollectionId ? "gold" : "white"}}>

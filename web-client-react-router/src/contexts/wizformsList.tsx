@@ -3,14 +3,19 @@ import { createContext, use, useState, type ReactNode } from "react";
 
 export interface WizformsListContextType {
     items: WizformSimpleModel[],
+    updateItems: (data: WizformSimpleModel[]) => void,
     addItemToCollection: (id: string, inCollectionId: string) => void,
     removeItemFromCollection: (id: string) => void 
 }
 
 export const WizformsListContext = createContext<WizformsListContextType | undefined>(undefined);
 
-function WizformsListProvider({initialItems, children}: {initialItems: WizformSimpleModel[], children: ReactNode}) {
-    const [items, setItems] = useState<WizformSimpleModel[]>(initialItems);
+function WizformsListProvider({children}: {children: ReactNode}) {
+    const [items, setItems] = useState<WizformSimpleModel[]>([]);
+
+    async function updateItems(data: WizformSimpleModel[]) {
+        setItems(data);
+    }
 
     async function addItemToCollection(id: string, inCollectionId: string) {
         setItems(items.map(i => {
@@ -34,6 +39,7 @@ function WizformsListProvider({initialItems, children}: {initialItems: WizformSi
         <>
             <WizformsListContext.Provider value={{
                 items: items, 
+                updateItems: updateItems,
                 addItemToCollection: addItemToCollection, 
                 removeItemFromCollection: removeItemFromCollection
             }}>

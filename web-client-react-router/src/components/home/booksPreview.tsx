@@ -1,5 +1,5 @@
 import { useActiveBook } from "@/contexts/activeBook";
-import { type BookFullModel, fetchBook, fetchBooks, type BookSimpleModel } from "@/queries/books";
+import { fetchBook, fetchBooks, type BookSimpleModel } from "@/queries/books";
 import { CurrentBookStore } from "@/stores/currentBook";
 import { Badge, Button, Popover, Select, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";

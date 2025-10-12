@@ -1,20 +1,17 @@
-import { Badge, Card, SimpleGrid, Text } from "@mantine/core"
-import classes from "./styles.module.css";
-import { locationBackgroundsData } from "./imports";
-import { Link, Outlet, useParams } from "react-router";
+import { Outlet, useParams } from "react-router";
 import type { Location } from "@/queries/map/types";
 import { useEffect, useState } from "react";
 import { useLocations } from "@/queries/map/locationsQuery";
 import LocationsGrid from "./grid";
 
 function MapLocationsMain() {
-    const { bookId, sectionId } = useParams();
+    const { sectionId } = useParams();
 
     const [locations, setLocations] = useState<Location[] |undefined>(undefined);
 
     return (
     <>
-        <LocationsGrid locations={locations} bookId={bookId!} sectionId={sectionId!}/>
+        <LocationsGrid locations={locations}/>
         <LocationsLoader sectionId={sectionId!} onLoad={setLocations}/>
         <Outlet/>
     </>
