@@ -7,6 +7,7 @@ import { AuthError } from "./loginForm";
 import { zodResolver } from 'mantine-form-zod-resolver';
 import { useAuth } from "@/contexts/auth";
 import { registerUser } from "@/queries/auth/registerUser";
+import { useNavigate } from "react-router";
 
 export const registrationValidationSchema = z.object({
     email: z.string().email({message: 'Некорректный формат'}),
@@ -18,6 +19,7 @@ type FormValues = z.infer<typeof registrationValidationSchema>;
 function RegistrationForm() {
 
     const auth = useAuth();
+    const navigate = useNavigate();
 
     const [opened, {open, close}] = useDisclosure(false);
     const form = useForm<FormValues>({
@@ -47,16 +49,16 @@ function RegistrationForm() {
         },
         onSuccess: async(data) => {
             if (data) {
-                // await saveRegisterInfoCookies({data: data});
-                // setRegistrationState(RegistrationState.Unconfirmed);
-                // setPermission(UserPermissionType.UnregisteredUser);
+                auth?.register(data);
+                close();
+                navigate(0);
             }
         }
     })
 
     return (
     <>
-        <Button onClick={open}>Зарегистрироваться</Button>
+        <Button radius={0} onClick={open}>Зарегистрироваться</Button>
         <Modal.Root opened={opened} onClose={close} centered={true}>
             <Modal.Overlay/>
             <Modal.Content>

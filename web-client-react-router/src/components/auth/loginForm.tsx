@@ -63,7 +63,7 @@ function LoginForm() {
 
     return (
     <>
-        <Button onClick={open}>Войти</Button>
+        <Button radius={0} onClick={open}>Войти</Button>
         <Modal.Root opened={opened} onClose={close} centered={true}>
             <Modal.Overlay/>
             <Modal.Content>

@@ -3,19 +3,22 @@ import { Button, NumberInput, Text } from "@mantine/core";
 import { useState } from "react";
 import { confirmCode } from "@/queries/auth/confirmCode";
 import { AuthError } from "./loginForm";
+import { useAuth } from "@/contexts/auth";
+import { useNavigate } from "react-router";
 
 function ConfirmationForm() {
     const [code, setCode] = useState<string>("");
     const [codeError, setCodeError] = useState<string | null>(null);
 
+    const auth = useAuth();
+    const navigate = useNavigate();
+
     const confirmEmailMutation = useMutation({
         mutationFn: confirmCode,
         onSuccess: async(data) => {
             if (data) {
-                // setRegistrationState(data.confirmEmail.registrationState);
-                // setPermission(data.confirmEmail.permission);
-                // await setTokenCookie({data: data.confirmEmail.newToken});
-                // navigate({to: ".", reloadDocument: true});
+                auth?.confirm(data);
+                navigate(0);
             }
         },
         onError: (error) => {

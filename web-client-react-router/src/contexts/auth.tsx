@@ -3,6 +3,8 @@ import { updateToken } from "@/queries/auth/updateToken";
 import { requestTokenData } from "@/queries/auth/processToken";
 import type { SignInResult } from "@/graphql/graphql";
 import Cookies from "js-cookie";
+import type { RegistrationResult } from "@/queries/auth/registerUser";
+import type { EmailConfirmationResult } from "@/queries/auth/confirmCode";
 
 export enum RegistrationState {
     Unregistered = "UNREGISTERED",
@@ -33,7 +35,9 @@ export interface AuthContextType {
   registrationState: RegistrationState | undefined,
   userPermission: UserPermissionType | undefined,
   userId: string | undefined,
-  signIn: (data: SignInResult) => void
+  signIn: (data: SignInResult) => void,
+  register: (data: RegistrationResult) => void,
+  confirm: (data: EmailConfirmationResult) => void
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -84,12 +88,30 @@ function AuthProvider({children}: {children: ReactNode}) {
         setUserId(data.userId);
     }
 
+    const processRegistration = async(data: RegistrationResult) => {
+        Cookies.set('zanzarah-project-user-email', data.emailHash, {expires: 10000000});
+        Cookies.set('zanzarah-project-user-password', data.passwordHash, {expires: 10000000});
+        Cookies.set('zanzarah-project-auth-token', data.token, {maxAge: 86400});
+
+        setRegistrationState(RegistrationState.Unconfirmed);
+        setUserId(data.userId);
+    }
+
+    const processConfirmation = async(data: EmailConfirmationResult) => {
+        Cookies.set('zanzarah-project-auth-token', data.newToken, {maxAge: 86400});
+
+        setRegistrationState(data.registrationState);
+        setUserId(data.permission);
+    }
+
     return (
       <AuthContext.Provider value={{
         registrationState: registrationState, 
         userId: userId, 
         userPermission: permission,
-        signIn: processSignIn 
+        signIn: processSignIn,
+        register: processRegistration,
+        confirm: processConfirmation
       }}>
         {children}
       </AuthContext.Provider>

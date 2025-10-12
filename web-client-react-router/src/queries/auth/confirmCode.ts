@@ -3,7 +3,7 @@ import request, { gql } from "graphql-request"
 import { API_ENDPOINT } from "../common"
 import Cookies from "js-cookie"
 
-type EmailConfirmationResult = {
+export type EmailConfirmationResult = {
   newToken: string,
   registrationState: RegistrationState,
   permission: UserPermissionType
@@ -24,7 +24,7 @@ type ConfirmCodeMutationVariables = {
   email: string
 }
 
-export type ConfirmCodeMutationResult = {
+type ConfirmCodeMutationResult = {
   confirmEmail: EmailConfirmationResult
 }
 
@@ -35,5 +35,5 @@ export const confirmCode = async(data: ConfirmCodeMutationVariables) => {
         confirmCodeMutation,
         {email: emailCookie!, code: data.code}
     );
-    return result;
+    return result?.confirmEmail;
 }

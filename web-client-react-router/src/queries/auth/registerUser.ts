@@ -1,7 +1,7 @@
 import request, { gql } from "graphql-request"
 import { API_ENDPOINT } from "../common"
 
-type RegistrationResult = {
+export type RegistrationResult = {
   userId: string,
   emailHash: string,
   passwordHash: string,
