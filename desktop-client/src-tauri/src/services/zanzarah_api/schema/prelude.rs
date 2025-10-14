@@ -14,7 +14,9 @@ pub use super::wizform::{
     WizformUpdateModel,
     WizformUpdateMutationArguments,
     WizformUpdateMutation,
-    UpdateWizformResponse
+    UpdateWizformResponse,
+    AllWizformsQuery,
+    AllWizformsQueryVariables
 };
 pub use super::element:: {
     ElementModel,
@@ -28,4 +30,14 @@ pub use super::book::{
     CreateBookMutationArguments,
     CreateBookMutation
 };
-// pub use super::user::{RegisterUserMutation, RegisterUserMutationVariables, RegisterUserResponse, ConfirmEmailMutation, ConfirmEmailMutationVariables, EmailConfirmationResponse};
+pub use super::location::{
+    WizformsMapLocation,
+    BookAllLocationsQuery,
+    BookAllLocationsQueryVariables
+};
+pub use super::location_entry::{
+    LocationEntriesBulkInsertMutation,
+    LocationEntryInputModel,
+    LocationEntriesBulkInsertMutationArguments,
+    LocationWizformsBulkInsertResponse
+};

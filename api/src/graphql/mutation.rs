@@ -1,6 +1,9 @@
+use std::str::FromStr;
+
 use async_graphql::Context;
 use itertools::Itertools;
 use sea_orm::DatabaseConnection;
+use uuid::Uuid;
 use crate::{
     error::ZZApiError,
     services::{
@@ -11,7 +14,7 @@ use crate::{
             },
         },
         book::{
-            models::{book::BookModel, wizform::{WizformInputModel, WizformModel, WizformUpdateModel}},
+            models::{book::BookModel, location_wizform_entry::{DeleteLocationWizformsResponse, LocationWizformInputModel, LocationWizformsBulkInsertResponse}, wizform::{WizformInputModel, WizformModel, WizformUpdateModel}},
             repo::BookRepository,
         },
     },
@@ -108,6 +111,85 @@ impl Mutation {
                 tracing::error!(
                     "
                     Failed to insert wizforms.
+                    Error: {:#?}
+                ",
+                    &error
+                );
+                Err(error)
+            }
+        }
+    }
+
+    async fn delete_book_location_entries(
+        &self,
+        context: &Context<'_>,
+        book_id: async_graphql::ID
+    ) -> Result<DeleteLocationWizformsResponse, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        match service.delete_all_location_entries_for_book(db, Uuid::from_str(&book_id.0)?).await {
+            Ok(()) => Ok(DeleteLocationWizformsResponse {
+                message: "Entries deleted successfully".to_string(),
+            }),
+            Err(error) => {
+                tracing::error!(
+                    "
+                    Failed to delete entries.
+                    Error: {:#?}
+                ",
+                    &error
+                );
+                Err(error)
+            }
+        }
+    }
+
+    async fn insert_location_entries_bulk(
+        &self,
+        context: &Context<'_>,
+        entries: Vec<LocationWizformInputModel>,
+    ) -> Result<LocationWizformsBulkInsertResponse, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        match service.add_location_wizforms_bulk(
+                db,
+                entries
+            )
+            .await
+        {
+            Ok(()) => Ok(LocationWizformsBulkInsertResponse {
+                message: "Entries inserted successfully".to_string(),
+            }),
+            Err(error) => {
+                tracing::error!(
+                    "
+                    Failed to insert entries.
                     Error: {:#?}
                 ",
                     &error

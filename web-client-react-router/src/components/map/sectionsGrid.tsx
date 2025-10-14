@@ -35,7 +35,19 @@ const backgroundsData = new Map<string, string>([
   ["95fdcc61-32a4-472f-bf58-79328a19cb98", cloudRealmsMain],
   ["77c03879-7304-4698-83df-cacdec5c3bf8", tiralinMain],
   ["2a7c9922-65f5-401f-b8ef-95b94bda4da2", lavaCavesMain],
-  ["f59b9583-0250-48d6-bd7d-376d0d4c0342", darkRealmsMain]
+  ["f59b9583-0250-48d6-bd7d-376d0d4c0342", darkRealmsMain],
+
+  // global 4.99
+  ["6ec8a254-0b7a-4b9d-a09c-d086a51c1fc4", faeriesGarden],
+  ["c6ba88fc-929c-4e8c-be58-39dedfc27cd4", forestMain],
+  ["406a5509-e666-493c-a724-dd06912ee624", swampsMain],
+  ["5dd023e5-a808-404e-9a63-f817a04519a7", mountainsMain],
+  ["998132da-9221-495f-ad65-2de25b12181c", snowPeaksMain],
+  ["4875722e-06f9-4372-b674-89c0af3eaca9", darkCavesMain],
+  ["f357cb6e-99ff-40e2-a468-dda5d222e7f9", cloudRealmsMain],
+  ["d57b35c5-759c-4d57-bad2-45503a80ba60", tiralinMain],
+  ["bead5457-bdf8-4441-a091-c4f84ffba3f8", lavaCavesMain],
+  ["2774ff9c-3d30-42b7-a0b8-d82f1ecf44af", darkRealmsMain],
 ]);
 
 function SectionsGrid({sections}: {

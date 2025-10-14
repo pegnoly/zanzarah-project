@@ -78,6 +78,10 @@ type CompatibleVersions {
   versions: [String!]!
 }
 
+type DeleteLocationWizformsResponse {
+  message: String!
+}
+
 type ElementModel {
   id: ID!
   bookId: ID!
@@ -94,6 +98,14 @@ type EmailConfirmationResult {
 
 type InsertWizformsResponse {
   message: String!
+}
+
+type LocationModel {
+  id: ID!
+  sectionId: ID!
+  name: String!
+  ordering: Int!
+  gameNumber: String
 }
 
 type LocationNameModel {
@@ -121,6 +133,15 @@ type LocationWizformFullEntry {
   wizformElement: WizformElementType!
   comment: String
   icon: String!
+}
+
+input LocationWizformInputModel {
+  locationId: ID!
+  wizformId: ID!
+}
+
+type LocationWizformsBulkInsertResponse {
+  message: String!
 }
 
 type Magic {
@@ -180,6 +201,8 @@ input MagicsInputModel {
 type MutationRoot {
   createBook(name: String!, directory: String!, version: String!): BookModel!
   insertWizformsBulk(wizforms: [WizformInputModel!]!): InsertWizformsResponse!
+  deleteBookLocationEntries(bookId: ID!): DeleteLocationWizformsResponse!
+  insertLocationEntriesBulk(entries: [LocationWizformInputModel!]!): LocationWizformsBulkInsertResponse!
   tryRegisterUser(email: String!, password: String!): RegistrationResult!
   updateWizform(updateModel: WizformUpdateModel!): UpdateWizformResponse!
   renewToken(email: String!, password: String!): TokenUpdateResult!
@@ -197,6 +220,7 @@ type MutationRoot {
 
 type QueryRoot {
   userByEmail(email: String!): UserModel
+  allWizforms(bookId: ID!): [WizformListModel!]!
   wizforms(
     """
     Book this wizform belongs to
@@ -218,7 +242,7 @@ type QueryRoot {
     Optional active collection
     """
     collection: UUID
-  ): [CollectionWizform!]!
+  ): [WizformListModel!]!
   wizform(
     """
     Id of wizform to focus
@@ -253,6 +277,7 @@ type QueryRoot {
   locationEntries(locationId: ID!): [LocationWizformFullEntry!]!
   selectableWizforms(bookId: ID!, locationId: ID!): [WizformSelectionModel!]!
   wizformHabitats(wizformId: ID!): [LocationNameModel!]!
+  allLocationsForBook(bookId: ID!): [LocationModel!]!
   collections(userId: ID!, bookId: ID!): [CollectionFullModel!]!
   activeCollection(bookId: ID!, userId: ID!): ID
   entriesCount(collectionId: ID!): Int!
@@ -364,6 +389,15 @@ input WizformInputModel {
   description: String!
   icon64: String!
   name: String!
+}
+
+type WizformListModel {
+  id: ID!
+  name: String!
+  icon64: String!
+  number: Int!
+  enabled: Boolean!
+  inCollectionId: UUID
 }
 
 type WizformSelectionModel {

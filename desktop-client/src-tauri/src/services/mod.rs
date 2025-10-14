@@ -1,3 +1,3 @@
 mod zanzarah_api;
-mod parser;
+pub mod parser;
 pub mod prelude;

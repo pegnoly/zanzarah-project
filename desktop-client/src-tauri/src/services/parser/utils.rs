@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error::ZZParserError, services::prelude::{MagicElementType, MagicInputModel, MagicSlotInputModel, MagicsInputModel}};
 
-/// Types only used during the process of parsing. No reasons to use them outside of it.
+// Types only used during the process of parsing. No reasons to use them outside of it.
 
 pub struct ZanzarahTextItem {
     pub id: String,
@@ -11,6 +11,19 @@ pub struct ZanzarahTextItem {
     pub content: String,
     pub text_type: i32,
     pub mark: String
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ZanzarahScriptItem {
+    pub id: i32,
+    pub code1: i32,
+    pub code2: i32,
+    pub string1: String,
+    pub string2: String,
+    pub string3: String,
+    pub string4: String,
+    pub string5: String,
+    pub string6: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

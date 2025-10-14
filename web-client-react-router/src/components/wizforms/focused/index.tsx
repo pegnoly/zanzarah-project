@@ -38,7 +38,7 @@ function WizformFocused() {
                         <DialogTitle style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem'}}>{wizform == undefined ? <Loader/> : wizform.name}</DialogTitle>
                         <DialogDescription>{wizform == undefined ? "" : `${activeBook?.elements?.find(e => e.element == wizform.element)?.name} №${wizform.number}`}</DialogDescription>
                     </DialogHeader>
-                    <Accordion defaultValue={FocusedWizformMode.BaseProps}>
+                    <Accordion defaultValue={FocusedWizformMode.BaseProps} variant="contained" style={{overflowY: 'auto'}}>
                         <Accordion.Item value={FocusedWizformMode.BaseProps}>
                             <Accordion.Control>Основные параметры</Accordion.Control>
                             <Accordion.Panel>

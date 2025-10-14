@@ -2,13 +2,12 @@ mod payloads;
 pub mod prelude;
 
 use cynic::{http::ReqwestExt, MutationBuilder, QueryBuilder};
-use payloads::RegisterUserPayload;
 use prelude::{ElementsPayload, FilterWizformsPayload, UpdateWizformPayload};
 use reqwest::Client;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::{error::ZZParserError, services::prelude::{CreateBookMutation, CreateBookMutationArguments, CreateBookPayload}};
+use crate::{error::ZZParserError, services::prelude::{AllWizformsQuery, AllWizformsQueryVariables, BookAllLocationsQuery, BookAllLocationsQueryVariables, CreateBookMutation, CreateBookMutationArguments, CreateBookPayload, LocationEntriesBulkInsertMutation, LocationEntriesBulkInsertMutationArguments, LocationEntryInputModel, LocationWizformsBulkInsertResponse, WizformsMapLocation}};
 
 use super::prelude::{BookFullModel, BooksQuery, BooksQueryArguments, ElementModel, ElementsQuery, ElementsQueryVariables, InsertWizformsResponse, UpdateWizformResponse, WizformEditableModel, WizformInputModel, WizformQuery, WizformQueryVariables, WizformSimpleModel, WizformUpdateMutation, WizformUpdateMutationArguments, WizformsBulkInsertMutation, WizformsBulkInsertMutationArguments, WizformsQuery, WizformsQueryVariables};
 
@@ -118,6 +117,23 @@ impl ZanzarahApiService {
         } 
     }
 
+    pub async fn get_all_wizforms(&self, book_id: Uuid) -> Result<Vec<WizformSimpleModel>, ZZParserError> {
+        let client = self.client.read().await;
+        let query = AllWizformsQuery::build(
+            AllWizformsQueryVariables { book_id: book_id.into() }
+        );
+        let response = client.post(ZANZARAH_API_URL)
+            .run_graphql(query)
+            .await?;
+        if let Some(data) = response.data {
+            Ok(data.all_wizforms)
+        } else if let Some(errors) = response.errors {
+            Err(ZZParserError::GraphQLErrorsArray { route: "Get all wizforms".to_string(), errors })
+        } else {
+            Err(ZZParserError::UnknownGraphQLError)
+        } 
+    }
+
     pub async fn get_wizform(&self, id: Uuid) -> Result<Option<WizformEditableModel>, ZZParserError> {
         let client = self.client.read().await;
         let query = WizformQuery::build(
@@ -167,5 +183,39 @@ impl ZanzarahApiService {
         } else {
             Err(ZZParserError::UnknownGraphQLError)
         }   
+    }
+
+    pub async fn get_all_locations(&self, book_id: Uuid) -> Result<Vec<WizformsMapLocation>, ZZParserError> {
+        let client = self.client.read().await;
+        let query = BookAllLocationsQuery::build(
+            BookAllLocationsQueryVariables { book_id: book_id.into() }
+        );
+        let response = client.post(ZANZARAH_API_URL)
+            .run_graphql(query)
+            .await?;
+        if let Some(data) = response.data {
+            Ok(data.all_locations_for_book)
+        } else if let Some(errors) = response.errors {
+            Err(ZZParserError::GraphQLErrorsArray { route: "Get locations".to_string(), errors })
+        } else {
+            Err(ZZParserError::UnknownGraphQLError)
+        } 
+    }
+
+    pub async fn location_entries_bulk_insert(&self, entries: Vec<LocationEntryInputModel>) -> Result<LocationWizformsBulkInsertResponse, ZZParserError> {
+        let client = self.client.read().await;
+        let query = LocationEntriesBulkInsertMutation::build(
+            LocationEntriesBulkInsertMutationArguments { items: entries }
+        );
+        let response = client.post(ZANZARAH_API_URL)
+            .run_graphql(query)
+            .await?;
+        if let Some(data) = response.data {
+            Ok(data.insert_location_entries_bulk)
+        } else if let Some(errors) = response.errors {
+            Err(ZZParserError::GraphQLErrorsArray { route: "Insert entries bulk ".to_string(), errors })
+        } else {
+            Err(ZZParserError::UnknownGraphQLError)
+        } 
     }
 }

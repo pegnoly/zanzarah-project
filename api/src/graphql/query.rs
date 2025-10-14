@@ -15,7 +15,7 @@ use crate::{
             models::{
                 book::{BookFullModel, BookModel},
                 element::ElementModel,
-                location::{LocationNameModel, LocationWithEntriesCountModel},
+                location::{LocationModel, LocationNameModel, LocationWithEntriesCountModel},
                 location_section::LocationSectionWithCount,
                 location_wizform_entry::LocationWizformFullEntry,
                 wizform::{CollectionWizform, WizformElementType, WizformListModel, WizformSelectionModel},
@@ -64,6 +64,29 @@ impl Query {
                 Err(error)
             }
         }
+    }
+
+    async fn all_wizforms(
+        &self,
+        context: &Context<'_>,
+        book_id: async_graphql::ID
+    ) -> Result<Vec<WizformListModel>, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        service.get_all_wizforms(db, Uuid::from_str(&book_id.0)?).await
     }
 
     async fn wizforms(
@@ -437,6 +460,32 @@ impl Query {
 
         let result = service
             .get_wizform_habitats(db, Uuid::from_str(&wizform_id.0)?)
+            .await?;
+        Ok(result)
+    }
+
+    async fn all_locations_for_book(
+        &self,
+        context: &Context<'_>,
+        book_id: async_graphql::ID,
+    ) -> Result<Vec<LocationModel>, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        let result = service
+            .get_locations_for_book(db, Uuid::from_str(&book_id.0)?)
             .await?;
         Ok(result)
     }

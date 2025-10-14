@@ -1,10 +1,11 @@
-use std::path::PathBuf;
+use std::{io::Write, path::PathBuf};
 
 use base64::Engine;
 use encoding_rs::WINDOWS_1251;
+use itertools::Itertools;
 use uuid::Uuid;
 
-use crate::{error::ZZParserError, services::prelude::{WizformElementType, WizformInputModel}};
+use crate::{app::prelude::RosterScript, error::ZZParserError, services::prelude::{LocationEntryInputModel, WizformElementType, WizformInputModel, WizformSimpleModel, WizformsMapLocation}};
 
 use super::{plugins::prelude::{DescPluginType, NamePlugin, NamePluginType}, prelude::DescPlugin, reader::ZanzarahFileReader, utils::*};
 
@@ -43,6 +44,53 @@ impl<'a> ParseProcessor<'a> {
             });
         }
         Ok(())
+    }
+
+    pub fn parse_scripts(
+        &mut self, 
+        directory: PathBuf, 
+        locations: &[WizformsMapLocation], 
+        scripts: &[RosterScript],
+        wizforms: &[WizformSimpleModel]
+    ) -> Result<Vec<LocationEntryInputModel>, ZZParserError> {
+        let mut entries_to_insert = vec![];
+        for location in locations {
+            if let Some(game_number) = &location.game_number {
+                let mut already_used_numbers_for_location = vec![];
+                let scn_data = std::fs::read(directory.join(format!("Resources\\Worlds\\sc_{game_number}.scn")))?;
+                let hex_string = hex::encode(&scn_data);
+                for i in 0..81 {
+                    let k = if i < 10 {
+                        format!("0{i}")
+                    } else {
+                        i.to_string()
+                    };
+                    let roster = format!("a458{k}90");
+                    if hex_string.contains(&roster) {
+                        let roster = roster.to_uppercase();
+                        // println!("Found roster: {roster}");
+                        if let Some(roster_script) = scripts.iter().find(|s| s.id == roster) {
+                            for line in roster_script.script.lines() {
+                                if line.starts_with("'.0") {
+                                    let elements = line.split(".").collect_vec();
+                                    let wizform_number = elements[2].parse::<i32>()?;
+                                    if !already_used_numbers_for_location.contains(&wizform_number) {
+                                        let wizform_id = &wizforms.iter().find(|w| w.number == wizform_number).unwrap().id;
+                                        already_used_numbers_for_location.push(wizform_number);
+                                        entries_to_insert.push(LocationEntryInputModel {
+                                            location_id: location.id.clone(),
+                                            wizform_id: wizform_id.clone()
+                                        });
+                                    }   
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        println!("Found entries count: {}", entries_to_insert.len());
+        Ok(entries_to_insert)
     }
 
     pub fn parse_wizforms(&mut self, directory: PathBuf, book_id: Uuid) -> Result<Vec<WizformInputModel>, ZZParserError> {

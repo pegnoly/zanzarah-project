@@ -30,7 +30,7 @@ function WizformBaseProps(params: {
                     <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{params.model!.precision}</Text>
                 </Group>
                 <Group gap="xs">
-                    <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Скорость повышения уровня:`}</Text>
+                    <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Скорость прокачки:`}</Text>
                     <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{params.model!.expModifier}</Text>
                 </Group>
             </div>

@@ -78,12 +78,13 @@ pub struct WizformsBulkInsertMutation {
 }
 
 #[derive(Debug, cynic::QueryFragment, Serialize, Clone)]
-#[cynic(graphql_type = "CollectionWizform")]
+#[cynic(graphql_type = "WizformListModel")]
 pub struct WizformSimpleModel {
     pub id: cynic::Id,
     pub name: String,
     pub icon64: String,
-    pub enabled: bool
+    pub enabled: bool,
+    pub number: i32
 }
 
 #[derive(Debug, cynic::QueryVariables)]
@@ -98,6 +99,18 @@ pub struct WizformsQueryVariables {
 pub struct WizformsQuery {
     #[arguments(bookId: $book_id, elementFilter: $element, nameFilter: $name)]
     pub wizforms: Vec<WizformSimpleModel>
+}
+
+#[derive(Debug, cynic::QueryVariables)]
+pub struct AllWizformsQueryVariables {
+    pub book_id: cynic::Id
+}
+
+#[derive(Debug, cynic::QueryFragment)]
+#[cynic(graphql_type = "QueryRoot", variables = "AllWizformsQueryVariables")]
+pub struct AllWizformsQuery {
+    #[arguments(bookId: $book_id)]
+    pub all_wizforms: Vec<WizformSimpleModel>
 }
 
 #[derive(Debug, cynic::QueryFragment, Serialize, Clone)]

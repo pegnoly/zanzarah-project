@@ -3,16 +3,14 @@ use argon2::password_hash::{rand_core::OsRng, SaltString};
 use reqwest::Client;
 use services::prelude::ZanzarahApiService;
 
-use crate::app::prelude::create_book;
+use crate::app::prelude::{create_book, start_scripts_parsing};
 
 mod app;
-mod services;
+pub mod services;
 mod error;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub async fn run() {
-    let salt = SaltString::generate(&mut OsRng).to_string();
-    println!("Salt: {}", salt);
     let exe_path = std::env::current_exe().unwrap();
     let exe_dir = exe_path.parent().unwrap();
     let config_data = std::fs::read_to_string(exe_dir.join("cfg/zz_cfg.json")).unwrap();
@@ -29,6 +27,7 @@ pub async fn run() {
             load_books,
             create_book,
             load_current_book,
+            start_scripts_parsing,
             start_parsing,
             load_wizforms,
             load_wizform_for_edit,

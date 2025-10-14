@@ -395,6 +395,7 @@ pub struct WizformListModel {
     pub name: String,
     pub icon64: String,
     pub number: i16,
+    pub enabled: bool,
     pub in_collection_id: Option<Uuid>
 }
 
@@ -414,6 +415,10 @@ impl WizformListModel {
 
     async fn number(&self) -> i16 {
         self.number
+    }
+
+    async fn enabled(&self) -> bool {
+        self.enabled
     }
 
     async fn in_collection_id(&self) -> Option<Uuid> {

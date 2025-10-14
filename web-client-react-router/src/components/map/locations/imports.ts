@@ -267,4 +267,97 @@ export const locationBackgroundsData = new Map<string, string>([
     ["11e529d2-4239-49dd-9087-962db71cb5a7", blueQuarter],
     ["0853f56d-829c-49ca-a7e0-dd1b2d676751", darkCathedralEntrance],
     ["8752ccbc-febf-44f8-8144-ebba9a754b03", luciusUnderground],
+
+    // garden global 4.99
+    ["995b30b0-0a4f-42ed-a650-998de3c2e534", raphyGrotto],
+    ["48458c60-18b2-461d-a595-1d844faf8349", dumpLift],
+    ["bb26d02c-782c-4374-973b-3323f4c1bc8a", endeva],
+    ["08a0ce63-78c9-4eec-879f-88ec989ef380", fairyGardenEntrance],
+    ["22a4067c-059e-4173-b3ab-6926b5964e22", smallWaterfall],
+    ["642513f5-570d-49a2-b65a-6acfc44b09a7", luciusHouseRiver],
+    ["19e49aa0-50e3-459a-8765-cf887b796d73", luciusHouse],
+    ["246102ba-ca32-4fc2-b63f-f25d6fdf391a", dwarfCloudCave],
+    ["9f337d8c-acf9-4895-9a6d-cba59ee21455", mountainRealmPassage],
+
+    // tiralin global 4.99
+    ["5fcb3fdf-670d-4175-ae6f-06a49d1e1ff5", tiralinEast],
+    ["4cf11983-9049-432a-aec3-a6b96e8d3692", tiralinWest],
+    ["eae94c01-cbda-4e51-95d9-aea5fbec55aa", undergroundFirstLevel],
+    ["e32bd0f1-71a4-46e7-804d-8648abd0a8b8", undergroundSecondLevel],
+
+    // swamps global 4.99
+    ["79ccfd15-d682-47f1-b182-e9644d0b150f", danmor],
+    ["3cb29a11-7ec1-48c8-bfb8-2384fe84471e", swampsLeftToDanmor],
+    ["b22df41e-180d-4e52-9b7a-ff83dca49441", swampsToTiralin],
+    ["968ba955-ce09-4c17-b48a-b9a363e4a219", stonehenge],
+    ["b6801302-f1e6-4d7b-acab-3a34d92fa763", farSwamps],
+    ["355d37b5-f70c-4b0b-8900-a8e87a0b659b", pathToBigTree],
+    ["5c0a2edf-6a18-4e9e-b618-3e63290fff90", bigTree],
+    ["45c83b4a-e796-4d31-9f7e-509ca79be6ec", darkRealmEntrance],
+
+    // mountains global 4.99
+    ["533fdf73-47a9-4ad0-9a35-b2803b6bfa85", greatWaterfalls],
+    ["167df949-bdbd-4c48-b173-74de8d1e22c3", mountainsEntrance],
+    ["3fd8695c-84f3-4fe0-b94d-3f4aeeffa9a5", mountainBridge],
+    ["84873393-b90d-4e7f-8b7a-22eeeaaf8c48", mountainRise],
+    ["30ca94c8-67c0-491b-bdd0-ff4edf4b89ac", prepicise],
+    ["d033ebe4-5540-494f-a667-5739552f9232", dwarvenTower],
+    ["b741c1c5-23a5-4ef5-823e-bbd6e5836c22", dwarvenSacredPlace],
+    ["fad3830e-95e1-4c10-b030-d241c7419bd4", mountainsFork],
+    ["0c96a873-3328-47f6-9c5e-4a745d4e3998", pathToMountainPeak],
+
+    // ice peaks global 4.99
+    ["22295348-eaec-4e3e-b265-ee04053929c5", icePathToPeak],
+    ["0a8963eb-659f-4711-8a28-af9889453922", icePeaksEntrance],
+    ["4a5f6e49-a81c-45bf-b018-78142fa9c47e", caveWithVortex],
+    ["32be66f3-d5a9-4b2f-88e1-ee49ed35f31b", iceCavesEntrance],
+    ["237e1b34-9fca-4671-bcaf-377544aa5195", iceCavesWithRune],
+    ["be3e03d8-c2a7-4e10-ab17-e1b0fc692716", lasseCave],
+
+    // realms of clouds 4.99
+    ["79fd11ad-c825-4c47-85dd-5a09879bea87", dump],
+    ["5da15c70-8b1a-4a2d-a297-24688a00565a", lift],
+    ["addbee9c-cb7a-4e14-9371-e438d41dedbd", pathToArena],
+    ["3589d0d0-a4fa-4bb9-9b7b-f6c7a77c3d24", arena],
+    ["44c348f2-845a-459e-b7a6-affab97650e4", teleportPlace],
+    ["fb5d6b9f-4737-4e97-8800-157c5b909547", pavilion],
+    ["2b0585f9-d9fc-4b55-8919-c488ad195607", pathToCathedral],
+    ["652ac1eb-d0e2-4d99-b3b6-ccd482532e04", cathedral],
+
+    // lava caves 4.99
+    ["63566edc-c9d0-4b5a-8412-b755fd69476c", lavaLake],
+    ["ad5b23e7-879b-4da9-8647-4a1f88600893", abandonedMine],
+    ["64fc9328-b9bd-4302-8635-ff411b560931", crater],
+    ["851ac854-bbed-466b-8863-9edc3751c06c", minersCamp],
+    ["c08efa5b-92c9-4500-928b-972ff635985e", mainLavaCave],
+    ["87f4451c-5fb4-478b-a87c-fecfa635c331", topFork],
+    ["2ef9be5e-f37d-4042-877e-544d29b5ef1e", midFork],
+
+    // dark realm 4.99
+    ["9b6b434e-f97e-4036-ba12-d3caaf1659d5", darkRealmOutsides],
+    ["f881a21d-78d4-4ea9-8518-ae44185db8aa", darkRealmCenterQuarter],
+    ["0df0a8d8-e1d5-4a3d-9c1d-00399a3156fb", redQuarter],
+    ["02c1147c-e28d-456d-a04c-d54775f735b0", greenQuarter],
+    ["43c74779-b3ed-4a6f-b692-4e47064a9ced", thrine],
+    ["263b308e-68a8-4e7c-a429-1fc02798424b", blueQuarter],
+    ["d02d5663-03e5-4689-b412-0b125b85786e", darkCathedralEntrance],
+    ["afd3e336-4fb2-4ba7-8bf5-b52fb622ebbd", luciusUnderground],
+ 
+    // dark caves 4.99
+    ["80c30259-3c80-459c-adb6-bf5493beae8e", caveNearWaterfalls],
+    ["25fff02c-a6cd-4b94-ba72-012142a112b7", cavePathToForest],
+    ["1e92578f-718d-467e-8fd0-46b18b312f29", pathToMonagam],
+    ["3ddcfd22-19fe-41d3-9a40-87961bf38699", monagam],
+    ["74cc4274-8c1f-4527-8056-c57906024d77", factory],
+
+    // forest global 4.99
+    ["24af700e-1df6-4960-bdbf-b9533bb597fa", roadToTiralin],
+    ["291d73fb-a517-4f3a-9bfa-39d788077d6a", tiralinEndevaFork],
+    ["c840a509-44cd-4b97-a64b-f6982bf548f7", ruinsPath],
+    ["3b046299-ff3a-4abc-83ea-5ffbd935e95f", ruins],
+    ["a657c564-27eb-47b4-9488-cfabcf3195a2", forestToMountains],
+    ["c7f1766f-75f4-4e1a-9031-41d3aba60192", forestRiver],
+    ["27de1d29-0ddb-423e-9f76-62ee7340bb0c", magicLake],
+    ["107076ac-ce05-401d-9778-7d877393c711", forestHut],
+    ["3bd42713-eff4-4f36-b30a-92f6c82a763b", fireCardPlace],
 ])

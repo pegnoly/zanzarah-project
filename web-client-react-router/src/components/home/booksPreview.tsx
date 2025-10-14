@@ -93,7 +93,7 @@ function useBooks() {
     return useQuery({
         queryKey: ['books'],
         queryFn: async() => {
-            return fetchBooks({available: true});
+            return fetchBooks({available: false});
         }
     })
 }

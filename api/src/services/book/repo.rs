@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use super::models::{
     book::{self, BookFullModel, BookModel},
     collection::{self, CollectionFullModel},
@@ -8,21 +10,30 @@ use super::models::{
     location_wizform_entry::{self, LocationWizformFullEntry},
     wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel},
 };
-use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, wizform::{CollectionWizform, WizformListModel}}};
+use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, location::{self, LocationModel}, location_section, location_wizform_entry::LocationWizformInputModel, wizform::{CollectionWizform, WizformListModel}}};
 use sea_orm::{
-    ActiveModelTrait,
-    ActiveValue::Set,
-    ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, FromQueryResult,
-    IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QuerySelect,
-    Statement, TransactionTrait,
-    prelude::Expr,
-    sea_query::OnConflict
+    prelude::Expr, sea_query::OnConflict, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QuerySelect, SelectColumns, Statement, TransactionTrait
 };
 use uuid::Uuid;
 
 pub struct BookRepository;
 
 impl BookRepository {
+
+    pub async fn get_all_wizforms(
+        &self,
+        db: &DatabaseConnection,
+        book_id: Uuid,
+    ) -> Result<Vec<WizformListModel>, ZZApiError> {
+        Ok(
+            wizform::Entity::find()
+                .filter(wizform::Column::BookId.eq(book_id))
+                .filter(wizform::Column::Enabled.eq(true))
+                .into_model::<WizformListModel>()
+                .all(db).await?
+        )
+    }
+
     pub async fn get_wizforms(
         &self,
         book_id: Uuid,
@@ -36,7 +47,7 @@ impl BookRepository {
             sea_orm::DatabaseBackend::Postgres,
             r#"
                 SELECT 
-                    w.id, w.name, w.icon64, w.number, ce.id AS in_collection_id
+                    w.id, w.name, w.icon64, w.number, w.enabled, ce.id AS in_collection_id
                 FROM 
                     wizforms w
                 LEFT JOIN 
@@ -478,6 +489,25 @@ impl BookRepository {
         Ok(id)
     }
 
+    pub async fn add_location_wizforms_bulk(
+        &self,
+        db: &DatabaseConnection,
+        items: Vec<LocationWizformInputModel>
+    ) -> Result<(), ZZApiError> {
+        let transaction = db.begin().await?;
+        for item in items {
+            let model_to_insert = location_wizform_entry::ActiveModel {
+                id: Set(Uuid::new_v4()),
+                location_id: Set(Uuid::from_str(&item.location_id.0)?),
+                wizform_id: Set(Uuid::from_str(&item.wizform_id.0)?),
+                comment: Set(None)
+            };
+            model_to_insert.insert(db).await?;
+        }
+        transaction.commit().await?;
+        Ok(())
+    }
+
     pub async fn add_location_wizform_comment(
         &self,
         db: &DatabaseConnection,
@@ -613,5 +643,45 @@ impl BookRepository {
         .await?;
         tracing::info!("Wizform habitats: {:#?}", &data);
         Ok(data)
+    }
+
+    pub async fn get_locations_for_book(
+        &self,
+        db: &DatabaseConnection,
+        book_id: Uuid
+    ) -> Result<Vec<LocationModel>, ZZApiError> {
+        let result = LocationModel::find_by_statement(Statement::from_sql_and_values(
+                sea_orm::DatabaseBackend::Postgres, 
+                r#"
+                    select l.id, l.section_id, l.name, l.ordering, l.game_number from locations l
+                    left join location_sections ls on ls.id = l.section_id   
+                    where ls.book_id = $1
+                "#, [book_id.into()])
+            )
+            .all(db)
+            .await?;
+        tracing::info!("Locations: {:#?}", &result);
+        Ok(result)
+    }
+
+    pub async fn delete_all_location_entries_for_book(
+        &self,
+        db: &DatabaseConnection,
+        book_id: Uuid
+    ) -> Result<(), ZZApiError> {
+        let result = db.execute(Statement::from_sql_and_values(sea_orm::DatabaseBackend::Postgres, 
+        r#"
+            delete from location_wizform_entries
+            using (
+                select lwe.id from location_wizform_entries lwe
+                left join locations l on lwe.location_id = l.id
+                left join location_sections ls on ls.id = l.section_id
+                where ls.book_id = $1
+            ) as subquery
+            where location_wizform_entries.id = subquery.id
+            "#, [book_id.into()]))
+            .await?;
+        tracing::info!("Delete entries result: {:#?}", &result);
+        Ok(())
     }
 }

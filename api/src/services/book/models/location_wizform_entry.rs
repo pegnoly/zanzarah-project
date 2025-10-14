@@ -73,6 +73,22 @@ impl LocationWizformEntryModel {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, async_graphql::InputObject)]
+pub struct LocationWizformInputModel {
+    pub location_id: async_graphql::ID,
+    pub wizform_id: async_graphql::ID
+}
+
+#[derive(async_graphql::SimpleObject)]
+pub struct LocationWizformsBulkInsertResponse {
+    pub message: String
+}
+
+#[derive(async_graphql::SimpleObject)]
+pub struct DeleteLocationWizformsResponse {
+    pub message: String
+}
+
 #[derive(Debug, FromQueryResult, Serialize, Deserialize)]
 pub struct LocationWizformFullEntry {
     pub id: Uuid,
