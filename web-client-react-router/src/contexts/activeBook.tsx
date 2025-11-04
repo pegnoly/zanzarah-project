@@ -23,8 +23,8 @@ export const ActiveBookContext = createContext<ActiveBookContextType | undefined
 const getActiveBook = () => {
     const existing = Cookies.get("zanzarah-project-current-book");
     if (existing == undefined) {
-        Cookies.set("zanzarah-project-current-book", "5a5247c2-273b-41e9-8224-491e02f77d8d", {expires: 10000000});
-        return "5a5247c2-273b-41e9-8224-491e02f77d8d";
+        Cookies.set("zanzarah-project-current-book", "78bd36dc-6ba2-4030-ac59-398076b73d93", {expires: 10000000});
+        return "78bd36dc-6ba2-4030-ac59-398076b73d93";
     }
     return existing;
 }

@@ -16,8 +16,9 @@ function CurrentBook(params: {book: Book | undefined}) {
                 </Tooltip>
             </div>
             <ButtonGroup>
-                <Button onClick={() => invoke("start_parsing")}>Parse files</Button>
-                <Button onClick={() => invoke("start_scripts_parsing")}>Parse scripts</Button>
+                <Button radius={0} bg="cyan" onClick={() => invoke("start_parsing")}>Parse files</Button>
+                <Button radius={0} bg="grape" onClick={() => invoke("start_scripts_parsing")}>Parse scripts</Button>
+                <Button radius={0} bg="indigo" onClick={() => invoke("start_items_parsing")}>Parse items</Button>
             </ButtonGroup>
         </Stack>
     }</div>

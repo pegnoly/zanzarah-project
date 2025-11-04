@@ -10,7 +10,7 @@ use super::models::{
     location_wizform_entry::{self, LocationWizformFullEntry},
     wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel},
 };
-use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, location::{self, LocationModel}, location_section, location_wizform_entry::LocationWizformInputModel, wizform::{CollectionWizform, WizformListModel}}};
+use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, item::{self, ItemInputModel}, location::{self, LocationModel}, location_section, location_wizform_entry::LocationWizformInputModel, wizform::{CollectionWizform, WizformListModel}}};
 use sea_orm::{
     prelude::Expr, sea_query::OnConflict, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QuerySelect, SelectColumns, Statement, TransactionTrait
 };
@@ -682,6 +682,26 @@ impl BookRepository {
             "#, [book_id.into()]))
             .await?;
         tracing::info!("Delete entries result: {:#?}", &result);
+        Ok(())
+    }
+
+    pub async fn insert_items_bulk(
+        &self,
+        db: &DatabaseConnection,
+        items: Vec<ItemInputModel>
+    ) -> Result<(), ZZApiError> {
+        let transaction = db.begin().await?;
+        for item in items {
+            let model_to_insert = item::ActiveModel {
+                id: Set(uuid::Uuid::new_v4()),
+                book_id: Set(Uuid::from_str(&item.book_id.0)?),
+                name: Set(item.name),
+                icon64: Set(item.icon64),
+                evolutions: Set(item.evolutions)
+            };
+            model_to_insert.insert(db).await?;
+        }
+        transaction.commit().await?;
         Ok(())
     }
 }

@@ -96,7 +96,27 @@ type EmailConfirmationResult {
   permission: UserPermissionType!
 }
 
+input EvolutionListItem {
+  from: Int!
+  to: Int!
+}
+
+input EvolutionsList {
+  items: [EvolutionListItem!]!
+}
+
 type InsertWizformsResponse {
+  message: String!
+}
+
+input ItemInputModel {
+  bookId: ID!
+  name: String!
+  icon64: String!
+  evolutions: EvolutionsList!
+}
+
+type ItemsBulkInsertResponse {
   message: String!
 }
 
@@ -207,6 +227,7 @@ type MutationRoot {
   updateWizform(updateModel: WizformUpdateModel!): UpdateWizformResponse!
   renewToken(email: String!, password: String!): TokenUpdateResult!
   confirmEmail(email: String!, code: String!): EmailConfirmationResult!
+  insertItemsBulk(items: [ItemInputModel!]!): ItemsBulkInsertResponse!
   createCollection(userId: ID!, bookId: ID!, name: String!): CollectionModel!
   setActiveCollection(collectionId: ID!): String!
   addCollectionItem(collectionId: ID!, wizformId: ID!): AddCollectionItemResponse!

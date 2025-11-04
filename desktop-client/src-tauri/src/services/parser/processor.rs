@@ -1,11 +1,10 @@
-use std::{io::Write, path::PathBuf};
-
+use std::path::PathBuf;
 use base64::Engine;
 use encoding_rs::WINDOWS_1251;
 use itertools::Itertools;
 use uuid::Uuid;
 
-use crate::{app::prelude::RosterScript, error::ZZParserError, services::prelude::{LocationEntryInputModel, WizformElementType, WizformInputModel, WizformSimpleModel, WizformsMapLocation}};
+use crate::{app::prelude::{ParsedScript, RosterScript}, error::ZZParserError, services::prelude::{EvolutionListItem, EvolutionsList, ItemInputModel, LocationEntryInputModel, WizformElementType, WizformInputModel, WizformSimpleModel, WizformsMapLocation}};
 
 use super::{plugins::prelude::{DescPluginType, NamePlugin, NamePluginType}, prelude::DescPlugin, reader::ZanzarahFileReader, utils::*};
 
@@ -166,7 +165,7 @@ impl<'a> ParseProcessor<'a> {
                 let pixel = icons_set.get_pixel(offset, y + 1);
                 image.set_pixel(x, y, pixel);
             }
-            let image_path = icons_save_path.join(format!("{}.bmp", number));
+            let image_path = icons_save_path.join(format!("{number}.bmp"));
             let mut image64_repr = String::new();
     
             if image.save(&image_path).is_ok() {
@@ -240,5 +239,66 @@ impl<'a> ParseProcessor<'a> {
 
     fn get_wizform_name_by_number(&self, wizforms: &[WizformInputModel], number: i32) -> Option<String> {
         wizforms.iter().find(|w| w.number == number).map(|wizform| wizform.name.clone())
+    }
+
+    pub fn parse_items(&self, directory: PathBuf, scripts: &[ParsedScript], items_ids: &[String], book_id: Uuid) -> Result<Vec<ItemInputModel>, ZZParserError> {
+        let icons_path = directory.join("Resources\\Bitmaps\\ITM000T.BMP");
+        let icons_save_path = std::env::current_exe()?
+            .parent()
+            .map(|m| m.join(format!("{}\\items\\", &book_id)))
+            .ok_or(ZZParserError::PathNotExists("items icons save".to_string()))?;
+        std::fs::create_dir_all(&icons_save_path)?;
+        let icons_set = bmp::open(icons_path)?;
+        let items_scripts = scripts.iter()
+            .filter(|s| items_ids.iter().any(|id| int_to_le_hex_string(s.id) == *id))
+            .collect_vec();
+
+        let mut items = vec![];
+        items_scripts.iter()
+            .for_each(|is| {
+                let mut is_reading = false;
+                let mut current_target = -1;
+                let mut current_produced = -1;
+                let mut evolutions = vec![];
+                for line in is.script.lines() {
+                    if line.starts_with("D") {
+                        is_reading = true;
+                        current_target = line.split(".").last().unwrap().parse::<i32>().unwrap();
+                    }
+                    if line.starts_with(";.") && is_reading {
+                        current_produced = line.split(".").last().unwrap().parse::<i32>().unwrap();
+                    }
+                    if line.starts_with("7") && is_reading {
+                        is_reading = false;
+                        evolutions.push(EvolutionListItem { from: current_target, to: current_produced });
+                    }
+                }
+                let name_id = int_to_le_hex_string(is.name_id.unwrap());
+                let name = self.texts.iter()
+                    .find(|text| text.id == name_id)
+                    .ok_or(ZZParserError::UnknownTextId(name_id.clone()))
+                    .unwrap()
+                    .content.clone();
+                let mut image = bmp::Image::new(ICON_DIMENSIONS, ICON_DIMENSIONS);
+                for (x, y) in image.coordinates() {
+                    let offset = x + 40 * (is.number.unwrap() as u32);
+                    let pixel = icons_set.get_pixel(offset, y + 1);
+                    image.set_pixel(x, y, pixel);
+                }
+                let image_path = icons_save_path.join(format!("{}.bmp", &name));
+                let mut image64_repr = String::new();
+        
+                if image.save(&image_path).is_ok() {
+                    image64_repr = base64::prelude::BASE64_STANDARD.encode(std::fs::read(image_path).unwrap());
+                }
+                items.push(ItemInputModel {
+                    book_id: book_id.into(),
+                    name,
+                    icon64: image64_repr,
+                    evolutions: EvolutionsList { items: evolutions }
+                });
+            });
+
+        Ok(items)
     }
 }

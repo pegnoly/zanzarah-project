@@ -1,5 +1,16 @@
-use app::prelude::{load_books, load_current_book, load_elements, load_wizform_for_edit, load_wizforms, start_parsing, test, update_wizform_display_status, update_wizform_element, AppConfig};
-use argon2::password_hash::{rand_core::OsRng, SaltString};
+use app::prelude::{
+    load_books, 
+    load_current_book, 
+    load_elements, 
+    load_wizform_for_edit, 
+    load_wizforms, 
+    start_parsing,
+    start_items_parsing,
+    test, 
+    update_wizform_display_status, 
+    update_wizform_element, 
+    AppConfig
+};
 use reqwest::Client;
 use services::prelude::ZanzarahApiService;
 
@@ -28,6 +39,7 @@ pub async fn run() {
             create_book,
             load_current_book,
             start_scripts_parsing,
+            start_items_parsing,
             start_parsing,
             load_wizforms,
             load_wizform_for_edit,

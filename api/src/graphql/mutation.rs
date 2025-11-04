@@ -14,7 +14,7 @@ use crate::{
             },
         },
         book::{
-            models::{book::BookModel, location_wizform_entry::{DeleteLocationWizformsResponse, LocationWizformInputModel, LocationWizformsBulkInsertResponse}, wizform::{WizformInputModel, WizformModel, WizformUpdateModel}},
+            models::{book::BookModel, item::{ItemInputModel, ItemsBulkInsertResponse}, location_wizform_entry::{DeleteLocationWizformsResponse, LocationWizformInputModel, LocationWizformsBulkInsertResponse}, wizform::{WizformInputModel, WizformModel, WizformUpdateModel}},
             repo::BookRepository,
         },
     },
@@ -317,5 +317,33 @@ impl Mutation {
 
         let result = repo.confirm_email(db, email, code).await?;
         Ok(result)
+    }
+
+    async fn insert_items_bulk(
+        &self,
+        context: &Context<'_>,
+        items: Vec<ItemInputModel>
+    ) -> Result<ItemsBulkInsertResponse, ZZApiError> {
+        let repo = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!("Failed to get book repo from context. {}", &error.message);
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        match repo.insert_items_bulk(db, items).await {
+            Ok(()) => Ok(ItemsBulkInsertResponse {
+                message: "Items inserted OK".to_string(),
+            }),
+            Err(error) => {
+                tracing::info!("Failed to insert items: {:#?}", &error);
+                Err(error)
+            }
+        }
     }
 }

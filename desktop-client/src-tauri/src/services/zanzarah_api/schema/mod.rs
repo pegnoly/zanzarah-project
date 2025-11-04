@@ -7,4 +7,5 @@ mod book;
 mod user;
 mod location;
 mod location_entry;
+mod item;
 pub mod prelude;

@@ -88,6 +88,7 @@ function CollectionsRenderer() {
             }
         });
         setCollections(updatedCollections);
+        activeBook?.updateCurrentCollection(updated);
     }
 
     return <>
@@ -166,7 +167,7 @@ function CurrentCollection({model}: {
 function CollectionSelector({models, selectCallback}: {
     models: CollectionModel [],
     selectCallback: (updated: string) => void
-}) { 
+}) {
     const [currentCollection, setCurrentCollection] = useState<string | null>(models.find(c => c.active)?.id!)
 
     const setActiveCollectionMutation = useMutation({

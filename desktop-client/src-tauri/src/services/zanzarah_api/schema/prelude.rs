@@ -41,3 +41,11 @@ pub use super::location_entry::{
     LocationEntriesBulkInsertMutationArguments,
     LocationWizformsBulkInsertResponse
 };
+pub use super::item::{
+    ItemInputModel,
+    ItemsBulkInsertMutation,
+    ItemsBulkInsertMutationVariables,
+    ItemsBulkInsertResponse,
+    EvolutionListItem,
+    EvolutionsList
+};

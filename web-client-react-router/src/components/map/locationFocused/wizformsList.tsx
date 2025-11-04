@@ -37,18 +37,20 @@ function WizformsList({entries}: {
             <Accordion.Item key={i} value={e}>
                 <Accordion.Control style={{backgroundColor: 'silver'}}>{activeBook.elements?.find(el => el.element == e)?.name}</Accordion.Control>
                 <Accordion.Panel>
-                <List>{entries!
-                    .filter(m => m.wizformElement == e)
-                    .map(m => (
-                    <WizformsListItem 
-                        key={m.id} 
-                        item={m} 
-                        // auth={params.auth} 
-                        // deletedCallback={itemDeleted} 
-                        // commentAddedCallback={commentAdded}
-                        // commentDeletedCallback={commentDeleted}
-                    />
-                ))}</List> 
+                <div style={{overflowY: 'auto', maxHeight: 500}}>
+                    <List>{entries!
+                        .filter(m => m.wizformElement == e)
+                        .map(m => (
+                        <WizformsListItem 
+                            key={m.id} 
+                            item={m} 
+                            // auth={params.auth} 
+                            // deletedCallback={itemDeleted} 
+                            // commentAddedCallback={commentAdded}
+                            // commentDeletedCallback={commentDeleted}
+                        />
+                    ))}</List> 
+                </div>
                 </Accordion.Panel>
             </Accordion.Item>
         ))}

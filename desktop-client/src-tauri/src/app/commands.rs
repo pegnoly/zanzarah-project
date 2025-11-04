@@ -1,14 +1,12 @@
-use std::{collections::HashMap, path::PathBuf, str::FromStr};
-
-use argon2::{password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString}, Argon2, PasswordHash};
+use std::path::PathBuf;
 use itertools::Itertools;
-use serde::{de, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use tauri::State;
 use uuid::Uuid;
 
 use crate::{error::ZZParserError, services::{parser::utils::int_to_le_hex_string, prelude::{BookFullModel, CreateBookPayload, ElementModel, ElementsPayload, FilterWizformsPayload, ParseProcessor, RegisterUserPayload, UpdateWizformPayload, WizformEditableModel, WizformElementType, WizformSimpleModel, ZanzarahApiService}}};
 
-use super::{config::{AppConfig, BookConfigSchema}, types::BookFrontendModel, utils::check_local_book};
+use super::{config::AppConfig, types::BookFrontendModel, utils::check_local_book};
 
 #[tauri::command]
 pub async fn load_books(
@@ -19,7 +17,7 @@ pub async fn load_books(
         //println!("Got some books from api: {:#?}", &books);
         let local_books_compared = books.iter_mut()
             .filter_map(|book| {
-                if let Err(error) = check_local_book(book, &app_config.books_data) {
+                if let Err(_) = check_local_book(book, &app_config.books_data) {
                     //log::error!("Failed to compare local book data with db one: {:?}", &error);
                     None
                 } else {
@@ -129,7 +127,11 @@ pub struct ParsedScript {
     #[serde(rename = "Id")]
     pub id: i32,
     #[serde(rename = "Script")]
-    pub script: String
+    pub script: String,
+    #[serde(rename = "NameId")]
+    pub name_id: Option<i32>,
+    #[serde(rename = "Number")]
+    pub number: Option<i32>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -168,6 +170,23 @@ pub async fn start_scripts_parsing(
     let entries = parser.parse_scripts(PathBuf::from(current_book_config.directory.clone()), &locations, &rosters_scripts, &wizforms)?;
     zanzarah_service.location_entries_bulk_insert(entries).await?;
 
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn start_items_parsing(
+    app_config: State<'_, AppConfig>,
+    zanzarah_service: State<'_, ZanzarahApiService>
+) -> Result<(), ZZParserError> {
+    let data = std::fs::read_to_string("D:\\zanzarah-items.json")?;
+    let scripts: Vec<ParsedScript> = serde_json::from_str(&data).unwrap();
+
+    let current_book_config = app_config.books_data.get(&app_config.current_book).unwrap();
+    let mut parser = ParseProcessor::new(&current_book_config.name_plugins, &current_book_config.desc_plugins);
+    parser.parse_texts(PathBuf::from(current_book_config.directory.clone()))?;
+    let items = parser
+        .parse_items(PathBuf::from(current_book_config.directory.clone()), &scripts, current_book_config.items.as_ref().unwrap(), app_config.current_book)?;
+    zanzarah_service.items_bulk_insert(items).await?;
     Ok(())
 }
 

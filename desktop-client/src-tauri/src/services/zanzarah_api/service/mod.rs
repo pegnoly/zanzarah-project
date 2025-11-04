@@ -7,12 +7,12 @@ use reqwest::Client;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::{error::ZZParserError, services::prelude::{AllWizformsQuery, AllWizformsQueryVariables, BookAllLocationsQuery, BookAllLocationsQueryVariables, CreateBookMutation, CreateBookMutationArguments, CreateBookPayload, LocationEntriesBulkInsertMutation, LocationEntriesBulkInsertMutationArguments, LocationEntryInputModel, LocationWizformsBulkInsertResponse, WizformsMapLocation}};
+use crate::{error::ZZParserError, services::prelude::{AllWizformsQuery, AllWizformsQueryVariables, BookAllLocationsQuery, BookAllLocationsQueryVariables, CreateBookMutation, CreateBookMutationArguments, CreateBookPayload, ItemInputModel, ItemsBulkInsertMutation, ItemsBulkInsertMutationVariables, ItemsBulkInsertResponse, LocationEntriesBulkInsertMutation, LocationEntriesBulkInsertMutationArguments, LocationEntryInputModel, LocationWizformsBulkInsertResponse, WizformsMapLocation}};
 
 use super::prelude::{BookFullModel, BooksQuery, BooksQueryArguments, ElementModel, ElementsQuery, ElementsQueryVariables, InsertWizformsResponse, UpdateWizformResponse, WizformEditableModel, WizformInputModel, WizformQuery, WizformQueryVariables, WizformSimpleModel, WizformUpdateMutation, WizformUpdateMutationArguments, WizformsBulkInsertMutation, WizformsBulkInsertMutationArguments, WizformsQuery, WizformsQueryVariables};
 
-// const ZANZARAH_API_URL: &str = "https://zanzarah-project-api-lyaq.shuttle.app/";
-const ZANZARAH_API_URL: &str = "http://127.0.0.1:8000/";
+const ZANZARAH_API_URL: &str = "https://zanzarah-project-api-lyaq.shuttle.app/";
+// const ZANZARAH_API_URL: &str = "http://127.0.0.1:8000/";
 
 pub struct ZanzarahApiService {
     client: RwLock<Client>
@@ -214,6 +214,23 @@ impl ZanzarahApiService {
             Ok(data.insert_location_entries_bulk)
         } else if let Some(errors) = response.errors {
             Err(ZZParserError::GraphQLErrorsArray { route: "Insert entries bulk ".to_string(), errors })
+        } else {
+            Err(ZZParserError::UnknownGraphQLError)
+        } 
+    }
+
+    pub async fn items_bulk_insert(&self, items: Vec<ItemInputModel>) -> Result<ItemsBulkInsertResponse, ZZParserError> {
+        let client = self.client.read().await;
+        let query = ItemsBulkInsertMutation::build(
+            ItemsBulkInsertMutationVariables { items }
+        );
+        let response = client.post(ZANZARAH_API_URL)
+            .run_graphql(query)
+            .await?;
+        if let Some(data) = response.data {
+            Ok(data.insert_items_bulk)
+        } else if let Some(errors) = response.errors {
+            Err(ZZParserError::GraphQLErrorsArray { route: "Insert items bulk ".to_string(), errors })
         } else {
             Err(ZZParserError::UnknownGraphQLError)
         } 
