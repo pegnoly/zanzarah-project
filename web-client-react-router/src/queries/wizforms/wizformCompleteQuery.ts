@@ -34,6 +34,8 @@ const wizformCompleteQuery = gql`
             evolutionForm,
             previousForm,
             inCollectionId,
+            previousIcon,
+            evolutionIcon,
             magics {
                 types {
                     level,

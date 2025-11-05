@@ -10,9 +10,9 @@ use super::models::{
     location_wizform_entry::{self, LocationWizformFullEntry},
     wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel},
 };
-use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, item::{self, ItemEvolutionModel, ItemInputModel}, location::{self, LocationModel}, location_section, location_wizform_entry::LocationWizformInputModel, wizform::{CollectionWizform, WizformListModel}}};
+use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, item::{self, ItemEvolutionModel, ItemInputModel}, location::LocationModel, location_wizform_entry::LocationWizformInputModel, wizform::{CollectionWizform, WizformListModel}}};
 use sea_orm::{
-    prelude::Expr, sea_query::OnConflict, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QuerySelect, SelectColumns, Statement, TransactionTrait
+    prelude::Expr, sea_query::OnConflict, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QuerySelect, Statement, TransactionTrait
 };
 use uuid::Uuid;
 
@@ -87,17 +87,26 @@ impl BookRepository {
         let wizform = CollectionWizform::find_by_statement(Statement::from_sql_and_values(
             sea_orm::DatabaseBackend::Postgres,
             r#"
-                SELECT 
-                    w.*,
-                    ce.id AS in_collection_id
-                FROM 
-                    wizforms w
-                LEFT JOIN 
-                    collection_entries ce 
-                    ON ce.wizform_id = w.id 
-                    AND ce.collection_id = $1
-                WHERE 
-                    w.id = $2
+                    SELECT 
+                        w.*,
+                        we.icon64 AS evolution_icon, 
+                        wp.icon64 AS previous_icon,
+                        ce.id AS in_collection_id
+                    FROM 
+                        wizforms w
+                    LEFT JOIN 
+                        collection_entries ce 
+                        ON ce.wizform_id = w.id 
+                        AND ce.collection_id = $1
+                    LEFT JOIN 
+                        wizforms we
+                        on we.number = w.evolution_form and we.book_id = w.book_id
+                    LEFT JOIN
+                        wizforms wp
+                        on w.number = wp.evolution_form and wp.book_id = w.book_id
+                    WHERE 
+                        w.id = $2
+                        
                 "#,
                 [collection_id.into(), id.into()]))
             .one(db)
@@ -714,14 +723,28 @@ impl BookRepository {
         let result = ItemEvolutionModel::find_by_statement(Statement::from_sql_and_values(
             sea_orm::DatabaseBackend::Postgres, 
             r#"
-                select it.name as item_name, it.icon64 as item_icon, wf.name as wizform_name, wf.icon64 as wizform_icon from items it
-                left join wizforms wf on exists (
-                    select 1 
-                    from json_array_elements(it.evolutions->'items') as item
-                    where (item->>'from')::int = (select number from wizforms where id = $1)
-                    and (item->>'to')::int = wf.number
-                )
-                where wf.book_id = '78bd36dc-6ba2-4030-ac59-398076b73d93'
+                    WITH filtered_evolutions AS (
+                        SELECT 
+                            it.id,
+                            it.name as item_name,
+                            it.icon64 as item_icon,
+                            (item->>'to')::int as target_number
+                        FROM items it
+                        CROSS JOIN json_array_elements(it.evolutions->'items') as item
+                        WHERE (item->>'from')::int = 0
+                    ),
+                    wizforms_filtered AS (
+                        SELECT name as wizform_name, icon64 as wizform_icon, number, book_id
+                        FROM wizforms 
+                        WHERE book_id = '78bd36dc-6ba2-4030-ac59-398076b73d93'
+                    )
+                    SELECT 
+                        fe.item_name, 
+                        fe.item_icon, 
+                        wf.wizform_name, 
+                        wf.wizform_icon 
+                    FROM filtered_evolutions fe
+                    LEFT JOIN wizforms_filtered wf ON fe.target_number = wf.number;
             "#, [wizform_id.into(), book_id.into()]))
             .into_model::<ItemEvolutionModel>()
             .all(db)

@@ -54,7 +54,9 @@ export type WizformFull = {
     evolutionForm: number,
     previousForm: number,
     magics: Magics,
-    inCollectionId: string | null
+    inCollectionId: string | null,
+    previousIcon: string | null,
+    evolutionIcon: string | null
 }
 
 export type WizformSimpleModel = {

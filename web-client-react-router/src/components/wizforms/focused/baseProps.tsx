@@ -1,5 +1,5 @@
 import type { WizformFull } from "@/queries/wizforms/types";
-import { Badge, Group, Text } from "@mantine/core";
+import { Badge, Group, Image, Stack, Text } from "@mantine/core";
 
 type WizformBasePropsSchema = Omit<WizformFull, "magics">;
 
@@ -34,34 +34,37 @@ function WizformBaseProps(params: {
                     <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}>{params.model!.expModifier}</Text>
                 </Group>
             </div>
-            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'end', paddingTop: '5%'}}>
-                <Badge radius={0}>
-                    Превращения
-                </Badge>
-                <div style={{display: 'flex', flexDirection: 'column', gap: '2%', alignItems: 'end'}}>
-                    <Text size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Эволюция:`}</Text>
-                    <Text 
-                        size='md' 
-                        lineClamp={1}
-                        style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
-                    >{params.model!.evolutionForm == -1 ? 'Отстуствует' : params.model!.evolutionName}</Text>
+            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingTop: '5%', gap: '5%'}}>
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4%', width: '50%'}}>
+                    <Badge radius={0}>
+                        Эволюция
+                    </Badge>
+                    {
+                        params.model.evolutionForm == -1 ? 
+                        <Text style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red', fontSize: 15}}>Нет</Text> : 
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '2%', alignItems: 'center', paddingTop: '4%'}}>
+                            <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.evolutionIcon}`}/>
+                            <Text 
+                                style={{fontFamily: 'Comfortaa', fontWeight: 'bolder', fontSize: 14}}
+                            >{`${params.model.evolutionName}`}</Text>
+                            <Text>{`Уровень: ${params.model.evolutionLevel}`}</Text>
+                        </div>
+                    }
                 </div>
-                <Group gap="xs">
-                    <Text span size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Уровень эволюции:`}</Text>
-                    <Text 
-                        span
-                        size='md' 
-                        style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
-                    >{params.model!.evolutionLevel == -1 ? 'Отсутствует' : params.model!.evolutionLevel!}</Text>
-                </Group>
-                <div style={{display: 'flex', flexDirection: 'column', gap: '2%', alignItems: 'end'}}>
-                    <Text span size='md' style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder'}}>{`Предыдущая форма:`}</Text>
-                    <Text 
-                        span
-                        size='md' 
-                        lineClamp={1}
-                        style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
-                    >{params.model!.previousForm == undefined ? 'Отсутствует' : params.model!.previousFormName!}</Text>
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4%', width: '50%'}}>
+                    <Badge radius={0}>
+                        Предыдущая форма
+                    </Badge>
+                    {
+                        params.model.previousForm == undefined ?
+                        <Text style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red', fontSize: 15}}>Нет</Text> :
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '2%', alignItems: 'center', paddingTop: '4%'}}>
+                            <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.previousIcon}`}/>
+                            <Text 
+                                style={{fontFamily: 'Comfortaa', fontWeight: 'bolder', fontSize: 14}}
+                            >{`${params.model.previousFormName}`}</Text>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
