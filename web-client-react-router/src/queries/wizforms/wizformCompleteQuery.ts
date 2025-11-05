@@ -1,20 +1,22 @@
 import request, { gql } from "graphql-request"
-import type { WizformFull, WizformHabitatModel } from "./types"
+import type { ItemEvolutionModel, WizformFull, WizformHabitatModel } from "./types"
 import { useQuery } from "@tanstack/react-query"
 import { API_ENDPOINT } from "../common"
 
 export type WizformCompleteQueryResult = {
     wizform: WizformFull,
-    wizformHabitats: WizformHabitatModel []
+    wizformHabitats: WizformHabitatModel [],
+    wizformEvolutionItems: ItemEvolutionModel []
 }
 
 type WizformCompleteQueryVariables = {
     wizformId: string,
+    bookId: string,
     collectionId: string | null
 }
 
 const wizformCompleteQuery = gql`
-    query wizformCompleteData($wizformId: ID!, $collectionId: ID) {
+    query wizformCompleteData($wizformId: ID!, $bookId: ID!, $collectionId: ID) {
         wizform(id: $wizformId, collectionId: $collectionId) {
             name,
             id,
@@ -62,13 +64,19 @@ const wizformCompleteQuery = gql`
                 sectionName,
                 locationName,
                 comment
+        },
+        wizformEvolutionItems(wizformId: $wizformId, bookId: $bookId) {
+            itemName,
+            itemIcon,
+            wizformName,
+            wizformIcon
         }
     }
 `
 
 export function useWizform(variables: WizformCompleteQueryVariables) {
     return useQuery({
-        queryKey: ["wizform_focused", variables.wizformId, variables.collectionId],
+        queryKey: ["wizform_focused", variables.wizformId, variables.bookId, variables.collectionId],
         queryFn: async() => {
             return request<WizformCompleteQueryResult | undefined, WizformCompleteQueryVariables>(
                 API_ENDPOINT, 

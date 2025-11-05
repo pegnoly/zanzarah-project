@@ -5,15 +5,17 @@ import WizformMagics from "./magicLevels";
 import WizformHabitatsList from "./habitatsList";
 import { useNavigate, useParams } from "react-router";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { WizformFull, WizformHabitatModel } from "@/queries/wizforms/types";
+import { type ItemEvolutionModel, type WizformFull, type WizformHabitatModel } from "@/queries/wizforms/types";
 import { useWizform, type WizformCompleteQueryResult } from "@/queries/wizforms/wizformCompleteQuery";
 import { useActiveBook } from "@/contexts/activeBook";
 import CollectionsField from "./collectionsField";
+import WizformEvolutionsList from "./evolutionsList";
 
 enum FocusedWizformMode {
     BaseProps = "BaseProps",
     Magics = "Magics",
-    Habitats = "Habitats"
+    Habitats = "Habitats",
+    Evolutions = "Evolutions"
 }
 
 function WizformFocused() {
@@ -22,12 +24,14 @@ function WizformFocused() {
 
     const [wizform, setWizform] = useState<WizformFull | undefined>(undefined);
     const [habitats, setHabitats] = useState<WizformHabitatModel [] | undefined>(undefined);
+    const [evolutions, setEvolutions] = useState<ItemEvolutionModel [] | undefined>(undefined);
 
     const activeBook = useActiveBook();
 
     async function wizformLoaded(value: WizformCompleteQueryResult) {
         setWizform(value.wizform);
         setHabitats(value.wizformHabitats);
+        setEvolutions(value.wizformEvolutionItems);
     }
 
     return (
@@ -52,6 +56,14 @@ function WizformFocused() {
                             <Accordion.Panel>
                                 {
                                     wizform == undefined ? <Skeleton/> : <WizformMagics magics={wizform.magics}/>
+                                }
+                            </Accordion.Panel>
+                        </Accordion.Item>
+                        <Accordion.Item value={FocusedWizformMode.Evolutions}>
+                            <Accordion.Control>Превращения</Accordion.Control>
+                            <Accordion.Panel>
+                                {
+                                    evolutions == undefined ? <Skeleton/> : <WizformEvolutionsList evolutions={evolutions}/>
                                 }
                             </Accordion.Panel>
                         </Accordion.Item>
@@ -82,7 +94,7 @@ function WizformLoader({id, onLoad}: {id: string, onLoad: (value: WizformComplet
 
     const activeBook = useActiveBook();
 
-    const { data } = useWizform({wizformId: id, collectionId: activeBook?.currentCollection!});
+    const { data } = useWizform({wizformId: id, bookId: activeBook?.id!, collectionId: activeBook?.currentCollection!});
     useEffect(() => {
         if (data != undefined) {
             onLoad(data);

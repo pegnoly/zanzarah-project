@@ -79,6 +79,10 @@ type CompatibleVersions {
   versions: [String!]!
 }
 
+type DeleteLocationWizformsResponse {
+  message: String!
+}
+
 type ElementModel {
   bookId: ID!
   element: WizformElementType!
@@ -93,8 +97,43 @@ type EmailConfirmationResult {
   registrationState: RegistrationState!
 }
 
+input EvolutionListItem {
+  from: Int!
+  to: Int!
+}
+
+input EvolutionsList {
+  items: [EvolutionListItem!]!
+}
+
 type InsertWizformsResponse {
   message: String!
+}
+
+type ItemEvolutionModel {
+  itemIcon: String!
+  itemName: String!
+  wizformIcon: String!
+  wizformName: String!
+}
+
+input ItemInputModel {
+  bookId: ID!
+  evolutions: EvolutionsList!
+  icon64: String!
+  name: String!
+}
+
+type ItemsBulkInsertResponse {
+  message: String!
+}
+
+type LocationModel {
+  gameNumber: String
+  id: ID!
+  name: String!
+  ordering: Int!
+  sectionId: ID!
 }
 
 type LocationNameModel {
@@ -122,6 +161,15 @@ type LocationWizformFullEntry {
   wizformElement: WizformElementType!
   wizformName: String!
   wizformNumber: Int!
+}
+
+input LocationWizformInputModel {
+  locationId: ID!
+  wizformId: ID!
+}
+
+type LocationWizformsBulkInsertResponse {
+  message: String!
 }
 
 type Magic {
@@ -185,6 +233,9 @@ type MutationRoot {
   confirmEmail(code: String!, email: String!): EmailConfirmationResult!
   createBook(directory: String!, name: String!, version: String!): BookModel!
   createCollection(bookId: ID!, name: String!, userId: ID!): CollectionModel!
+  deleteBookLocationEntries(bookId: ID!): DeleteLocationWizformsResponse!
+  insertItemsBulk(items: [ItemInputModel!]!): ItemsBulkInsertResponse!
+  insertLocationEntriesBulk(entries: [LocationWizformInputModel!]!): LocationWizformsBulkInsertResponse!
   insertWizformsBulk(wizforms: [WizformInputModel!]!): InsertWizformsResponse!
   removeCollectionItem(id: ID!): String!
   removeLocationWizform(id: ID!): WizformSelectionModel
@@ -198,6 +249,8 @@ type MutationRoot {
 
 type QueryRoot {
   activeCollection(bookId: ID!, userId: ID!): ID
+  allLocationsForBook(bookId: ID!): [LocationModel!]!
+  allWizforms(bookId: ID!): [WizformListModel!]!
   books(
     """Query only available for user books"""
     available: Boolean
@@ -224,6 +277,7 @@ type QueryRoot {
     """Id of wizform to focus"""
     id: ID!
   ): CollectionWizform
+  wizformEvolutionItems(bookId: ID!, wizformId: ID!): [ItemEvolutionModel!]!
   wizformHabitats(wizformId: ID!): [LocationNameModel!]!
   wizforms(
     """Book this wizform belongs to"""
@@ -348,6 +402,7 @@ input WizformInputModel {
 }
 
 type WizformListModel {
+  enabled: Boolean!
   icon64: String!
   id: ID!
   inCollectionId: UUID

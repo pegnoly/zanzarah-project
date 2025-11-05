@@ -13,12 +13,7 @@ use crate::{
         },
         book::{
             models::{
-                book::{BookFullModel, BookModel},
-                element::ElementModel,
-                location::{LocationModel, LocationNameModel, LocationWithEntriesCountModel},
-                location_section::LocationSectionWithCount,
-                location_wizform_entry::LocationWizformFullEntry,
-                wizform::{CollectionWizform, WizformElementType, WizformListModel, WizformSelectionModel},
+                book::{BookFullModel, BookModel}, element::ElementModel, item::ItemEvolutionModel, location::{LocationModel, LocationNameModel, LocationWithEntriesCountModel}, location_section::LocationSectionWithCount, location_wizform_entry::LocationWizformFullEntry, wizform::{CollectionWizform, WizformElementType, WizformListModel, WizformSelectionModel}
             },
             repo::BookRepository,
         },
@@ -487,6 +482,31 @@ impl Query {
         let result = service
             .get_locations_for_book(db, Uuid::from_str(&book_id.0)?)
             .await?;
+        Ok(result)
+    }
+
+    async fn wizform_evolution_items(
+        &self,
+        context: &Context<'_>,
+        wizform_id:async_graphql::ID,
+        book_id: async_graphql::ID
+    ) -> Result<Vec<ItemEvolutionModel>, ZZApiError> {
+        let service = context.data::<BookRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+
+        let result = service.get_evolution_items_data(db, Uuid::from_str(&wizform_id.0)?, Uuid::from_str(&book_id.0)?).await?;
         Ok(result)
     }
 }

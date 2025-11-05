@@ -1,4 +1,4 @@
-use sea_orm::{prelude::*, FromJsonQueryResult};
+use sea_orm::{FromJsonQueryResult, FromQueryResult, prelude::*};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -65,4 +65,31 @@ pub struct ItemInputModel {
 #[derive(async_graphql::SimpleObject)]
 pub struct ItemsBulkInsertResponse {
     pub message: String
+}
+
+#[derive(Debug, FromQueryResult, Serialize, Deserialize)]
+pub struct ItemEvolutionModel {
+    pub item_name: String,
+    pub item_icon: String,
+    pub wizform_name: String,
+    pub wizform_icon: String
+}
+
+#[async_graphql::Object]
+impl ItemEvolutionModel {
+    async fn item_name(&self) -> &String {
+        &self.item_name
+    }
+
+    async fn item_icon(&self) -> &String {
+        &self.item_icon
+    }
+
+    async fn wizform_name(&self) -> &String {
+        &self.wizform_name
+    }
+
+    async fn wizform_icon(&self) -> &String {
+        &self.wizform_icon
+    }
 }

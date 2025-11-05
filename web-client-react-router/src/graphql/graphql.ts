@@ -1,5 +1,3 @@
-import type { DocumentTypeDecoration } from "@graphql-typed-document-node/core";
-
 /* eslint-disable */
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -112,6 +110,11 @@ export type CompatibleVersions = {
   versions: Array<Scalars['String']['output']>;
 };
 
+export type DeleteLocationWizformsResponse = {
+  __typename?: 'DeleteLocationWizformsResponse';
+  message: Scalars['String']['output'];
+};
+
 export type ElementModel = {
   __typename?: 'ElementModel';
   bookId: Scalars['ID']['output'];
@@ -128,9 +131,47 @@ export type EmailConfirmationResult = {
   registrationState: RegistrationState;
 };
 
+export type EvolutionListItem = {
+  from: Scalars['Int']['input'];
+  to: Scalars['Int']['input'];
+};
+
+export type EvolutionsList = {
+  items: Array<EvolutionListItem>;
+};
+
 export type InsertWizformsResponse = {
   __typename?: 'InsertWizformsResponse';
   message: Scalars['String']['output'];
+};
+
+export type ItemEvolutionModel = {
+  __typename?: 'ItemEvolutionModel';
+  itemIcon: Scalars['String']['output'];
+  itemName: Scalars['String']['output'];
+  wizformIcon: Scalars['String']['output'];
+  wizformName: Scalars['String']['output'];
+};
+
+export type ItemInputModel = {
+  bookId: Scalars['ID']['input'];
+  evolutions: EvolutionsList;
+  icon64: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+};
+
+export type ItemsBulkInsertResponse = {
+  __typename?: 'ItemsBulkInsertResponse';
+  message: Scalars['String']['output'];
+};
+
+export type LocationModel = {
+  __typename?: 'LocationModel';
+  gameNumber?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  ordering: Scalars['Int']['output'];
+  sectionId: Scalars['ID']['output'];
 };
 
 export type LocationNameModel = {
@@ -162,6 +203,16 @@ export type LocationWizformFullEntry = {
   wizformElement: WizformElementType;
   wizformName: Scalars['String']['output'];
   wizformNumber: Scalars['Int']['output'];
+};
+
+export type LocationWizformInputModel = {
+  locationId: Scalars['ID']['input'];
+  wizformId: Scalars['ID']['input'];
+};
+
+export type LocationWizformsBulkInsertResponse = {
+  __typename?: 'LocationWizformsBulkInsertResponse';
+  message: Scalars['String']['output'];
 };
 
 export type Magic = {
@@ -229,6 +280,9 @@ export type MutationRoot = {
   confirmEmail: EmailConfirmationResult;
   createBook: BookModel;
   createCollection: CollectionModel;
+  deleteBookLocationEntries: DeleteLocationWizformsResponse;
+  insertItemsBulk: ItemsBulkInsertResponse;
+  insertLocationEntriesBulk: LocationWizformsBulkInsertResponse;
   insertWizformsBulk: InsertWizformsResponse;
   removeCollectionItem: Scalars['String']['output'];
   removeLocationWizform?: Maybe<WizformSelectionModel>;
@@ -277,6 +331,21 @@ export type MutationRootCreateCollectionArgs = {
   bookId: Scalars['ID']['input'];
   name: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
+};
+
+
+export type MutationRootDeleteBookLocationEntriesArgs = {
+  bookId: Scalars['ID']['input'];
+};
+
+
+export type MutationRootInsertItemsBulkArgs = {
+  items: Array<ItemInputModel>;
+};
+
+
+export type MutationRootInsertLocationEntriesBulkArgs = {
+  entries: Array<LocationWizformInputModel>;
 };
 
 
@@ -330,6 +399,8 @@ export type MutationRootUpdateWizformArgs = {
 export type QueryRoot = {
   __typename?: 'QueryRoot';
   activeCollection?: Maybe<Scalars['ID']['output']>;
+  allLocationsForBook: Array<LocationModel>;
+  allWizforms: Array<WizformListModel>;
   books: Array<BookModel>;
   collections: Array<CollectionFullModel>;
   currentBook?: Maybe<BookFullModel>;
@@ -343,6 +414,7 @@ export type QueryRoot = {
   signIn: SignInResult;
   userByEmail?: Maybe<UserModel>;
   wizform?: Maybe<CollectionWizform>;
+  wizformEvolutionItems: Array<ItemEvolutionModel>;
   wizformHabitats: Array<LocationNameModel>;
   wizforms: Array<WizformListModel>;
 };
@@ -351,6 +423,16 @@ export type QueryRoot = {
 export type QueryRootActiveCollectionArgs = {
   bookId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
+};
+
+
+export type QueryRootAllLocationsForBookArgs = {
+  bookId: Scalars['ID']['input'];
+};
+
+
+export type QueryRootAllWizformsArgs = {
+  bookId: Scalars['ID']['input'];
 };
 
 
@@ -421,6 +503,12 @@ export type QueryRootUserByEmailArgs = {
 export type QueryRootWizformArgs = {
   collectionId?: InputMaybe<Scalars['ID']['input']>;
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryRootWizformEvolutionItemsArgs = {
+  bookId: Scalars['ID']['input'];
+  wizformId: Scalars['ID']['input'];
 };
 
 
@@ -540,6 +628,7 @@ export type WizformInputModel = {
 
 export type WizformListModel = {
   __typename?: 'WizformListModel';
+  enabled: Scalars['Boolean']['output'];
   icon64: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   inCollectionId?: Maybe<Scalars['UUID']['output']>;

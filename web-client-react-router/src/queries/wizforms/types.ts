@@ -70,3 +70,10 @@ export type WizformHabitatModel = {
     locationName: string,
     comment: string | null
 }
+
+export type ItemEvolutionModel = {
+    itemName: string,
+    itemIcon: string,
+    wizformName: string,
+    wizformIcon: string
+}

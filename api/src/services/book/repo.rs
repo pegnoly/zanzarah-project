@@ -10,7 +10,7 @@ use super::models::{
     location_wizform_entry::{self, LocationWizformFullEntry},
     wizform::{self, WizformElementType, WizformModel, WizformSelectionModel, WizformUpdateModel},
 };
-use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, item::{self, ItemInputModel}, location::{self, LocationModel}, location_section, location_wizform_entry::LocationWizformInputModel, wizform::{CollectionWizform, WizformListModel}}};
+use crate::{error::ZZApiError, services::book::models::{book::CompatibleVersions, item::{self, ItemEvolutionModel, ItemInputModel}, location::{self, LocationModel}, location_section, location_wizform_entry::LocationWizformInputModel, wizform::{CollectionWizform, WizformListModel}}};
 use sea_orm::{
     prelude::Expr, sea_query::OnConflict, ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, IntoActiveModel, ModelTrait, PaginatorTrait, QueryFilter, QuerySelect, SelectColumns, Statement, TransactionTrait
 };
@@ -703,5 +703,29 @@ impl BookRepository {
         }
         transaction.commit().await?;
         Ok(())
+    }
+
+    pub async fn get_evolution_items_data(
+        &self,
+        db: &DatabaseConnection,
+        wizform_id: Uuid,
+        book_id: Uuid
+    ) -> Result<Vec<ItemEvolutionModel>, ZZApiError> {
+        let result = ItemEvolutionModel::find_by_statement(Statement::from_sql_and_values(
+            sea_orm::DatabaseBackend::Postgres, 
+            r#"
+                select it.name as item_name, it.icon64 as item_icon, wf.name as wizform_name, wf.icon64 as wizform_icon from items it
+                left join wizforms wf on exists (
+                    select 1 
+                    from json_array_elements(it.evolutions->'items') as item
+                    where (item->>'from')::int = (select number from wizforms where id = $1)
+                    and (item->>'to')::int = wf.number
+                )
+                where wf.book_id = '78bd36dc-6ba2-4030-ac59-398076b73d93'
+            "#, [wizform_id.into(), book_id.into()]))
+            .into_model::<ItemEvolutionModel>()
+            .all(db)
+            .await?;
+        Ok(result)
     }
 }

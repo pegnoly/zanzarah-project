@@ -266,7 +266,12 @@ impl<'a> ParseProcessor<'a> {
                         current_target = line.split(".").last().unwrap().parse::<i32>().unwrap();
                     }
                     if line.starts_with(";.") && is_reading {
-                        current_produced = line.split(".").last().unwrap().parse::<i32>().unwrap();
+                        println!("Line: {}", &line);
+                        if let Ok(value) = line.split(".").last().unwrap().parse::<i32>() {
+                            current_produced = value;
+                        } else {
+                            is_reading = false;
+                        }
                     }
                     if line.starts_with("7") && is_reading {
                         is_reading = false;
