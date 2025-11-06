@@ -23,16 +23,16 @@ function WizformEvolutionListItem({model ,index}: {model: ItemEvolutionModel, in
 
     return (
             <Group justify="space-between">
-                <div id={`elem${index}1`} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '45%'}}>
+                <div id={`elem${index}1`} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '45%'}}>
                     <Tooltip label={model.itemName}>
-                        <Text style={{fontSize: 10, alignSelf: 'center'}}>{model.itemName}</Text>
+                        <Text style={{fontSize: 10, alignSelf: 'center', lineBreak: 'strict'}}>{model.itemName}</Text>
                     </Tooltip>
                     <Image w={40} h={40} style={{alignContent: 'self-end'}} src={`data:image/bmp;base64,${model.itemIcon}`}/>
                 </div> 
-                <div id={`elem${index}2`} style={{display: 'flex', flexDirection: 'row', width: '45%', gap: '5%'}}>
-                    <Image w={40} h={40} style={{alignSelf: 'start'}} src={`data:image/bmp;base64,${model.wizformIcon}`}/>
+                <div id={`elem${index}2`} style={{display: 'flex', flexDirection: 'row', width: '45%', gap: '5%', alignItems: 'center'}}>
+                    <Image w={40} h={40} style={{alignSelf: 'center'}} src={`data:image/bmp;base64,${model.wizformIcon}`}/>
                     <Tooltip label={model.wizformName}>
-                        <Text style={{fontSize: 10, alignSelf: 'center', justifySelf: 'center'}}>{model.wizformName}</Text>
+                        <Text style={{fontSize: 10, alignSelf: 'center', justifySelf: 'center', lineBreak: 'strict'}}>{model.wizformName}</Text>
                     </Tooltip>
                 </div>
             </Group>
