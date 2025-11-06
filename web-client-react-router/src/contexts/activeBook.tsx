@@ -41,8 +41,8 @@ const getNameFilter = () => {
 const getElementFilter = () => {
     const existing = Cookies.get("zanzarah-project-element-filter");
     if (existing == undefined) {
-        Cookies.set("zanzarah-project-element-filter", WizformElementType.Nature, {expires: 10000000});
-        return WizformElementType.Nature;
+        Cookies.set("zanzarah-project-element-filter", WizformElementType.None, {expires: 10000000});
+        return WizformElementType.None;
     }
     return existing as WizformElementType;
 }
