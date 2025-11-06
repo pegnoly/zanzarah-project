@@ -125,12 +125,12 @@ pub struct MagicSlotInputModel {
     pub third_element: MagicElementType,
 }
 
-impl Into<MagicSlotModel> for MagicSlotInputModel {
-    fn into(self) -> MagicSlotModel {
+impl From<MagicSlotInputModel> for MagicSlotModel {
+    fn from(val: MagicSlotInputModel) -> Self {
         MagicSlotModel {
-            first_element: self.first_element,
-            second_element: self.second_element,
-            third_element: self.third_element,
+            first_element: val.first_element,
+            second_element: val.second_element,
+            third_element: val.third_element,
         }
     }
 }
@@ -144,14 +144,14 @@ pub struct MagicInputModel {
     pub second_passive_slot: MagicSlotInputModel,
 }
 
-impl Into<Magic> for MagicInputModel {
-    fn into(self) -> Magic {
+impl From<MagicInputModel> for Magic {
+    fn from(val: MagicInputModel) -> Self {
         Magic {
-            level: self.level,
-            first_active_slot: self.first_active_slot.into(),
-            first_passive_slot: self.first_passive_slot.into(),
-            second_active_slot: self.second_active_slot.into(),
-            second_passive_slot: self.second_passive_slot.into(),
+            level: val.level,
+            first_active_slot: val.first_active_slot.into(),
+            first_passive_slot: val.first_passive_slot.into(),
+            second_active_slot: val.second_active_slot.into(),
+            second_passive_slot: val.second_passive_slot.into(),
         }
     }
 }
@@ -161,10 +161,10 @@ pub struct MagicsInputModel {
     pub types: Vec<MagicInputModel>,
 }
 
-impl Into<Magics> for MagicsInputModel {
-    fn into(self) -> Magics {
+impl From<MagicsInputModel> for Magics {
+    fn from(val: MagicsInputModel) -> Self {
         Magics {
-            types: self
+            types: val
                 .types
                 .into_iter()
                 .map(|m| m.into())

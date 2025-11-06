@@ -1,5 +1,5 @@
 import type { WizformFull } from "@/queries/wizforms/types";
-import { Badge, Group, Image, Stack, Text } from "@mantine/core";
+import { Badge, Group, Image, Text } from "@mantine/core";
 
 type WizformBasePropsSchema = Omit<WizformFull, "magics">;
 
@@ -45,9 +45,12 @@ function WizformBaseProps(params: {
                         <div style={{display: 'flex', flexDirection: 'column', gap: '2%', alignItems: 'center', paddingTop: '4%'}}>
                             <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.evolutionIcon}`}/>
                             <Text 
-                                style={{fontFamily: 'Comfortaa', fontWeight: 'bolder', fontSize: 14}}
+                                style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
                             >{`${params.model.evolutionName}`}</Text>
-                            <Text>{`Уровень: ${params.model.evolutionLevel}`}</Text>
+                            <Group gap={5}>
+                                <Text size="sm" style={{fontFamily: 'Comfortaa', fontWeight: 'bold'}}>{`Уровень: `}</Text>
+                                <Text size="sm" c="red" style={{fontFamily: 'Comfortaa', fontWeight: 'bold'}}>{params.model.evolutionLevel}</Text>
+                            </Group>
                         </div>
                     }
                 </div>
@@ -58,10 +61,10 @@ function WizformBaseProps(params: {
                     {
                         params.model.previousForm == undefined ?
                         <Text style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red', fontSize: 15}}>Нет</Text> :
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '2%', alignItems: 'center', paddingTop: '4%'}}>
+                        <div style={{display: 'flex', flexDirection: 'column', paddingTop: '2%', alignItems: 'center'}}>
                             <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.previousIcon}`}/>
                             <Text 
-                                style={{fontFamily: 'Comfortaa', fontWeight: 'bolder', fontSize: 14}}
+                                style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
                             >{`${params.model.previousFormName}`}</Text>
                         </div>
                     }

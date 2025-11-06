@@ -55,7 +55,7 @@ impl BookRepository {
                 WHERE 
                     w.book_id = $2
                     AND w.name LIKE $3
-                    AND w.element = $4
+                    AND (w.element = $4 OR $4 = -1)
                     AND w.enabled
                 ORDER BY 
                     w.number;
@@ -723,7 +723,13 @@ impl BookRepository {
         let result = ItemEvolutionModel::find_by_statement(Statement::from_sql_and_values(
             sea_orm::DatabaseBackend::Postgres, 
             r#"
-                    WITH filtered_evolutions AS (
+                    WITH wizform_number AS (
+                        SELECT COALESCE(
+                            (SELECT number FROM wizforms WHERE id = $1 LIMIT 1), 
+                            0
+                        ) AS v
+                    ),
+                    filtered_evolutions AS (
                         SELECT 
                             it.id,
                             it.name as item_name,
@@ -731,12 +737,13 @@ impl BookRepository {
                             (item->>'to')::int as target_number
                         FROM items it
                         CROSS JOIN json_array_elements(it.evolutions->'items') as item
-                        WHERE (item->>'from')::int = 0
+                        CROSS JOIN wizform_number wn
+                        WHERE (item->>'from')::int = wn.v
                     ),
                     wizforms_filtered AS (
-                        SELECT name as wizform_name, icon64 as wizform_icon, number, book_id
+                        SELECT name as wizform_name, icon64 as wizform_icon, number
                         FROM wizforms 
-                        WHERE book_id = '78bd36dc-6ba2-4030-ac59-398076b73d93'
+                        WHERE book_id = $2
                     )
                     SELECT 
                         fe.item_name, 

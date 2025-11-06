@@ -488,7 +488,7 @@ impl Query {
     async fn wizform_evolution_items(
         &self,
         context: &Context<'_>,
-        wizform_id:async_graphql::ID,
+        wizform_id: async_graphql::ID,
         book_id: async_graphql::ID
     ) -> Result<Vec<ItemEvolutionModel>, ZZApiError> {
         let service = context.data::<BookRepository>().map_err(|error| {

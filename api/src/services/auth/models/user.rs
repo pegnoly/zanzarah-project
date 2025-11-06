@@ -1,7 +1,6 @@
-use ::chrono::Local;
 use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
-use sqlx::types::chrono;
+
 #[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel)]
 #[sea_orm(table_name = "users")]
 pub struct Model {

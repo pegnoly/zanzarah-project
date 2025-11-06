@@ -1,6 +1,6 @@
 import { Select } from "@mantine/core";
 import { useActiveBook } from "@/contexts/activeBook";
-import type { WizformElementType } from "@/graphql/graphql";
+import { WizformElementType } from "@/graphql/graphql";
 
 function ElementsSelector({label, current, selectedCallback} : {
     label: string, 
@@ -16,9 +16,9 @@ function ElementsSelector({label, current, selectedCallback} : {
             label={label}
             value={current}
             onChange={(value) => selectedCallback(value as WizformElementType)}
-            data={activeBook?.elements?.filter(element => element.enabled).map((element, _index) => ({
+            data={[{label: "Все стихии", value: WizformElementType.None}].concat(activeBook?.elements?.filter(element => element.enabled && element.element != WizformElementType.None).map((element, _index) => ({
                 label: element.name, value: element.element
-            }))}
+            }))!)}
         />
     </>
 }
