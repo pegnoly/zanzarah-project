@@ -5,4 +5,7 @@ mod element;
 mod magic;
 mod book;
 mod user;
+mod location;
+mod location_entry;
+mod item;
 pub mod prelude;

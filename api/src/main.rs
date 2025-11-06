@@ -7,7 +7,7 @@ use axum::{
     response::{Html, IntoResponse},
     routing::get,
 };
-use graphql::{MutationRoot, QueryRoot, query::Query};
+use graphql::{MutationRoot, QueryRoot};
 use sea_orm::SqlxPostgresConnector;
 use serde::{Deserialize, Serialize};
 use services::{auth::prelude::AuthRepository, book::repo::BookRepository};

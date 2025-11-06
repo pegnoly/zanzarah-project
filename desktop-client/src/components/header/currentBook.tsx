@@ -1,4 +1,4 @@
-import { Button, Stack, Text, Tooltip } from "@mantine/core";
+import { Button, ButtonGroup, Stack, Text, Tooltip } from "@mantine/core";
 import { Book } from "./types";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -15,7 +15,11 @@ function CurrentBook(params: {book: Book | undefined}) {
                     <Text size="md" lineClamp={1}>{`${params.book.directory}`}</Text>
                 </Tooltip>
             </div>
-            <Button onClick={() => invoke("start_parsing")}>Parse files</Button>
+            <ButtonGroup>
+                <Button radius={0} bg="cyan" onClick={() => invoke("start_parsing")}>Parse files</Button>
+                <Button radius={0} bg="grape" onClick={() => invoke("start_scripts_parsing")}>Parse scripts</Button>
+                <Button radius={0} bg="indigo" onClick={() => invoke("start_items_parsing")}>Parse items</Button>
+            </ButtonGroup>
         </Stack>
     }</div>
 }

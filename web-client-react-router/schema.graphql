@@ -1,0 +1,426 @@
+schema {
+  query: QueryRoot
+  mutation: MutationRoot
+}
+
+type AddCollectionItemResponse {
+  createdId: ID!
+}
+
+type AuthorizationResult {
+  permission: UserPermissionType!
+  registrationState: RegistrationState!
+  userId: ID!
+}
+
+type BookFullModel {
+  activeWizformsCount: Int!
+  compatibleWith: CompatibleVersions!
+  id: ID!
+  name: String!
+  version: String!
+  wizformsCount: Int!
+}
+
+type BookModel {
+  available: Boolean!
+  compatibleWith: CompatibleVersions!
+  directory: String!
+  id: ID!
+  initialized: Boolean!
+  name: String!
+  version: String!
+}
+
+type CollectionFullModel {
+  active: Boolean!
+  bookId: ID!
+  createdOnVersion: String!
+  entriesCount: Int!
+  id: ID!
+  name: String!
+  userId: ID!
+}
+
+type CollectionModel {
+  active: Boolean!
+  bookId: ID!
+  createdOnVersion: String!
+  id: ID!
+  name: String!
+  userId: ID!
+}
+
+type CollectionWizform {
+  agility: Int!
+  bookId: ID!
+  description: String!
+  element: WizformElementType!
+  enabled: Boolean!
+  evolutionForm: Int!
+  evolutionLevel: Int!
+  evolutionName: String
+  expModifier: Int!
+  gameId: String!
+  hitpoints: Int!
+  icon64: String!
+  id: ID!
+  inCollectionId: UUID
+  jumpAbility: Int!
+  magics: Magics!
+  name: String!
+  number: Int!
+  precision: Int!
+  previousForm: Int
+  previousFormName: String
+}
+
+type CompatibleVersions {
+  versions: [String!]!
+}
+
+type DeleteLocationWizformsResponse {
+  message: String!
+}
+
+type ElementModel {
+  bookId: ID!
+  element: WizformElementType!
+  enabled: Boolean!
+  id: ID!
+  name: String!
+}
+
+type EmailConfirmationResult {
+  newToken: String!
+  permission: UserPermissionType!
+  registrationState: RegistrationState!
+}
+
+input EvolutionListItem {
+  from: Int!
+  to: Int!
+}
+
+input EvolutionsList {
+  items: [EvolutionListItem!]!
+}
+
+type InsertWizformsResponse {
+  message: String!
+}
+
+type ItemEvolutionModel {
+  itemIcon: String!
+  itemName: String!
+  wizformIcon: String!
+  wizformName: String!
+}
+
+input ItemInputModel {
+  bookId: ID!
+  evolutions: EvolutionsList!
+  icon64: String!
+  name: String!
+}
+
+type ItemsBulkInsertResponse {
+  message: String!
+}
+
+type LocationModel {
+  gameNumber: String
+  id: ID!
+  name: String!
+  ordering: Int!
+  sectionId: ID!
+}
+
+type LocationNameModel {
+  comment: String
+  locationName: String!
+  sectionName: String!
+}
+
+type LocationSectionWithCount {
+  id: ID!
+  locationsCount: Int!
+  name: String!
+}
+
+type LocationWithEntriesCountModel {
+  entriesCount: Int!
+  id: ID!
+  name: String!
+}
+
+type LocationWizformFullEntry {
+  comment: String
+  icon: String!
+  id: ID!
+  wizformElement: WizformElementType!
+  wizformName: String!
+  wizformNumber: Int!
+}
+
+input LocationWizformInputModel {
+  locationId: ID!
+  wizformId: ID!
+}
+
+type LocationWizformsBulkInsertResponse {
+  message: String!
+}
+
+type Magic {
+  firstActiveSlot: MagicSlotModel!
+  firstPassiveSlot: MagicSlotModel!
+  level: Int!
+  secondActiveSlot: MagicSlotModel!
+  secondPassiveSlot: MagicSlotModel!
+}
+
+enum MagicElementType {
+  AIR
+  CHAOS
+  DARK
+  ENERGY
+  ERROR
+  FIRE
+  ICE
+  JOKER
+  LIGHT
+  METALL
+  NATURE
+  NONE
+  PSI
+  STONE
+  WATER
+}
+
+input MagicInputModel {
+  firstActiveSlot: MagicSlotInputModel!
+  firstPassiveSlot: MagicSlotInputModel!
+  level: Int!
+  secondActiveSlot: MagicSlotInputModel!
+  secondPassiveSlot: MagicSlotInputModel!
+}
+
+input MagicSlotInputModel {
+  firstElement: MagicElementType!
+  secondElement: MagicElementType!
+  thirdElement: MagicElementType!
+}
+
+type MagicSlotModel {
+  firstElement: MagicElementType!
+  secondElement: MagicElementType!
+  thirdElement: MagicElementType!
+}
+
+type Magics {
+  types: [Magic!]!
+}
+
+input MagicsInputModel {
+  types: [MagicInputModel!]!
+}
+
+type MutationRoot {
+  addCollectionItem(collectionId: ID!, wizformId: ID!): AddCollectionItemResponse!
+  addLocationWizform(comment: String, locationId: ID!, wizformId: ID!): ID!
+  addLocationWizformComment(comment: String!, id: ID!): String!
+  confirmEmail(code: String!, email: String!): EmailConfirmationResult!
+  createBook(directory: String!, name: String!, version: String!): BookModel!
+  createCollection(bookId: ID!, name: String!, userId: ID!): CollectionModel!
+  deleteBookLocationEntries(bookId: ID!): DeleteLocationWizformsResponse!
+  insertItemsBulk(items: [ItemInputModel!]!): ItemsBulkInsertResponse!
+  insertLocationEntriesBulk(entries: [LocationWizformInputModel!]!): LocationWizformsBulkInsertResponse!
+  insertWizformsBulk(wizforms: [WizformInputModel!]!): InsertWizformsResponse!
+  removeCollectionItem(id: ID!): String!
+  removeLocationWizform(id: ID!): WizformSelectionModel
+  removeLocationWizformComment(id: ID!): String!
+  renewToken(email: String!, password: String!): TokenUpdateResult!
+  setActiveCollection(collectionId: ID!): String!
+  tryRegisterUser(email: String!, password: String!): RegistrationResult!
+  updateLocationWizformComment(comment: String!, id: ID!): String
+  updateWizform(updateModel: WizformUpdateModel!): UpdateWizformResponse!
+}
+
+type QueryRoot {
+  activeCollection(bookId: ID!, userId: ID!): ID
+  allLocationsForBook(bookId: ID!): [LocationModel!]!
+  allWizforms(bookId: ID!): [WizformListModel!]!
+  books(
+    """Query only available for user books"""
+    available: Boolean
+  ): [BookModel!]!
+  collections(bookId: ID!, userId: ID!): [CollectionFullModel!]!
+  currentBook(id: ID!): BookFullModel
+  elements(
+    """Book this element belongs to"""
+    bookId: ID!
+    """Select all or only enabled elements"""
+    enabled: Boolean
+  ): [ElementModel!]!
+  entriesCount(collectionId: ID!): Int!
+  locationEntries(locationId: ID!): [LocationWizformFullEntry!]!
+  locations(sectionId: ID!): [LocationWithEntriesCountModel!]!
+  processToken(token: String!): AuthorizationResult!
+  sections(bookId: ID!): [LocationSectionWithCount!]!
+  selectableWizforms(bookId: ID!, locationId: ID!): [WizformSelectionModel!]!
+  signIn(email: String!, password: String!): SignInResult!
+  userByEmail(email: String!): UserModel
+  wizform(
+    """Optional current collection"""
+    collectionId: ID
+    """Id of wizform to focus"""
+    id: ID!
+  ): CollectionWizform
+  wizformEvolutionItems(bookId: ID!, wizformId: ID!): [ItemEvolutionModel!]!
+  wizformHabitats(wizformId: ID!): [LocationNameModel!]!
+  wizforms(
+    """Book this wizform belongs to"""
+    bookId: ID!
+    """Optional active collection"""
+    collection: UUID
+    """Optional element of wizform"""
+    elementFilter: WizformElementType
+    """Select all or only enabled wizforms"""
+    enabled: Boolean
+    """Optional name filter"""
+    nameFilter: String
+  ): [WizformListModel!]!
+}
+
+type RegistrationResult {
+  emailHash: String!
+  passwordHash: String!
+  token: String!
+  userId: ID!
+}
+
+enum RegistrationState {
+  CONFIRMED
+  UNCONFIRMED
+  UNREGISTERED
+}
+
+type SignInResult {
+  emailHash: String!
+  newToken: String!
+  passwordHash: String!
+  permission: UserPermissionType!
+  registrationState: RegistrationState!
+  userId: ID!
+}
+
+type TokenUpdateResult {
+  newToken: String!
+  permission: UserPermissionType!
+  registrationState: RegistrationState!
+  userId: ID!
+}
+
+"""
+A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
+Strings within GraphQL. UUIDs are used to assign unique identifiers to
+entities without requiring a central allocating authority.
+
+# References
+
+* [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+* [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
+"""
+scalar UUID
+
+type UpdateWizformResponse {
+  message: String!
+}
+
+type UserModel {
+  email: String!
+  hashedPassword: String!
+  id: ID!
+  name: String!
+  permission: UserPermissionType!
+  registrationState: RegistrationState!
+  salt: String!
+}
+
+enum UserPermissionType {
+  ADMIN
+  EDITOR
+  UNREGISTERED_USER
+  USER
+}
+
+enum WizformElementType {
+  AIR
+  CHAOS
+  CUSTOM_1
+  CUSTOM_2
+  CUSTOM_3
+  CUSTOM_4
+  CUSTOM_5
+  DARK
+  ENERGY
+  FIRE
+  ICE
+  LIGHT
+  METALL
+  NATURE
+  NEUTRAL_ONE
+  NEUTRAL_TWO
+  NONE
+  PSI
+  STONE
+  WATER
+}
+
+input WizformInputModel {
+  agility: Int!
+  bookId: ID!
+  description: String!
+  element: WizformElementType!
+  enabled: Boolean!
+  evolutionForm: Int!
+  evolutionLevel: Int!
+  evolutionName: String
+  expModifier: Int!
+  gameId: String!
+  hitpoints: Int!
+  icon64: String!
+  id: ID!
+  jumpAbility: Int!
+  magics: MagicsInputModel!
+  name: String!
+  number: Int!
+  precision: Int!
+  previousForm: Int
+  previousFormName: String
+}
+
+type WizformListModel {
+  enabled: Boolean!
+  icon64: String!
+  id: ID!
+  inCollectionId: UUID
+  name: String!
+  number: Int!
+}
+
+type WizformSelectionModel {
+  element: WizformElementType!
+  id: ID!
+  name: String!
+  number: Int!
+}
+
+input WizformUpdateModel {
+  description: String
+  element: WizformElementType
+  enabled: Boolean
+  id: ID!
+  name: String
+}

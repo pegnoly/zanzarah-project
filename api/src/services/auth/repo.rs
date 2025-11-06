@@ -159,7 +159,7 @@ impl AuthRepository {
             ))
             .to(vec![("New zanzarah-project user", email.as_str())])
             .subject("Подтверждение аккаунта для Zanzarah project")
-            .html_body(format!("<h1>Ваш код подтверждения - {}</h1>", code))
+            .html_body(format!("<h1>Ваш код подтверждения - {code}</h1>"))
             .text_body("Hello from zz-api");
 
         SmtpClientBuilder::new(self.email_config.host.clone(), 587)
