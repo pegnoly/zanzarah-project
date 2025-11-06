@@ -7,3 +7,4 @@ pub mod location_section;
 pub mod location_wizform_entry;
 pub mod magic;
 pub mod wizform;
+pub mod item;

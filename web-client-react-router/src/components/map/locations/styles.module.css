@@ -1,0 +1,64 @@
+.map_card_back {
+    background-size: cover;
+    background-repeat: no-repeat;
+    width: 100%;
+    object-fit: cover;
+    display: inline-flex;
+}
+
+@media (min-width: 300px) {
+  .map_card_back {
+    height: 250px;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .map_card_back {
+    height: 300px;
+  }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  .map_card_back {
+    height: 350px;
+  }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  .map_card_back {
+    height: 400px;
+  }
+}
+
+/* Specific media queries for device types */
+/* For portrait tablets and large phones */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: portrait) {
+  .map_card_back {
+    height: 500px;
+  }
+}
+
+/* For landscape tablets */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
+  .map_card_back {
+    height: 350px;
+  }
+}
+
+/* For mobile devices in landscape */
+@media only screen and (max-device-width: 480px) and (orientation: landscape) {
+  .map_card_back {
+    height: 250px;
+  }
+}
+
+.map_grid {
+    padding-top: 3%;
+    padding-bottom: 3%;
+    padding-left: 6%;
+    padding-right: 6%;
+    align-self: center;
+}

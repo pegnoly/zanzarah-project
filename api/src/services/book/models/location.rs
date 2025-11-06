@@ -12,6 +12,7 @@ pub struct Model {
     pub section_id: Uuid,
     pub name: String,
     pub ordering: i32,
+    pub game_number: Option<String>
 }
 
 pub type LocationModel = Model;
@@ -67,6 +68,10 @@ impl LocationModel {
 
     async fn ordering(&self) -> i32 {
         self.ordering
+    }
+
+    async fn game_number(&self) -> Option<String> {
+        self.game_number.clone()
     }
 }
 
