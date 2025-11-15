@@ -87,8 +87,10 @@ impl BookRepository {
         let wizform = CollectionWizform::find_by_statement(Statement::from_sql_and_values(
             sea_orm::DatabaseBackend::Postgres,
             r#"
-                    SELECT 
+                    SELECT
                         w.*,
+                        we.name AS evolution_name,
+                        wp.name AS previous_name,
                         we.icon64 AS evolution_icon, 
                         wp.icon64 AS previous_icon,
                         ce.id AS in_collection_id
@@ -100,13 +102,12 @@ impl BookRepository {
                         AND ce.collection_id = $1
                     LEFT JOIN 
                         wizforms we
-                        on we.number = w.evolution_form and we.book_id = w.book_id
+                        ON we.number = w.evolution_form AND we.book_id = w.book_id
                     LEFT JOIN
                         wizforms wp
-                        on w.number = wp.evolution_form and wp.book_id = w.book_id
+                        ON w.number = wp.evolution_form AND wp.book_id = w.book_id AND wp.enabled = true
                     WHERE 
                         w.id = $2
-                        
                 "#,
                 [collection_id.into(), id.into()]))
             .one(db)
