@@ -4,6 +4,7 @@ use crate::services::zanzarah_api::schema;
 
 #[derive(Debug, Clone, QueryFragment)]
 pub struct CompatibleVersions {
+    #[allow(dead_code)]
     versions: Vec<String>
 }
 

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use tauri::State;
 use uuid::Uuid;
 
-use crate::{error::ZZParserError, services::{parser::utils::int_to_le_hex_string, prelude::{BookFullModel, CreateBookPayload, ElementModel, ElementsPayload, FilterWizformsPayload, ParseProcessor, RegisterUserPayload, UpdateWizformPayload, WizformEditableModel, WizformElementType, WizformSimpleModel, ZanzarahApiService}}};
+use crate::{error::ZZParserError, services::{parser::utils::int_to_le_hex_string, prelude::{CreateBookPayload, ElementModel, ElementsPayload, FilterWizformsPayload, ParseProcessor, UpdateWizformPayload, WizformEditableModel, WizformElementType, WizformSimpleModel, ZanzarahApiService}}};
 
 use super::{config::AppConfig, types::BookFrontendModel, utils::check_local_book};
 
@@ -17,7 +17,7 @@ pub async fn load_books(
         //println!("Got some books from api: {:#?}", &books);
         let local_books_compared = books.iter_mut()
             .filter_map(|book| {
-                if let Err(_) = check_local_book(book, &app_config.books_data) {
+                if check_local_book(book, &app_config.books_data).is_err() {
                     //log::error!("Failed to compare local book data with db one: {:?}", &error);
                     None
                 } else {
@@ -66,7 +66,7 @@ pub async fn create_book(
 
 #[tauri::command]
 pub async fn test(
-    zanzarah_service: State<'_, ZanzarahApiService>
+    // zanzarah_service: State<'_, ZanzarahApiService>
 ) -> Result<(), ()> {
     // let password = b"ft314rthhtyj1111";
     // let salt = SaltString::generate(&mut OsRng);

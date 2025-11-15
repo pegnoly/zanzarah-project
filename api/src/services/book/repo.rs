@@ -740,11 +740,12 @@ impl BookRepository {
                         CROSS JOIN json_array_elements(it.evolutions->'items') as item
                         CROSS JOIN wizform_number wn
                         WHERE (item->>'from')::int = wn.v
+                        and it.book_id = $2
                     ),
                     wizforms_filtered AS (
                         SELECT name as wizform_name, icon64 as wizform_icon, number
                         FROM wizforms 
-                        WHERE book_id = $2
+                        WHERE book_id = $3
                     )
                     SELECT 
                         fe.item_name, 
@@ -753,7 +754,7 @@ impl BookRepository {
                         wf.wizform_icon 
                     FROM filtered_evolutions fe
                     LEFT JOIN wizforms_filtered wf ON fe.target_number = wf.number;
-            "#, [wizform_id.into(), book_id.into()]))
+            "#, [wizform_id.into(), book_id.into(), book_id.into()]))
             .into_model::<ItemEvolutionModel>()
             .all(db)
             .await?;

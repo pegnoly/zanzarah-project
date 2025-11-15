@@ -55,13 +55,13 @@ impl MagicParsed {
             })
         }
         else {
-            let magics_hex = format!("{:#010x}", n); 
+            let magics_hex = format!("{n:#010x}"); 
             let magics_entities = magics_hex.split("").collect_vec(); 
             let level = u16::from_str_radix(&format!("{}{}", &magics_entities[5], &magics_entities[6]), 16)?;
-            let slot = u8::from_str_radix(&format!("{}", &magics_entities[7]), 16)? + 1;
-            let first_element = u8::from_str_radix(&format!("{}", &magics_entities[8]), 16)?;
-            let second_element = u8::from_str_radix(&format!("{}", &magics_entities[9]), 16)?;
-            let third_element = u8::from_str_radix(&format!("{}", &magics_entities[10]), 16)?;
+            let slot = u8::from_str_radix(magics_entities[7], 16)? + 1;
+            let first_element = u8::from_str_radix(magics_entities[8], 16)?;
+            let second_element = u8::from_str_radix(magics_entities[9], 16)?;
+            let third_element = u8::from_str_radix(magics_entities[10], 16)?;
             Ok(MagicParsed {
                 level,
                 slot_number: slot,

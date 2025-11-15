@@ -15,7 +15,7 @@ pub struct DescCleaner {
 
 impl DescPlugin for DescCleaner {
     fn apply(&self, desc: String) -> String {
-        let parts = desc.split('}');
-        parts.last().unwrap().to_string()
+        let mut parts = desc.split('}');
+        parts.next_back().unwrap().to_string()
     }
 }

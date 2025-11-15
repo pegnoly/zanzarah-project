@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use strum::{Display, EnumIter, EnumString, FromRepr};
 
 use crate::services::zanzarah_api::schema;

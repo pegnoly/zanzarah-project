@@ -1,2 +1,2 @@
-pub use super::config::{AppConfig, BookConfigSchema};
+pub use super::config::AppConfig;
 pub use super::commands::*;
