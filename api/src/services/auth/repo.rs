@@ -107,7 +107,7 @@ impl AuthRepository {
             8,
             1,
             30,
-            password.as_bytes().to_vec(),
+            email.as_bytes().to_vec(),
         )?;
         let code = totp.generate(chrono::Local::now().timestamp_millis() as u64);
         // generate name

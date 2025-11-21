@@ -1,5 +1,6 @@
 use sea_orm::{FromJsonQueryResult, FromQueryResult, prelude::*};
 use serde::{Deserialize, Serialize};
+use strum::{Display, EnumString};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel)]
@@ -67,16 +68,50 @@ pub struct ItemsBulkInsertResponse {
     pub message: String
 }
 
+#[derive(
+    Debug,
+    DeriveActiveEnum,
+    EnumIter,
+    EnumString,
+    PartialEq,
+    Eq,
+    Clone,
+    Copy,
+    Serialize,
+    Deserialize,
+    Hash,
+    Display,
+    async_graphql::Enum
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum ItemTransformType {
+    #[sea_orm(string_value = "TRANSFORM_FROM")]
+    #[serde(rename = "TRANSFORM_FROM")]
+    #[strum(serialize = "TRANSFORM_FROM")]
+    From,
+    #[sea_orm(string_value = "TRANSFORM_TO")]
+    #[serde(rename = "TRANSFORM_TO")]
+    #[strum(serialize = "TRANSFORM_TO")]
+    To
+}
+
 #[derive(Debug, FromQueryResult, Serialize, Deserialize)]
 pub struct ItemEvolutionModel {
+    pub transform_type: ItemTransformType,
     pub item_name: String,
     pub item_icon: String,
     pub wizform_name: String,
-    pub wizform_icon: String
+    pub wizform_icon: String,
+    pub spoilerable: bool
 }
 
 #[async_graphql::Object]
 impl ItemEvolutionModel {
+
+    async fn transform_type(&self) -> ItemTransformType {
+        self.transform_type
+    }
+
     async fn item_name(&self) -> &String {
         &self.item_name
     }
@@ -91,5 +126,9 @@ impl ItemEvolutionModel {
 
     async fn wizform_icon(&self) -> &String {
         &self.wizform_icon
+    }
+
+    async fn spoilerable(&self) -> bool {
+        self.spoilerable
     }
 }

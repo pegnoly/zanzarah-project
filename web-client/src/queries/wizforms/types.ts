@@ -73,9 +73,16 @@ export type WizformHabitatModel = {
     comment: string | null
 }
 
+export enum ItemTransformType {
+    From = "FROM",
+    To = "TO"
+}
+
 export type ItemEvolutionModel = {
+    transformType: ItemTransformType,
     itemName: string,
     itemIcon: string,
     wizformName: string,
-    wizformIcon: string
+    wizformIcon: string,
+    spoilerable: boolean
 }

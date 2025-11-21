@@ -651,7 +651,6 @@ impl BookRepository {
         .into_model::<LocationNameModel>()
         .all(db)
         .await?;
-        tracing::info!("Wizform habitats: {:#?}", &data);
         Ok(data)
     }
 
@@ -735,6 +734,7 @@ impl BookRepository {
                             it.id,
                             it.name as item_name,
                             it.icon64 as item_icon,
+                            it.spoilerable as spoilerable,
                             (item->>'to')::int as target_number
                         FROM items it
                         CROSS JOIN json_array_elements(it.evolutions->'items') as item
@@ -742,19 +742,46 @@ impl BookRepository {
                         WHERE (item->>'from')::int = wn.v
                         and it.book_id = $2
                     ),
+                    filtered_previous_forms AS (
+                        SELECT
+                            it.id,
+                            it.name as item_name,
+                            it.icon64 as item_icon,
+                            it.spoilerable as spoilerable,
+                            (item->>'from')::int as target_number
+                        FROM items it
+                        CROSS JOIN json_array_elements(it.evolutions->'items') as item
+                        CROSS JOIN wizform_number wn
+                        WHERE (item->>'to')::int = wn.v
+                        and it.book_id = $3
+                    ),
                     wizforms_filtered AS (
                         SELECT name as wizform_name, icon64 as wizform_icon, number
                         FROM wizforms 
-                        WHERE book_id = $3
+                        WHERE book_id = $4
                     )
                     SELECT 
+                        'TRANSFORM_TO' as transform_type,
                         fe.item_name, 
+                        fe.spoilerable,
                         fe.item_icon, 
-                        wf.wizform_name, 
-                        wf.wizform_icon 
+                        wf.wizform_name,
+                        wf.wizform_icon
                     FROM filtered_evolutions fe
-                    LEFT JOIN wizforms_filtered wf ON fe.target_number = wf.number;
-            "#, [wizform_id.into(), book_id.into(), book_id.into()]))
+                    LEFT JOIN wizforms_filtered wf ON fe.target_number = wf.number
+
+                    UNION ALL
+
+                    SELECT 
+                        'TRANSFORM_FROM' as transform_type,
+                        fp.item_name,
+                        fp.spoilerable,
+                        fp.item_icon,
+                        wf.wizform_name,
+                        wf.wizform_icon
+                    FROM filtered_previous_forms fp
+                    LEFT JOIN wizforms_filtered wf ON fp.target_number = wf.number;
+            "#, [wizform_id.into(), book_id.into(), book_id.into(), book_id.into()]))
             .into_model::<ItemEvolutionModel>()
             .all(db)
             .await?;
