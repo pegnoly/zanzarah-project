@@ -1,5 +1,7 @@
+import { RegistrationState, useAuth } from "@/contexts/auth";
 import { ItemTransformType, type ItemEvolutionModel } from "@/queries/wizforms/types";
-import { Divider, Group, Image, List, Tabs, Text, Tooltip } from "@mantine/core";
+import { Collapse, Divider, Group, Image, List, Tabs, Text, Tooltip, UnstyledButton } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 
 function WizformEvolutionsList({evolutions}: {evolutions: ItemEvolutionModel[]}) {
     console.log("Evolutions: ", evolutions)
@@ -21,7 +23,6 @@ function WizformEvolutionsList({evolutions}: {evolutions: ItemEvolutionModel[]})
                         <List>{evolutions
                             .filter(
                                 e => e.transformType == ItemTransformType.To && 
-                                e.spoilerable == false && 
                                 e.wizformIcon != null &&
                                 e.wizformName != null
                             ).map((e, i) => (
@@ -39,7 +40,6 @@ function WizformEvolutionsList({evolutions}: {evolutions: ItemEvolutionModel[]})
                         <List>{evolutions
                             .filter(                                
                                 e => e.transformType == ItemTransformType.From && 
-                                e.spoilerable == false && 
                                 e.wizformIcon != null &&
                                 e.wizformName != null
                             ).map((e, i) => (
@@ -58,22 +58,74 @@ function WizformEvolutionsList({evolutions}: {evolutions: ItemEvolutionModel[]})
 }
 
 function WizformEvolutionListItem({model ,index}: {model: ItemEvolutionModel, index: number}) {
-
+    const auth = useAuth();
+    const [opened, {open, close}] = useDisclosure(false);
+    if (model.spoilerable && auth?.registrationState != RegistrationState.Confirmed) {
+        return null;
+    }
     return (
-            <Group justify="space-between">
-                <div id={`elem${index}1`} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '45%'}}>
-                    <Tooltip label={model.transformType == ItemTransformType.To ? model.itemName : model.wizformName}>
-                        <Text style={{fontSize: 10, alignSelf: 'center', lineBreak: 'strict'}}>{model.transformType == ItemTransformType.To ? model.itemName : model.wizformName}</Text>
-                    </Tooltip>
-                    <Image w={40} h={40} style={{alignContent: 'self-end'}} src={`data:image/bmp;base64,${model.transformType == ItemTransformType.To ? model.itemIcon : model.wizformIcon}`}/>
-                </div> 
-                <div id={`elem${index}2`} style={{display: 'flex', flexDirection: 'row', width: '45%', gap: '5%', alignItems: 'center'}}>
-                    <Image w={40} h={40} style={{alignSelf: 'center'}} src={`data:image/bmp;base64,${model.transformType == ItemTransformType.From ? model.itemIcon : model.wizformIcon}`}/>
-                    <Tooltip label={model.transformType == ItemTransformType.From ? model.itemName : model.wizformName}>
-                        <Text style={{fontSize: 10, alignSelf: 'center', justifySelf: 'center', lineBreak: 'strict'}}>{model.transformType == ItemTransformType.From ? model.itemName : model.wizformName}</Text>
-                    </Tooltip>
-                </div>
-            </Group>
+        <Group justify="space-between">
+            <div id={`elem${index}1`} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '45%'}}>
+                {
+                    model.spoilerable == true && model.transformType == ItemTransformType.From ?
+                    <div style={{width: '100%'}}>
+                        <UnstyledButton hidden={opened} onClick={open}>
+                            Показать
+                        </UnstyledButton>
+                        <Collapse in={opened} onClick={close}>
+                            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
+                                <Tooltip label={model.transformType == ItemTransformType.From ? model.wizformName : model.itemName}>
+                                    <Text 
+                                        style={{fontSize: 10, alignSelf: 'center', lineBreak: 'strict'}}
+                                    >{model.transformType == ItemTransformType.From ? model.wizformName : model.itemName}</Text>
+                                </Tooltip>
+                                <Image 
+                                    w={40} 
+                                    h={40} 
+                                    style={{alignContent: 'self-end'}} 
+                                    src={`data:image/bmp;base64,${model.transformType == ItemTransformType.From ? model.wizformIcon : model.itemIcon}`}/>
+                            </div>
+                        </Collapse>
+                    </div> :
+                    <>
+                        <Tooltip label={model.transformType == ItemTransformType.To ? model.itemName : model.wizformName}>
+                            <Text style={{fontSize: 10, alignSelf: 'center', lineBreak: 'strict'}}>{model.transformType == ItemTransformType.To ? model.itemName : model.wizformName}</Text>
+                        </Tooltip>
+                        <Image w={40} h={40} style={{alignContent: 'self-end'}} src={`data:image/bmp;base64,${model.transformType == ItemTransformType.To ? model.itemIcon : model.wizformIcon}`}/>
+                    </>
+                }
+            </div> 
+            <div id={`elem${index}2`} style={{display: 'flex', flexDirection: 'row', width: '45%', gap: '5%', alignItems: 'center'}}>
+                {
+                    (model.spoilerable == true && model.transformType == ItemTransformType.To) ?
+                    <div style={{width: '100%'}}>
+                        <UnstyledButton hidden={opened} onClick={open}>
+                            Показать
+                        </UnstyledButton>
+                        <Collapse in={opened}>
+                            <div style={{display: 'flex', flexDirection: 'row', gap: '5%', alignContent: 'center'}}>
+                                <Image 
+                                    w={40} 
+                                    h={40} 
+                                    // style={{alignContent: 'self-end'}} 
+                                    src={`data:image/bmp;base64,${model.transformType == ItemTransformType.To ? model.wizformIcon : model.itemIcon}`}/>
+                                <Tooltip label={model.transformType == ItemTransformType.To ? model.wizformName : model.itemName}>
+                                    <Text 
+                                        style={{fontSize: 10, alignSelf: 'center', lineBreak: 'strict'}}
+                                    >{model.transformType == ItemTransformType.To ? model.wizformName : model.itemName}</Text>
+                                </Tooltip>
+                            </div>
+                        </Collapse>
+                    </div> :
+                    <>
+                        <Image w={40} h={40} style={{alignSelf: 'center'}} src={`data:image/bmp;base64,${model.transformType == ItemTransformType.From ? model.itemIcon : model.wizformIcon}`}/>
+                        <Tooltip label={model.transformType == ItemTransformType.From ? model.itemName : model.wizformName}>
+                            <Text style={{fontSize: 10, alignSelf: 'center', justifySelf: 'center', lineBreak: 'strict'}}>{model.transformType == ItemTransformType.From ? model.itemName : model.wizformName}</Text>
+                        </Tooltip>
+                    </>
+                }
+            </div>
+        </Group>
     )
 }
 
