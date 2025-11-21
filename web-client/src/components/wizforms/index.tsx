@@ -26,8 +26,6 @@ function WizformsLoader() {
     const activeBook = useActiveBook();
     const wizformsList = useWizformsList();
 
-    console.log("Must be realoaded? ", activeBook);
-
     const { data } = useWizforms({
         bookId: activeBook?.id!, 
         enabled: true, 

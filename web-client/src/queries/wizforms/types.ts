@@ -82,7 +82,7 @@ export type ItemEvolutionModel = {
     transformType: ItemTransformType,
     itemName: string,
     itemIcon: string,
-    wizformName: string,
-    wizformIcon: string,
+    wizformName: string | null,
+    wizformIcon: string | null,
     spoilerable: boolean
 }

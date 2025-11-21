@@ -68,7 +68,7 @@ const wizformCompleteQuery = gql`
                 comment
         },
         wizformEvolutionItems(wizformId: $wizformId, bookId: $bookId) {
-            transformType
+            transformType,
             itemName,
             itemIcon,
             wizformName,

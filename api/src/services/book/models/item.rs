@@ -100,8 +100,8 @@ pub struct ItemEvolutionModel {
     pub transform_type: ItemTransformType,
     pub item_name: String,
     pub item_icon: String,
-    pub wizform_name: String,
-    pub wizform_icon: String,
+    pub wizform_name: Option<String>,
+    pub wizform_icon: Option<String>,
     pub spoilerable: bool
 }
 
@@ -120,12 +120,12 @@ impl ItemEvolutionModel {
         &self.item_icon
     }
 
-    async fn wizform_name(&self) -> &String {
-        &self.wizform_name
+    async fn wizform_name(&self) -> Option<String> {
+        self.wizform_name.clone()
     }
 
-    async fn wizform_icon(&self) -> &String {
-        &self.wizform_icon
+    async fn wizform_icon(&self) -> Option<String> {
+        self.wizform_icon.clone()
     }
 
     async fn spoilerable(&self) -> bool {

@@ -7,9 +7,9 @@ function WizformEvolutionsList({evolutions}: {evolutions: ItemEvolutionModel[]})
         evolutions.length == 0 ?
         <Text>Для данной феи нет взаимодействий с эволюционными предметами</Text> :
         <div style={{overflowY: 'auto', maxHeight: 500}}>
-            <Tabs defaultValue={ItemTransformType.To} style={{justifyItems: 'center'}}>
-                <Tabs.List>
-                    <Tabs.Tab value={ItemTransformType.To}>
+            <Tabs defaultValue={ItemTransformType.To} variant="pills" radius={0} color="teal">
+                <Tabs.List grow>
+                    <Tabs.Tab value={ItemTransformType.To} >
                         Превращается в...
                     </Tabs.Tab>
                     <Tabs.Tab value={ItemTransformType.From}>
@@ -18,7 +18,13 @@ function WizformEvolutionsList({evolutions}: {evolutions: ItemEvolutionModel[]})
                 </Tabs.List>
                 <Tabs.Panel value={ItemTransformType.To}>
                     <div style={{paddingTop: '4%'}}>
-                        <List>{evolutions.filter(e => e.transformType == ItemTransformType.To && e.spoilerable == false).map((e, i) => (
+                        <List>{evolutions
+                            .filter(
+                                e => e.transformType == ItemTransformType.To && 
+                                e.spoilerable == false && 
+                                e.wizformIcon != null &&
+                                e.wizformName != null
+                            ).map((e, i) => (
                             <>                
                                 <WizformEvolutionListItem key={i} model={e} index={i}/>
                                 {
@@ -30,7 +36,13 @@ function WizformEvolutionsList({evolutions}: {evolutions: ItemEvolutionModel[]})
                 </Tabs.Panel>
                 <Tabs.Panel value={ItemTransformType.From}>
                     <div style={{paddingTop: '4%'}}>
-                        <List>{evolutions.filter(e => e.transformType == ItemTransformType.From && e.spoilerable == false).map((e, i) => (
+                        <List>{evolutions
+                            .filter(                                
+                                e => e.transformType == ItemTransformType.From && 
+                                e.spoilerable == false && 
+                                e.wizformIcon != null &&
+                                e.wizformName != null
+                            ).map((e, i) => (
                             <>                
                                 <WizformEvolutionListItem key={i} model={e} index={i}/>
                                 {

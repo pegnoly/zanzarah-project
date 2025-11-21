@@ -326,7 +326,6 @@ impl BookRepository {
         ))
         .all(db)
         .await?;
-        tracing::info!("Collections with entries found: {:#?}", &collections);
         Ok(collections)
     }
 
@@ -678,7 +677,7 @@ impl BookRepository {
         db: &DatabaseConnection,
         book_id: Uuid
     ) -> Result<(), ZZApiError> {
-        let result = db.execute(Statement::from_sql_and_values(sea_orm::DatabaseBackend::Postgres, 
+        db.execute(Statement::from_sql_and_values(sea_orm::DatabaseBackend::Postgres, 
         r#"
             delete from location_wizform_entries
             using (
@@ -690,7 +689,6 @@ impl BookRepository {
             where location_wizform_entries.id = subquery.id
             "#, [book_id.into()]))
             .await?;
-        tracing::info!("Delete entries result: {:#?}", &result);
         Ok(())
     }
 
@@ -785,6 +783,7 @@ impl BookRepository {
             .into_model::<ItemEvolutionModel>()
             .all(db)
             .await?;
+        // println!("Items result: {:#?}", &result);
         Ok(result)
     }
 }

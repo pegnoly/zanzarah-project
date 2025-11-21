@@ -45,7 +45,7 @@ function WizformBaseProps(params: {
                         <div style={{display: 'flex', flexDirection: 'column', gap: '2%', alignItems: 'center', paddingTop: '4%'}}>
                             <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.evolutionIcon}`}/>
                             <Text 
-                                style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
+                                style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', fontSize: '0.9rem', color: 'red', lineBreak: "auto"}}
                             >{`${params.model.evolutionName}`}</Text>
                             <Group gap={5}>
                                 <Text size="sm" style={{fontFamily: 'Comfortaa', fontWeight: 'bold'}}>{`Уровень: `}</Text>
@@ -64,7 +64,7 @@ function WizformBaseProps(params: {
                         <div style={{display: 'flex', flexDirection: 'column', paddingTop: '2%', alignItems: 'center'}}>
                             <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.previousIcon}`}/>
                             <Text 
-                                style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red'}}
+                                style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', fontSize: '0.9rem', color: 'red'}}
                             >{`${params.model.previousFormName}`}</Text>
                         </div>
                     }
