@@ -36,6 +36,10 @@ const wizformCompleteQuery = gql`
             inCollectionId,
             previousIcon,
             evolutionIcon,
+            evolutionId,
+            previousId,
+            evolutionEnabled,
+            previousEnabled,
             magics {
                 types {
                     level,
@@ -73,7 +77,9 @@ const wizformCompleteQuery = gql`
             itemIcon,
             wizformName,
             wizformIcon,
-            spoilerable
+            spoilerable,
+            id,
+            enabled
         }
     }
 `

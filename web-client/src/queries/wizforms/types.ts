@@ -56,7 +56,11 @@ export type WizformFull = {
     magics: Magics,
     inCollectionId: string | null,
     previousIcon: string | null,
-    evolutionIcon: string | null
+    evolutionIcon: string | null,
+    evolutionId: string | null,
+    previousId: string | null,
+    evolutionEnabled: boolean | null,
+    previousEnabled: boolean | null
 }
 
 export type WizformSimpleModel = {
@@ -84,5 +88,7 @@ export type ItemEvolutionModel = {
     itemIcon: string,
     wizformName: string | null,
     wizformIcon: string | null,
-    spoilerable: boolean
+    spoilerable: boolean,
+    id: string | null,
+    enabled: boolean | null
 }

@@ -93,6 +93,10 @@ impl BookRepository {
                         wp.name AS previous_name,
                         we.icon64 AS evolution_icon, 
                         wp.icon64 AS previous_icon,
+                        we.id AS evolution_id,
+                        wp.id AS previous_id,
+                        we.enabled AS evolution_enabled,
+                        wp.enabled as previous_enabled,
                         ce.id AS in_collection_id
                     FROM 
                         wizforms w
@@ -754,7 +758,7 @@ impl BookRepository {
                         and it.book_id = $3
                     ),
                     wizforms_filtered AS (
-                        SELECT name as wizform_name, icon64 as wizform_icon, number
+                        SELECT name as wizform_name, icon64 as wizform_icon, number, id, enabled
                         FROM wizforms 
                         WHERE book_id = $4
                     )
@@ -764,7 +768,9 @@ impl BookRepository {
                         fe.spoilerable,
                         fe.item_icon, 
                         wf.wizform_name,
-                        wf.wizform_icon
+                        wf.wizform_icon,
+                        wf.id,
+                        wf.enabled
                     FROM filtered_evolutions fe
                     LEFT JOIN wizforms_filtered wf ON fe.target_number = wf.number
 
@@ -776,7 +782,9 @@ impl BookRepository {
                         fp.spoilerable,
                         fp.item_icon,
                         wf.wizform_name,
-                        wf.wizform_icon
+                        wf.wizform_icon,
+                        wf.id,
+                        wf.enabled
                     FROM filtered_previous_forms fp
                     LEFT JOIN wizforms_filtered wf ON fp.target_number = wf.number;
             "#, [wizform_id.into(), book_id.into(), book_id.into(), book_id.into()]))

@@ -22,6 +22,8 @@ function WizformFocused() {
     const navigate = useNavigate();
     const { focusedId } = useParams();
 
+    const [activePanel, setActivePanel] = useState<FocusedWizformMode | null>(FocusedWizformMode.BaseProps);
+
     const [wizform, setWizform] = useState<WizformFull | undefined>(undefined);
     const [habitats, setHabitats] = useState<WizformHabitatModel [] | undefined>(undefined);
     const [evolutions, setEvolutions] = useState<ItemEvolutionModel [] | undefined>(undefined);
@@ -34,15 +36,27 @@ function WizformFocused() {
         setEvolutions(value.wizformEvolutionItems);
     }
 
+    useEffect(() => {
+        if (focusedId != undefined) {
+            setActivePanel(FocusedWizformMode.BaseProps);
+        }
+    }, [focusedId])
+
     return (
         <>
-            <Dialog open onOpenChange={() => navigate(-1)}>
+            <Dialog open onOpenChange={() => navigate(`/wizforms/${activeBook?.id}`)}>
                 <DialogContent className="rounded-none">
                     <DialogHeader>
                         <DialogTitle style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem'}}>{wizform == undefined ? <Loader/> : wizform.name}</DialogTitle>
                         <DialogDescription>{wizform == undefined ? "" : `${activeBook?.elements?.find(e => e.element == wizform.element)?.name} №${wizform.number}`}</DialogDescription>
                     </DialogHeader>
-                    <Accordion defaultValue={FocusedWizformMode.BaseProps} variant="contained" style={{overflowY: 'auto'}}>
+                    <Accordion 
+                        defaultValue={FocusedWizformMode.BaseProps} 
+                        value={activePanel} 
+                        onChange={(value) => setActivePanel(value as FocusedWizformMode)} 
+                        variant="contained" 
+                        style={{overflowY: 'auto'}}
+                    >
                         <Accordion.Item value={FocusedWizformMode.BaseProps}>
                             <Accordion.Control>Основные параметры</Accordion.Control>
                             <Accordion.Panel>

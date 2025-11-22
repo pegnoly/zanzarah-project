@@ -102,6 +102,8 @@ pub struct ItemEvolutionModel {
     pub item_icon: String,
     pub wizform_name: Option<String>,
     pub wizform_icon: Option<String>,
+    pub id: Option<Uuid>,
+    pub enabled: Option<bool>,
     pub spoilerable: bool
 }
 
@@ -130,5 +132,13 @@ impl ItemEvolutionModel {
 
     async fn spoilerable(&self) -> bool {
         self.spoilerable
+    }
+
+    async fn id(&self) -> Option<async_graphql::ID> {
+        self.id.map(|id| id.into())
+    }
+
+    async fn enabled(&self) -> Option<bool> {
+        self.enabled
     }
 }

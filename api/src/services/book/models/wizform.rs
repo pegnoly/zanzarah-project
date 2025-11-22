@@ -275,7 +275,11 @@ pub struct CollectionWizform {
     pub name: String,
     pub in_collection_id: Option<Uuid>,
     pub evolution_icon: Option<String>,
-    pub previous_icon: Option<String>
+    pub previous_icon: Option<String>,
+    pub evolution_id: Option<Uuid>,
+    pub previous_id: Option<Uuid>,
+    pub evolution_enabled: Option<bool>,
+    pub previous_enabled: Option<bool>
 }
 
 #[async_graphql::Object]
@@ -369,6 +373,22 @@ impl CollectionWizform {
 
     async fn evolution_icon(&self) -> Option<String> {
         self.evolution_icon.clone()
+    }
+
+    async fn evolution_id(&self) -> Option<Uuid> {
+        self.evolution_id
+    }
+
+    async fn previous_id(&self) -> Option<Uuid> {
+        self.previous_id
+    }
+
+    async fn evolution_enabled(&self) -> Option<bool> {
+        self.evolution_enabled
+    }
+
+    async fn previous_enabled(&self) -> Option<bool> {
+        self.previous_enabled
     }
 }
 
