@@ -1,11 +1,15 @@
+import { useActiveBook } from "@/contexts/activeBook";
 import type { WizformFull } from "@/queries/wizforms/types";
 import { Badge, Group, Image, Text } from "@mantine/core";
+import { Link } from "react-router";
 
 type WizformBasePropsSchema = Omit<WizformFull, "magics">;
 
 function WizformBaseProps(params: {
     model: WizformBasePropsSchema
 }) {
+
+    const currentBook = useActiveBook();
 
     return (
         <div style={{display: 'flex', flexDirection: 'column'}}>
@@ -43,7 +47,13 @@ function WizformBaseProps(params: {
                         params.model.evolutionForm == -1 ? 
                         <Text style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red', fontSize: 15}}>Нет</Text> : 
                         <div style={{display: 'flex', flexDirection: 'column', gap: '2%', alignItems: 'center', paddingTop: '4%'}}>
-                            <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.evolutionIcon}`}/>
+                            {
+                                params.model.evolutionEnabled != null && params.model.evolutionId != null && params.model.evolutionEnabled == true ? 
+                                <Link to={`/wizforms/${currentBook?.id}/focused/${params.model.evolutionId}`}>
+                                    <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.evolutionIcon}`}/>
+                                </Link> :
+                                <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.evolutionIcon}`}/>
+                            }
                             <Text 
                                 style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', fontSize: '0.9rem', color: 'red', lineBreak: "auto"}}
                             >{`${params.model.evolutionName}`}</Text>
@@ -62,7 +72,13 @@ function WizformBaseProps(params: {
                         params.model.previousForm == undefined ?
                         <Text style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red', fontSize: 15}}>Нет</Text> :
                         <div style={{display: 'flex', flexDirection: 'column', paddingTop: '2%', alignItems: 'center'}}>
-                            <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.previousIcon}`}/>
+                            {
+                                params.model.previousEnabled != null && params.model.previousId != null && params.model.previousEnabled == true ? 
+                                <Link to={`/wizforms/${currentBook?.id}/focused/${params.model.previousId}`}>
+                                    <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.previousIcon}`}/>
+                                </Link> :
+                                <Image w={40} h={40} src={`data:image/bmp;base64,${params.model.previousIcon}`}/>
+                            }
                             <Text 
                                 style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', fontSize: '0.9rem', color: 'red'}}
                             >{`${params.model.previousFormName}`}</Text>
