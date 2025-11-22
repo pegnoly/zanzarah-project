@@ -6,7 +6,7 @@ import { removeCollectionItem } from "@/queries/collections/removeItemMutation";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function CollectionsField({wizformId, inCollectionId}: {
     wizformId: string,
@@ -17,6 +17,10 @@ function CollectionsField({wizformId, inCollectionId}: {
     const activeBook = useActiveBook();
 
     const [localCollectionId, setLocalCollectionId] = useState<string | null>(inCollectionId);
+
+    useEffect(() => {
+        setLocalCollectionId(inCollectionId);
+    }, [inCollectionId])
 
     if (auth?.registrationState != RegistrationState.Confirmed || activeBook?.currentCollection == null) {
         return null;
