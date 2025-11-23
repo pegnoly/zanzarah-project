@@ -80,7 +80,7 @@ function WizformEvolutionListItem({model ,index}: {model: ItemEvolutionModel, in
                                 Показать
                             </UnstyledButton>
                             <Collapse in={opened} onClick={close}>
-                                <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
+                                <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'end', alignItems: 'center', width: '100%', gap: '5%'}}>
                                     <Tooltip label={model.wizformName}>
                                         <Text 
                                             style={{fontSize: 10, alignSelf: 'center', lineBreak: 'strict'}}
@@ -88,7 +88,15 @@ function WizformEvolutionListItem({model ,index}: {model: ItemEvolutionModel, in
                                     </Tooltip>
                                     {
                                         model.enabled ? 
-                                        <Link to={`/wizforms/${currentBook?.id}/focused/${model.id}`}>
+                                        <Link 
+                                            to={`/wizforms/${currentBook?.id}/focused/${model.id}`}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                flex: '0 0 auto',
+                                                alignSelf: 'center'
+                                            }}
+                                        >
                                             <Image 
                                                 w={40} 
                                                 h={40} 
@@ -101,13 +109,21 @@ function WizformEvolutionListItem({model ,index}: {model: ItemEvolutionModel, in
                                 </div>
                             </Collapse>
                         </div> :
-                        <>
+                        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'end', alignItems: 'center', width: '100%', gap: '5%'}}>
                             <Tooltip label={model.wizformName}>
                                 <Text style={{fontSize: 10, alignSelf: 'center', lineBreak: 'strict'}}>{model.wizformName}</Text>
                             </Tooltip>
                             {
                                 model.enabled ? 
-                                <Link to={`/wizforms/${currentBook?.id}/focused/${model.id}`}>
+                                <Link 
+                                    to={`/wizforms/${currentBook?.id}/focused/${model.id}`}
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        flex: '0 0 auto',
+                                        alignSelf: 'center'
+                                    }}
+                                >
                                     <Image 
                                         w={40} 
                                         h={40} 
@@ -117,7 +133,7 @@ function WizformEvolutionListItem({model ,index}: {model: ItemEvolutionModel, in
                                 </Link> :
                                 <Image w={40} h={40} style={{alignContent: 'self-end'}} src={`data:image/bmp;base64,${model.wizformIcon}`}/>
                             }
-                        </>
+                        </div>
                     ) :
                     <>
                         <Tooltip label={model.itemName}>
@@ -127,7 +143,7 @@ function WizformEvolutionListItem({model ,index}: {model: ItemEvolutionModel, in
                     </>
                 }
             </div> 
-            <div id={`elem${index}2`} style={{display: 'flex', flexDirection: 'row', width: '45%', gap: '5%', alignItems: 'center'}}>
+            <div id={`elem${index}2`} style={{display: 'flex', flexDirection: 'row', width: '45%', gap: '5%', justifyContent: 'space-between', alignItems: 'center'}}>
                 {
                     model.transformType == ItemTransformType.To ? 
                     (
@@ -140,7 +156,15 @@ function WizformEvolutionListItem({model ,index}: {model: ItemEvolutionModel, in
                                 <div style={{display: 'flex', flexDirection: 'row', gap: '5%', alignContent: 'center'}}>
                                     {
                                         model.enabled ?
-                                        <Link to={`/wizforms/${currentBook?.id}/focused/${model.id}`}>
+                                        <Link 
+                                            to={`/wizforms/${currentBook?.id}/focused/${model.id}`}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                flex: '0 0 auto',
+                                                alignSelf: 'center'
+                                            }}
+                                        >
                                             <Image 
                                                 w={40} 
                                                 h={40} 
@@ -155,39 +179,48 @@ function WizformEvolutionListItem({model ,index}: {model: ItemEvolutionModel, in
                                             src={`data:image/bmp;base64,${model.wizformIcon}`}
                                         />
                                     }
-                                    <Tooltip label={model.transformType == ItemTransformType.To ? model.wizformName : model.itemName}>
+                                    <Tooltip label={model.wizformName}>
                                         <Text 
                                             style={{fontSize: 10, alignSelf: 'center', lineBreak: 'strict'}}
-                                        >{model.transformType == ItemTransformType.To ? model.wizformName : model.itemName}</Text>
+                                        >{model.wizformName}</Text>
                                     </Tooltip>
                                 </div>
                             </Collapse>
                         </div> :
-                        <>
-                            {
-                                model.enabled ? 
-                                <Link to={`/wizforms/${currentBook?.id}/focused/${model.id}`}>
+                        <div style={{width: '100%'}}>
+                            <div style={{display: 'flex', flexDirection: 'row', gap: '5%', alignItems: 'center'}}>                    
+                                {
+                                    model.enabled ? 
+                                    <Link 
+                                        to={`/wizforms/${currentBook?.id}/focused/${model.id}`}
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            flex: '0 0 auto',
+                                            alignSelf: 'center'
+                                        }}
+                                    >
+                                        <Image 
+                                            w={40} 
+                                            h={40}
+                                            src={`data:image/bmp;base64,${model.wizformIcon}`}
+                                        />
+                                    </Link> 
+                                    :
                                     <Image 
                                         w={40} 
                                         h={40} 
-                                        // style={{alignContent: 'self-end'}} 
                                         src={`data:image/bmp;base64,${model.wizformIcon}`}
                                     />
-                                </Link> :
-                                <Image 
-                                    w={40} 
-                                    h={40} 
-                                    // style={{alignContent: 'self-end'}} 
-                                    src={`data:image/bmp;base64,${model.wizformIcon}`}
-                                />
-                            }
-                            <Tooltip label={model.wizformName}>
-                                <Text style={{fontSize: 10, alignSelf: 'center', justifySelf: 'center', lineBreak: 'strict'}}>{model.wizformName}</Text>
-                            </Tooltip>
-                        </>
+                                }
+                                <Tooltip label={model.wizformName}>
+                                    <Text style={{fontSize: 10, justifySelf: 'center', lineBreak: 'strict'}}>{model.wizformName}</Text>
+                                </Tooltip>
+                            </div>   
+                        </div>
                     ) : 
                     <>
-                        <Image w={40} h={40} style={{alignContent: 'self-end'}} src={`data:image/bmp;base64,${model.itemIcon}`}/>
+                        <Image w={40} h={40} style={{alignContent: 'self-start'}} src={`data:image/bmp;base64,${model.itemIcon}`}/>
                         <Tooltip label={model.itemName}>
                             <Text style={{fontSize: 10, alignSelf: 'center', lineBreak: 'strict'}}>{model.itemName}</Text>
                         </Tooltip>
