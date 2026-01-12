@@ -66,8 +66,9 @@ pub struct Model {
 
 #[derive(FromQueryResult, DerivePartialModel)]
 #[sea_orm(entity = "Entity")]
-pub struct WizformNameModel {
-    pub name: String,
+pub struct WizformUserModel {
+    pub id: Uuid,
+    pub name: String
 }
 
 pub type WizformModel = Model;

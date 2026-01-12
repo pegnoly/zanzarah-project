@@ -1,4 +1,4 @@
-use sea_orm::prelude::*;
+use sea_orm::{FromQueryResult, prelude::*};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel)]
@@ -13,6 +13,7 @@ pub struct Model {
     pub registration_state: RegistrationState,
     pub permission: UserPermissionType,
     pub confirmation_code: Option<String>,
+    pub avatar_wizform_id: Uuid 
 }
 
 pub type UserModel = Model;
@@ -122,4 +123,16 @@ impl UserModel {
     async fn permission(&self) -> UserPermissionType {
         self.permission
     }
+}
+
+#[derive(Debug, FromQueryResult, Serialize, Deserialize, Clone)]
+pub struct UserFullModel {
+    pub id: Uuid,
+    pub name: String,
+    pub email: String,
+    pub hashed_password: String,
+    pub registration_state: RegistrationState,
+    pub permission: UserPermissionType,
+    pub confirmation_code: Option<String>,
+    pub avatar: String
 }

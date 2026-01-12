@@ -2,11 +2,13 @@ import request, { gql } from "graphql-request"
 import { API_ENDPOINT } from "../common"
 import type { RegistrationState, UserPermissionType } from "@/contexts/auth"
 
-type TokenUpdateResult = {
+export type TokenUpdateResult = {
   userId: string,
   newToken: string,
   permission: UserPermissionType,
-  registrationState: RegistrationState
+  registrationState: RegistrationState,
+  name: string,
+  avatar: string
 }
 
 type TokenUpdateMutationVariables = {
@@ -24,7 +26,9 @@ const document = gql`
             userId,
             newToken,
             permission,
-            registrationState
+            registrationState,
+            avatar,
+            name
         }
     }
 `

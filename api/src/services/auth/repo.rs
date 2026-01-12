@@ -6,16 +6,14 @@ use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use mail_send::{SmtpClientBuilder, mail_builder::MessageBuilder};
 use rand::seq::IteratorRandom;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue::Set, ColumnTrait, DatabaseConnection, EntityTrait,
-    IntoActiveModel, QueryFilter,
+    ActiveModelTrait, ActiveValue::Set, ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult, IntoActiveModel, PaginatorTrait, QueryFilter, Statement
 };
-use shuttle_runtime::SecretStore;
 use totp_rs::TOTP;
 use uuid::Uuid;
 
 use crate::{
     error::ZZApiError,
-    services::book::models::wizform::{self, WizformNameModel},
+    services::{auth::models::user::UserFullModel, book::models::wizform::{self, WizformUserModel}},
 };
 
 use super::{
@@ -42,23 +40,27 @@ pub struct AuthRepository {
 }
 
 impl AuthRepository {
-    pub fn new(secrets: &SecretStore) -> Result<Self, ZZApiError> {
-        let jwt_validator = secrets.get("JWT_SECRET_VALIDATOR").unwrap();
-        let email_salt = secrets.get("EMAIL_HASHER").unwrap();
+    pub fn new() -> Result<Self, ZZApiError> {
+        let jwt_validator = "5abb995cb2c16679e6760b40389412372d229580116c52f66b4bea8377d4ef06f9449af57c15dfd0ff8579db9a00919ee77436e5bda209ae946ffe2485a03469e3aaece0c5b2a5fe375ced8c940ed4772ff85fd2b9fb5940692775c0a86ffc3d862ac97f3b478dce065b3898caa38c966ee3a312ead8a47ee52f68f5a11833658a865bd6da96cd7e9e4fe1540a661a0adc4506e4745302ff56e508ec111664b706da956ca5b04fa0b782ca88e510a5a1d7b0c81d4b50e617c5d873d2af8a26c4e2222e41c6cc1e79a77736a72c99857558647df4600771b1ccab64915260060107a093440c6d52c0c9595df34ca0524c4183572a585c3898db21488a81c44dd4";
+        let email_salt = "2tcDeAaD9ZKbmpvs6IqXGQ".to_string();
         Ok(AuthRepository {
             email_config: EmailConfig {
-                sender: secrets
-                    .get("ZANZARAH_PROJECT_SENDER")
-                    .ok_or(ZZApiError::Empty)?,
-                host: secrets
-                    .get("ZANZARAH_PROJECT_SMTP_HOST")
-                    .ok_or(ZZApiError::Empty)?,
-                email: secrets
-                    .get("ZANZARAH_PROJECT_APP_EMAIL")
-                    .ok_or(ZZApiError::Empty)?,
-                password: secrets
-                    .get("ZANZARAH_PROJECT_APP_PASSWORD")
-                    .ok_or(ZZApiError::Empty)?,
+                sender: "ZANZARAH-PROJECT".to_string(),
+                host: "smtp.gmail.com".to_string(),
+                email: "owafe001@gmail.com".to_string(),
+                password: "xnqh ibcm ntxd dhih".to_string()
+                // sender: secrets
+                //     .get("ZANZARAH_PROJECT_SENDER")
+                //     .ok_or(ZZApiError::Empty)?,
+                // host: secrets
+                //     .get("ZANZARAH_PROJECT_SMTP_HOST")
+                //     .ok_or(ZZApiError::Empty)?,
+                // email: secrets
+                //     .get("ZANZARAH_PROJECT_APP_EMAIL")
+                //     .ok_or(ZZApiError::Empty)?,
+                // password: secrets
+                //     .get("ZANZARAH_PROJECT_APP_PASSWORD")
+                //     .ok_or(ZZApiError::Empty)?,
             },
             email_salt,
             encoding_key: EncodingKey::from_secret(jwt_validator.as_bytes()),
@@ -98,6 +100,8 @@ impl AuthRepository {
             return Err(ZZApiError::EmailAlreadyExists);
         }
 
+        let users_count = user::Entity::find().count(db).await?;
+
         let password_hash = argon2
             .hash_password(password.as_bytes(), &salt)?
             .to_string();
@@ -107,30 +111,29 @@ impl AuthRepository {
             8,
             1,
             30,
-            email.as_bytes().to_vec(),
+            email_hash.as_bytes().to_vec(),
         )?;
         let code = totp.generate(chrono::Local::now().timestamp_millis() as u64);
         // generate name
-        let wizforms_names = wizform::Entity::find()
+        let wizforms_data = wizform::Entity::find()
             .filter(wizform::Column::Enabled.eq(true))
-            .into_partial_model::<WizformNameModel>()
+            .into_partial_model::<WizformUserModel>()
             .all(db)
             .await?;
-        let name = wizforms_names
+        let registered_wizform = wizforms_data
             .iter()
             .choose(&mut rand::rng())
-            .unwrap()
-            .name
-            .clone();
+            .unwrap();
         let model_to_insert = user::ActiveModel {
             id: Set(Uuid::new_v4()),
-            name: Set(name),
+            name: Set(format!("{} #{}", registered_wizform.name.clone(), users_count + 15)),
             email: Set(email_hash.to_string()),
             salt: Set(salt.to_string()),
             hashed_password: Set(password_hash.clone()),
             permission: Set(UserPermissionType::UnregisteredUser),
             registration_state: Set(RegistrationState::Unconfirmed),
             confirmation_code: Set(Some(code.clone())),
+            avatar_wizform_id: Set(registered_wizform.id)
         };
         let model = model_to_insert.insert(db).await?;
         self.send_confirmation_email(email.clone(), code).await?;
@@ -185,16 +188,14 @@ impl AuthRepository {
         let validation_info = Validation::new(Algorithm::default());
         let user_data =
             jsonwebtoken::decode::<UserClaims>(&token, &self.decoding_key, &validation_info)?;
-        tracing::info!("Got user data from token: {:#?}", &user_data);
-        if let Some(existing_user) = user::Entity::find()
-            .filter(user::Column::Email.eq(user_data.claims.email))
-            .one(db)
-            .await?
+        if let Some(existing_user) = self.get_user_full_model(db, user_data.claims.email).await?
         {
             Ok(AuthorizationResult {
                 user_id: existing_user.id.into(),
                 registration_state: user_data.claims.registration_state,
                 permission: user_data.claims.permission,
+                avatar: existing_user.avatar,
+                name: existing_user.name
             })
         } else {
             Err(ZZApiError::Custom(
@@ -209,10 +210,7 @@ impl AuthRepository {
         email_hash: String,
         password_hash: String,
     ) -> Result<TokenUpdateResult, ZZApiError> {
-        if let Some(existing_user) = user::Entity::find()
-            .filter(user::Column::Email.eq(email_hash.clone()))
-            .one(db)
-            .await?
+        if let Some(existing_user) = self.get_user_full_model(db, email_hash.clone()).await?
         {
             let claims = UserClaims {
                 email: email_hash,
@@ -227,10 +225,12 @@ impl AuthRepository {
                 new_token: token,
                 registration_state: existing_user.registration_state,
                 permission: existing_user.permission,
+                avatar: existing_user.avatar,
+                name: existing_user.name
             })
         } else {
             Err(ZZApiError::SeaOrmError(sea_orm::DbErr::RecordNotFound(
-                "Can't find user id database".to_string(),
+                "Can't find user in database".to_string(),
             )))
         }
     }
@@ -245,10 +245,7 @@ impl AuthRepository {
         let email_hash = argon2
             .hash_password(email.as_bytes(), &SaltString::from_b64(&self.email_salt)?)?
             .to_string();
-        if let Some(existing_user) = user::Entity::find()
-            .filter(user::Column::Email.eq(email_hash.clone()))
-            .one(db)
-            .await?
+        if let Some(existing_user) = self.get_user_full_model(db, email_hash.clone()).await?
         {
             let password_hash = PasswordHash::new(&existing_user.hashed_password)?;
             if let Ok(()) = argon2.verify_password(password.as_bytes(), &password_hash) {
@@ -267,6 +264,8 @@ impl AuthRepository {
                     registration_state: existing_user.registration_state,
                     permission: existing_user.permission,
                     user_id: existing_user.id.into(),
+                    avatar: existing_user.avatar,
+                    name: existing_user.name
                 })
             } else {
                 Err(ZZApiError::IncorrectPassword)
@@ -283,7 +282,7 @@ impl AuthRepository {
         code: String,
     ) -> Result<EmailConfirmationResult, ZZApiError> {
         if let Some(existing_user) = user::Entity::find()
-            .filter(user::Column::Email.eq(email))
+            .filter(user::Column::Email.eq(email.clone()))
             .one(db)
             .await?
         {
@@ -309,10 +308,13 @@ impl AuthRepository {
                                 &updated_claims,
                                 &self.encoding_key,
                             )?;
+                            let user_full_model = self.get_user_full_model(db, email).await?.unwrap();
                             Ok(EmailConfirmationResult {
                                 new_token: token,
                                 permission: UserPermissionType::User,
                                 registration_state: RegistrationState::Confirmed,
+                                name: user_full_model.name,
+                                avatar: user_full_model.avatar
                             })
                         } else {
                             Err(ZZApiError::IncorrectCode)
@@ -328,5 +330,19 @@ impl AuthRepository {
                 "There's no user to confirm email in database".to_string(),
             ))
         }
+    }
+
+    async fn get_user_full_model(&self, db: &DatabaseConnection, email: String) -> Result<Option<UserFullModel>, ZZApiError> {
+        let result = UserFullModel::find_by_statement(Statement::from_sql_and_values(
+            sea_orm::DatabaseBackend::Postgres, 
+            r#"
+                SELECT u.name, u.email, u.id, u.registration_state, u.permission, u.confirmation_code, u.hashed_password, w.icon64 AS avatar 
+                FROM users u
+                LEFT JOIN wizforms w on u.avatar_wizform_id = w.id
+                WHERE u.email = $1
+            "#, [email.into()]))
+            .one(db)
+            .await?;
+        Ok(result)
     }
 }

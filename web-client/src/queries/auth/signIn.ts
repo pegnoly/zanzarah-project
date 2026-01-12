@@ -3,13 +3,15 @@ import type { RegistrationState } from "@/graphql/graphql"
 import request, { gql } from "graphql-request"
 import { API_ENDPOINT } from "../common"
 
-type SignInResult = {
+export type SignInResult = {
   emailHash: string,
   newToken: string,
   passwordHash: string,
   permission: UserPermissionType,
   registrationState: RegistrationState,
-  userId: string
+  userId: string,
+  name: string,
+  avatar: string
 }
 
 const signInQuery = gql`
@@ -20,7 +22,9 @@ const signInQuery = gql`
             passwordHash,
             permission,
             registrationState,
-            userId
+            userId,
+            name,
+            avatar
         }
     }
 `

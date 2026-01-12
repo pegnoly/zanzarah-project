@@ -10,8 +10,8 @@ pub enum ZZApiError {
     UUIDError(#[from] uuid::Error),
     #[error("Some already traced error")]
     Empty,
-    #[error("Failed to setup shuttle runtime")]
-    ShuttleRuntime(#[from] shuttle_runtime::Error),
+    // #[error("Failed to setup shuttle runtime")]
+    // ShuttleRuntime(#[from] shuttle_runtime::Error),
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
     #[error("Custom ZZApi error: `{0}`")]

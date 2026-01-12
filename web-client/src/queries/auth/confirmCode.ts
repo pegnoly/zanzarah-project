@@ -6,7 +6,9 @@ import Cookies from "js-cookie"
 export type EmailConfirmationResult = {
   newToken: string,
   registrationState: RegistrationState,
-  permission: UserPermissionType
+  permission: UserPermissionType,
+  avatar: string,
+  name: string
 }
 
 const confirmCodeMutation = gql`
@@ -14,7 +16,9 @@ const confirmCodeMutation = gql`
     confirmEmail(email: $email, code: $code) {
       registrationState,
       permission,
-      newToken
+      newToken,
+      avatar,
+      name
     }
   }
 `

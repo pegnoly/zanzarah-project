@@ -23,6 +23,8 @@ pub struct AuthorizationResult {
     pub user_id: async_graphql::ID,
     pub registration_state: RegistrationState,
     pub permission: UserPermissionType,
+    pub name: String,
+    pub avatar: String
 }
 
 #[derive(Debug, async_graphql::SimpleObject)]
@@ -31,6 +33,8 @@ pub struct TokenUpdateResult {
     pub new_token: String,
     pub registration_state: RegistrationState,
     pub permission: UserPermissionType,
+    pub name: String,
+    pub avatar: String
 }
 
 #[derive(Debug, async_graphql::SimpleObject)]
@@ -41,6 +45,8 @@ pub struct SignInResult {
     pub registration_state: RegistrationState,
     pub permission: UserPermissionType,
     pub user_id: async_graphql::ID,
+    pub name: String,
+    pub avatar: String
 }
 
 #[derive(Debug, async_graphql::SimpleObject)]
@@ -48,4 +54,6 @@ pub struct EmailConfirmationResult {
     pub new_token: String,
     pub registration_state: RegistrationState,
     pub permission: UserPermissionType,
+    pub name: String,
+    pub avatar: String
 }

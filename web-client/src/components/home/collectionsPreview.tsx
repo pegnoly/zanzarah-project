@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Divider, Group, Loader, Modal, Popover, Select, SimpleGrid, Text, TextInput } from "@mantine/core";
+import { Badge, Button, Card, Divider, Group, Image, Loader, Modal, Popover, Select, SimpleGrid, Text, TextInput } from "@mantine/core";
 import { RegistrationState, useAuth } from "@/contexts/auth";
 import AuthForm from "../auth/authForm";
 import { useEffect, useState } from "react";
@@ -71,6 +71,7 @@ function CollectionsInfo() {
 
 function CollectionsRenderer() {
     const activeBook = useActiveBook();
+    const auth = useAuth();
     const [collections, setCollections] = useState<CollectionModel [] | undefined>(undefined);
 
     async function onCollectionCreated(value: CollectionModel) {
@@ -92,6 +93,13 @@ function CollectionsRenderer() {
     }
 
     return <>
+        <Group style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
+            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                <Text style={{fontFamily: 'Yanone Kaffeesatz', fontSize: '1.5rem'}}>Пользователь</Text>
+                <Text style={{fontFamily: 'Ysabeau SC', fontWeight: 'bolder', color: 'red', fontSize: '1.1rem'}}>{auth?.name}</Text>
+            </div>
+            <Image w={40} h={40} src={`data:image/bmp;base64,${auth?.avatar}`}></Image>
+        </Group>
         {
             activeBook?.id == undefined ? 
             <>

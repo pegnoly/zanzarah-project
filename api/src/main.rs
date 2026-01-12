@@ -1,3 +1,5 @@
+use std::net::SocketAddr;
+
 // #![forbid(clippy::unwrap_used)]
 use async_graphql::{EmptySubscription, Schema, http::GraphiQLSource};
 use async_graphql_axum::GraphQL;
@@ -11,6 +13,7 @@ use graphql::{MutationRoot, QueryRoot};
 use sea_orm::SqlxPostgresConnector;
 use serde::{Deserialize, Serialize};
 use services::{auth::prelude::AuthRepository, book::repo::BookRepository};
+use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
 
 mod error;
@@ -32,24 +35,33 @@ async fn graphiql() -> impl IntoResponse {
     )
 }
 
-#[shuttle_runtime::main]
-async fn main(
-    #[shuttle_shared_db::Postgres(
-        local_uri = "postgres://user_{secrets.POSTGRES_USER}:{secrets.POSTGRES_PASSWORD}@sharedpg-rds.shuttle.dev:5432/db_{secrets.POSTGRES_USER}"
-    )] pool: sqlx::PgPool,
-    #[shuttle_runtime::Secrets] secrets: shuttle_runtime::SecretStore,
-) -> shuttle_axum::ShuttleAxum {
+#[tokio::main]
+async fn main() {
+    let pool = PgPool::connect(
+        "postgresql://postgres:AKWoBDghSAGvqKKjzFMUngcHMziyBdqU@interchange.proxy.rlwy.net:32808/postgres"
+    )
+        .await
+        .unwrap();
     let db = SqlxPostgresConnector::from_sqlx_postgres_pool(pool);
     let schema = Schema::build(
         QueryRoot::default(),
         MutationRoot::default(),
         EmptySubscription,
     )
-    .data(db)
-    .data(BookRepository)
-    .data(AuthRepository::new(&secrets).map_err(|err| shuttle_runtime::Error::Custom(err.into()))?)
-    .finish();
-    tracing::info!("Tracing ok?");
+        .data(db)
+        .data(BookRepository)
+        .data(AuthRepository::new().unwrap())
+        .finish();
+    
+    // Get the port number from the environment, default to 3000
+    let port: u16 = std::env::var("PORT")
+        .unwrap_or_else(|_| "3000".to_string()) // Get the port as a string or default to "3000"
+        .parse() // Parse the port string into a u16
+        .expect("Failed to parse PORT");
+
+    // Create a socket address (IPv6 binding)
+    let address = SocketAddr::from(([0, 0, 0, 0, 0, 0, 0, 0], port));
+    let listener = tokio::net::TcpListener::bind(&address).await.unwrap();
 
     let router = Router::new()
         .route(
@@ -59,9 +71,15 @@ async fn main(
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
-                .allow_methods([Method::GET, Method::POST])
-                .allow_headers(Any),
+                .allow_methods([
+                    Method::GET,
+                    Method::POST,
+                    Method::PUT,
+                    Method::DELETE,
+                    Method::OPTIONS,
+                ])
+                .allow_headers(Any)
         );
 
-    Ok(router.into())
+    axum::serve(listener, router).await.unwrap()
 }

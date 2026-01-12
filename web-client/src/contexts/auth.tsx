@@ -1,10 +1,10 @@
 import { createContext, use, useEffect, useState, type ReactNode } from "react";
 import { updateToken } from "@/queries/auth/updateToken";
 import { requestTokenData } from "@/queries/auth/processToken";
-import type { SignInResult } from "@/graphql/graphql";
 import Cookies from "js-cookie";
 import type { RegistrationResult } from "@/queries/auth/registerUser";
 import type { EmailConfirmationResult } from "@/queries/auth/confirmCode";
+import type { SignInResult } from "@/queries/auth/signIn";
 
 export enum RegistrationState {
     Unregistered = "UNREGISTERED",
@@ -35,6 +35,8 @@ export interface AuthContextType {
   registrationState: RegistrationState | undefined,
   userPermission: UserPermissionType | undefined,
   userId: string | undefined,
+  name: string | undefined,
+  avatar: string | undefined,
   signIn: (data: SignInResult) => void,
   register: (data: RegistrationResult) => void,
   confirm: (data: EmailConfirmationResult) => void
@@ -46,6 +48,8 @@ function AuthProvider({children}: {children: ReactNode}) {
     const [userId, setUserId] = useState<string | undefined>(undefined);
     const [registrationState, setRegistrationState] = useState<RegistrationState | undefined>(undefined);
     const [permission, setPermission] = useState<UserPermissionType | undefined>(undefined);
+    const [name, setName] = useState<string | undefined>(undefined);
+    const [avatar, setAvatar] = useState<string | undefined>(undefined);
 
     useEffect(() => {
       getAuthState();
@@ -62,6 +66,8 @@ function AuthProvider({children}: {children: ReactNode}) {
             setRegistrationState(updateTokenResult.registrationState);
             setUserId(updateTokenResult.userId)
             setPermission(updateTokenResult.permission);
+            setAvatar(updateTokenResult.avatar);
+            setName(updateTokenResult.name);
             Cookies.set("zanzarah_project-auth-token", updateTokenResult.newToken, {expires: 86400});
           }
         } else {
@@ -74,6 +80,8 @@ function AuthProvider({children}: {children: ReactNode}) {
           setRegistrationState(authData.registrationState);
           setPermission(authData.permission);
           setUserId(authData.userId);
+          setName(authData.name);
+          setAvatar(authData.avatar);
         }
       }
     }
@@ -86,6 +94,8 @@ function AuthProvider({children}: {children: ReactNode}) {
         setPermission(data.permission);
         setRegistrationState(data.registrationState);
         setUserId(data.userId);
+        setAvatar(data.avatar);
+        setName(data.name);
     }
 
     const processRegistration = async(data: RegistrationResult) => {
@@ -102,6 +112,8 @@ function AuthProvider({children}: {children: ReactNode}) {
 
         setRegistrationState(data.registrationState);
         setUserId(data.permission);
+        setAvatar(data.avatar);
+        setName(data.name);
     }
 
     return (
@@ -109,6 +121,8 @@ function AuthProvider({children}: {children: ReactNode}) {
         registrationState: registrationState, 
         userId: userId, 
         userPermission: permission,
+        name: name,
+        avatar: avatar,
         signIn: processSignIn,
         register: processRegistration,
         confirm: processConfirmation

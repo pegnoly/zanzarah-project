@@ -140,11 +140,18 @@ impl BookRepository {
         db: &DatabaseConnection,
         available: Option<bool>,
     ) -> Result<Vec<BookModel>, ZZApiError> {
-        let condition = Condition::all().add_option(
-            available.map(|available| Expr::col(book::Column::Available).eq(available)),
-        );
-
-        Ok(book::Entity::find().filter(condition).all(db).await?)
+        println!("Trying to get all books...");
+        // let condition = Condition::all().add_option(
+        //     available.map(|available| Expr::col(book::Column::Available).eq(available)),
+        // );
+        let data = book::BookModel::find_by_statement(Statement::from_sql_and_values(
+            sea_orm::DatabaseBackend::Postgres, 
+            "SELECT * FROM books WHERE available = true;", [])
+        )
+        .all(db)
+        .await.unwrap();
+        println!("Data: {:#?}", &data);
+        Ok(data)
     }
 
     pub async fn get_current_book(

@@ -5,7 +5,9 @@ import { API_ENDPOINT } from "../common"
 type AuthorizationResult = {
   userId: string,
   registrationState: RegistrationState,
-  permission: UserPermissionType
+  permission: UserPermissionType,
+  name: string,
+  avatar: string
 }
 
 const processTokenQuery = gql`
@@ -13,7 +15,9 @@ const processTokenQuery = gql`
     processToken(token: $token) {
       userId,
       registrationState,
-      permission
+      permission,
+      avatar,
+      name
     }
   }
 `
