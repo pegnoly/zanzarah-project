@@ -3,3 +3,5 @@
 .env.*
 node_modules
 dist
+api/target
+api/Secrets.dev.toml
