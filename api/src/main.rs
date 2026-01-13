@@ -50,7 +50,7 @@ async fn main() {
     )
         .data(db)
         .data(BookRepository)
-        .data(AuthRepository::new().unwrap())
+        // .data(AuthRepository::new().unwrap())
         .finish();
     
     // Get the port number from the environment, default to 3000
