@@ -3,7 +3,7 @@ use argon2::{
     password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation};
-use mail_send::{SmtpClientBuilder, mail_builder::MessageBuilder};
+use lettre::{Message, SmtpTransport, Transport, message::header::ContentType, transport::smtp::authentication::Credentials};
 use rand::seq::IteratorRandom;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult, IntoActiveModel, PaginatorTrait, QueryFilter, Statement
@@ -155,28 +155,27 @@ impl AuthRepository {
     }
 
     async fn send_confirmation_email(&self, email: String, code: String) -> Result<(), ZZApiError> {
-        let message = MessageBuilder::new()
-            .from((
-                self.email_config.sender.as_str(),
-                self.email_config.email.as_str(),
-            ))
-            .to(vec![("New zanzarah-project user", email.as_str())])
-            .subject("Подтверждение аккаунта для Zanzarah project")
-            .html_body(format!("<h1>Ваш код подтверждения - {code}</h1>"))
-            .text_body("Hello from zz-api");
+        let email = Message::builder()
+            .from("owafe001@gmail.com".parse().unwrap())
+            .to(email.parse().unwrap())
+            .subject("Подтверждение регистрации в Zanzarah-project")
+            .header(ContentType::TEXT_PLAIN)
+            .body(format!("Ваш код подтвержения: {}", &code)).unwrap();
 
-        SmtpClientBuilder::new(self.email_config.host.clone(), 587)
-            .implicit_tls(false)
-            .credentials((
-                self.email_config.email.clone(),
-                self.email_config.password.clone(),
-            ))
-            .connect()
-            .await
-            .unwrap()
-            .send(message)
-            .await
-            .unwrap();
+        let creds = Credentials::new(
+            self.email_config.email.clone(),
+            self.email_config.password.clone(),
+        );
+
+        let mailer = SmtpTransport::relay("smtp.gmail.com").unwrap()
+            .credentials(creds)
+            .build();
+
+        // Send the email
+        match mailer.send(&email) {
+            Ok(_) => println!("Email sent successfully!"),
+            Err(e) => panic!("Could not send email: {e:?}"),
+        }
         Ok(())
     }
 
