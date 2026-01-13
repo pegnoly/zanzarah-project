@@ -12,7 +12,10 @@ use axum::{
 use graphql::{MutationRoot, QueryRoot};
 use sea_orm::SqlxPostgresConnector;
 use serde::{Deserialize, Serialize};
-use services::{auth::prelude::AuthRepository, book::repo::BookRepository};
+use services::{
+    // auth::prelude::AuthRepository, 
+    book::repo::BookRepository
+};
 use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
 

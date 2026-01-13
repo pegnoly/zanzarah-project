@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 axum = "0.8.1"
-tokio = "1.28.2"
+tokio = {version = "1.28.2", features = ["rt-multi-thread"]}
 sqlx = {version = "0.8.3", features = ["runtime-tokio-rustls", "postgres", "uuid", "json"]}
 serde = { version = "1.0.209", features = ["derive"] }
 uuid = { version = "1.10.0", features = ["v4"] }
@@ -21,9 +21,9 @@ tower-http = { version = "0.6.2", features = ["cors"] }
 thiserror = "2.0.12"
 itertools = "0.14.0"
 reqwest = { version = "0.12.15", features = ["json"] }
-mail-send = "0.5.0"
+# mail-send = "0.5.0"
 chrono = "0.4.41"
-totp-rs = "5.7.0"
+# totp-rs = "5.7.0"
 jsonwebtoken = "9.3.1"
-argon2 = "0.5.3"
+# argon2 = "0.5.3"
 rand = "0.9.1"
