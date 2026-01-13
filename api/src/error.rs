@@ -10,8 +10,6 @@ pub enum ZZApiError {
     UUIDError(#[from] uuid::Error),
     #[error("Some already traced error")]
     Empty,
-    // #[error("Failed to setup shuttle runtime")]
-    // ShuttleRuntime(#[from] shuttle_runtime::Error),
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
     #[error("Custom ZZApi error: `{0}`")]
@@ -20,10 +18,10 @@ pub enum ZZApiError {
     ParseInt(#[from] ParseIntError),
     #[error(transparent)]
     Jwt(#[from] jsonwebtoken::errors::Error),
-    // #[error("Failed to generate hash: {0:?}")]
-    // Argon2Hash(argon2::password_hash::Error),
-    // #[error(transparent)]
-    // Totp(#[from] totp_rs::TotpUrlError),
+    #[error("Failed to generate hash: {0:?}")]
+    Argon2Hash(argon2::password_hash::Error),
+    #[error(transparent)]
+    Totp(#[from] totp_rs::TotpUrlError),
     #[error("IncorrectEmail")]
     IncorrectEmail,
     #[error("IncorrectPassword")]
@@ -38,11 +36,11 @@ pub enum ZZApiError {
     UserAlreadyConfirmed,
 }
 
-// impl From<argon2::password_hash::Error> for ZZApiError {
-//     fn from(value: argon2::password_hash::Error) -> Self {
-//         ZZApiError::Argon2Hash(value)
-//     }
-// }
+impl From<argon2::password_hash::Error> for ZZApiError {
+    fn from(value: argon2::password_hash::Error) -> Self {
+        ZZApiError::Argon2Hash(value)
+    }
+}
 
 impl Serialize for ZZApiError {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

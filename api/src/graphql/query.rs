@@ -9,7 +9,7 @@ use crate::{
     services::{
         auth::{
             prelude::{
-                // AuthRepository, 
+                AuthRepository, 
                 UserModel},
             utils::{AuthorizationResult, SignInResult},
         },
@@ -27,41 +27,41 @@ pub struct Query;
 
 #[async_graphql::Object]
 impl Query {
-    // async fn user_by_email(
-    //     &self,
-    //     context: &Context<'_>,
-    //     email: String,
-    // ) -> Result<Option<UserModel>, ZZApiError> {
-    //     let repo = context.data::<AuthRepository>().map_err(|error| {
-    //         tracing::error!(
-    //             "Failed to get auth repository from context. {}",
-    //             &error.message
-    //         );
-    //         ZZApiError::Empty
-    //     })?;
-    //     let db = context.data::<DatabaseConnection>().map_err(|error| {
-    //         tracing::error!(
-    //             "Failed to get database connection from context. {}",
-    //             &error.message
-    //         );
-    //         ZZApiError::Empty
-    //     })?;
+    async fn user_by_email(
+        &self,
+        context: &Context<'_>,
+        email: String,
+    ) -> Result<Option<UserModel>, ZZApiError> {
+        let repo = context.data::<AuthRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get auth repository from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
 
-    //     match repo.get_user_by_email(db, email.clone()).await {
-    //         Ok(user) => Ok(user),
-    //         Err(error) => {
-    //             tracing::error!(
-    //                 "
-    //                 Failed to get user by email. 
-    //                 Params: email - {:?}. 
-    //                 Error message: {:?}",
-    //                 email,
-    //                 error
-    //             );
-    //             Err(error)
-    //         }
-    //     }
-    // }
+        match repo.get_user_by_email(db, email.clone()).await {
+            Ok(user) => Ok(user),
+            Err(error) => {
+                tracing::error!(
+                    "
+                    Failed to get user by email. 
+                    Params: email - {:?}. 
+                    Error message: {:?}",
+                    email,
+                    error
+                );
+                Err(error)
+            }
+        }
+    }
 
     async fn all_wizforms(
         &self,
@@ -278,53 +278,53 @@ impl Query {
         }
     }
 
-    // async fn process_token(
-    //     &self,
-    //     context: &Context<'_>,
-    //     token: String,
-    // ) -> Result<AuthorizationResult, ZZApiError> {
-    //     let service = context.data::<AuthRepository>().map_err(|error| {
-    //         tracing::error!(
-    //             "Failed to get wizform service from context. {}",
-    //             &error.message
-    //         );
-    //         ZZApiError::Empty
-    //     })?;
-    //     let db = context.data::<DatabaseConnection>().map_err(|error| {
-    //         tracing::error!(
-    //             "Failed to get database connection from context. {}",
-    //             &error.message
-    //         );
-    //         ZZApiError::Empty
-    //     })?;
-    //     let result = service.get_user_data_from_token(db, token).await?;
-    //     Ok(result)
-    // }
+    async fn process_token(
+        &self,
+        context: &Context<'_>,
+        token: String,
+    ) -> Result<AuthorizationResult, ZZApiError> {
+        let service = context.data::<AuthRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let result = service.get_user_data_from_token(db, token).await?;
+        Ok(result)
+    }
 
-    // async fn sign_in(
-    //     &self,
-    //     context: &Context<'_>,
-    //     email: String,
-    //     password: String,
-    // ) -> Result<SignInResult, ZZApiError> {
-    //     let service = context.data::<AuthRepository>().map_err(|error| {
-    //         tracing::error!(
-    //             "Failed to get wizform service from context. {}",
-    //             &error.message
-    //         );
-    //         ZZApiError::Empty
-    //     })?;
-    //     let db = context.data::<DatabaseConnection>().map_err(|error| {
-    //         tracing::error!(
-    //             "Failed to get database connection from context. {}",
-    //             &error.message
-    //         );
-    //         ZZApiError::Empty
-    //     })?;
+    async fn sign_in(
+        &self,
+        context: &Context<'_>,
+        email: String,
+        password: String,
+    ) -> Result<SignInResult, ZZApiError> {
+        let service = context.data::<AuthRepository>().map_err(|error| {
+            tracing::error!(
+                "Failed to get wizform service from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
 
-    //     let result = service.sign_in(db, email, password).await?;
-    //     Ok(result)
-    // }
+        let result = service.sign_in(db, email, password).await?;
+        Ok(result)
+    }
 
     async fn sections(
         &self,

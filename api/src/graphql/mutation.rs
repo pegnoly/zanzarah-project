@@ -8,7 +8,7 @@ use crate::{
     error::ZZApiError,
     services::{
         auth::{
-            // prelude::AuthRepository,
+            prelude::AuthRepository,
             utils::{
                 EmailConfirmationResult, RegistrationResult, TokenUpdateResult,
             },
@@ -199,40 +199,40 @@ impl Mutation {
         }
     }
 
-    // async fn try_register_user(
-    //     &self,
-    //     context: &Context<'_>,
-    //     email: String,
-    //     password: String,
-    // ) -> Result<RegistrationResult, ZZApiError> {
-    //     let repo = context.data::<AuthRepository>().map_err(|error| {
-    //         tracing::error!("Failed to get auth repo from context. {}", &error.message);
-    //         ZZApiError::Empty
-    //     })?;
-    //     let db = context.data::<DatabaseConnection>().map_err(|error| {
-    //         tracing::error!(
-    //             "Failed to get database connection from context. {}",
-    //             &error.message
-    //         );
-    //         ZZApiError::Empty
-    //     })?;
+    async fn try_register_user(
+        &self,
+        context: &Context<'_>,
+        email: String,
+        password: String,
+    ) -> Result<RegistrationResult, ZZApiError> {
+        let repo = context.data::<AuthRepository>().map_err(|error| {
+            tracing::error!("Failed to get auth repo from context. {}", &error.message);
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
 
-    //     let error_params = format!(
-    //         "
-    //         Failed to register user.
-    //         Params: email: {:#?}, password: {:#?}.
-    //     ",
-    //         &email, &password
-    //     );
+        let error_params = format!(
+            "
+            Failed to register user.
+            Params: email: {:#?}, password: {:#?}.
+        ",
+            &email, &password
+        );
 
-    //     match repo.register_user(db, email, password).await {
-    //         Ok(result) => Ok(result),
-    //         Err(error) => {
-    //             tracing::info!("{}. Error: {:#?}.", &error_params, &error);
-    //             Err(error)
-    //         }
-    //     }
-    // }
+        match repo.register_user(db, email, password).await {
+            Ok(result) => Ok(result),
+            Err(error) => {
+                tracing::info!("{}. Error: {:#?}.", &error_params, &error);
+                Err(error)
+            }
+        }
+    }
 
     async fn update_wizform(
         &self,
@@ -275,49 +275,49 @@ impl Mutation {
         }
     }
 
-    // async fn renew_token(
-    //     &self,
-    //     context: &Context<'_>,
-    //     email: String,
-    //     password: String,
-    // ) -> Result<TokenUpdateResult, ZZApiError> {
-    //     let repo = context.data::<AuthRepository>().map_err(|error| {
-    //         tracing::error!("Failed to get auth repo from context. {}", &error.message);
-    //         ZZApiError::Empty
-    //     })?;
-    //     let db = context.data::<DatabaseConnection>().map_err(|error| {
-    //         tracing::error!(
-    //             "Failed to get database connection from context. {}",
-    //             &error.message
-    //         );
-    //         ZZApiError::Empty
-    //     })?;
+    async fn renew_token(
+        &self,
+        context: &Context<'_>,
+        email: String,
+        password: String,
+    ) -> Result<TokenUpdateResult, ZZApiError> {
+        let repo = context.data::<AuthRepository>().map_err(|error| {
+            tracing::error!("Failed to get auth repo from context. {}", &error.message);
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
 
-    //     let result = repo.generate_new_token(db, email, password).await?;
-    //     Ok(result)
-    // }
+        let result = repo.generate_new_token(db, email, password).await?;
+        Ok(result)
+    }
 
-    // async fn confirm_email(
-    //     &self,
-    //     context: &Context<'_>,
-    //     email: String,
-    //     code: String,
-    // ) -> Result<EmailConfirmationResult, ZZApiError> {
-    //     let repo = context.data::<AuthRepository>().map_err(|error| {
-    //         tracing::error!("Failed to get auth repo from context. {}", &error.message);
-    //         ZZApiError::Empty
-    //     })?;
-    //     let db = context.data::<DatabaseConnection>().map_err(|error| {
-    //         tracing::error!(
-    //             "Failed to get database connection from context. {}",
-    //             &error.message
-    //         );
-    //         ZZApiError::Empty
-    //     })?;
+    async fn confirm_email(
+        &self,
+        context: &Context<'_>,
+        email: String,
+        code: String,
+    ) -> Result<EmailConfirmationResult, ZZApiError> {
+        let repo = context.data::<AuthRepository>().map_err(|error| {
+            tracing::error!("Failed to get auth repo from context. {}", &error.message);
+            ZZApiError::Empty
+        })?;
+        let db = context.data::<DatabaseConnection>().map_err(|error| {
+            tracing::error!(
+                "Failed to get database connection from context. {}",
+                &error.message
+            );
+            ZZApiError::Empty
+        })?;
 
-    //     let result = repo.confirm_email(db, email, code).await?;
-    //     Ok(result)
-    // }
+        let result = repo.confirm_email(db, email, code).await?;
+        Ok(result)
+    }
 
     async fn insert_items_bulk(
         &self,
