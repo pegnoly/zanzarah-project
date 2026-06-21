@@ -4,7 +4,7 @@
 use log4rs::{append::{console::ConsoleAppender, file::FileAppender}, config::{Appender, Root}, encode::pattern::PatternEncoder, filter::threshold::ThresholdFilter, Config};
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let timestamp = chrono::prelude::Local::now().naive_local();
     let logs_dir = std::env::current_exe().unwrap().parent().unwrap().join("logs\\");
     if !logs_dir.exists() {
@@ -38,7 +38,8 @@ async fn main() {
                 .build(log::LevelFilter::Trace),
         )
         .unwrap();
-    log4rs::init_config(config).unwrap();
-    log::info!("Alive...");
-    zz_parser_lib::run().await
+    // log4rs::init_config(config)?;
+    // log::info!("Alive...");
+    editor_lib::run().await?;
+    Ok(())
 }

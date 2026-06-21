@@ -13,21 +13,6 @@ pub struct Model {
 
 pub type CollectionEntryModel = Model;
 
-#[async_graphql::Object]
-impl CollectionEntryModel {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn collection_id(&self) -> async_graphql::ID {
-        self.collection_id.into()
-    }
-
-    async fn wizform_id(&self) -> async_graphql::ID {
-        self.wizform_id.into()
-    }
-}
-
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
     Wizform,

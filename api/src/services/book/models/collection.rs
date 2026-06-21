@@ -17,33 +17,6 @@ pub struct Model {
 
 pub type CollectionModel = Model;
 
-#[async_graphql::Object]
-impl CollectionModel {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn book_id(&self) -> async_graphql::ID {
-        self.book_id.into()
-    }
-
-    async fn user_id(&self) -> async_graphql::ID {
-        self.user_id.into()
-    }
-
-    async fn created_on_version(&self) -> &String {
-        &self.created_on_version
-    }
-
-    async fn name(&self) -> &String {
-        &self.name
-    }
-
-    async fn active(&self) -> bool {
-        self.active
-    }
-}
-
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
     Book,
@@ -99,35 +72,4 @@ pub struct CollectionFullModel {
     pub name: String,
     pub active: bool,
     pub entries_count: i64,
-}
-
-#[async_graphql::Object]
-impl CollectionFullModel {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn book_id(&self) -> async_graphql::ID {
-        self.book_id.into()
-    }
-
-    async fn user_id(&self) -> async_graphql::ID {
-        self.user_id.into()
-    }
-
-    async fn created_on_version(&self) -> &String {
-        &self.created_on_version
-    }
-
-    async fn name(&self) -> &String {
-        &self.name
-    }
-
-    async fn active(&self) -> bool {
-        self.active
-    }
-
-    async fn entries_count(&self) -> i64 {
-        self.entries_count
-    }
 }

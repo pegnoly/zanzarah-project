@@ -18,8 +18,10 @@ pub enum ZZApiError {
     ParseInt(#[from] ParseIntError),
     #[error(transparent)]
     Jwt(#[from] jsonwebtoken::errors::Error),
+    #[error(transparent)]
+    Argon2Phc(#[from] argon2::password_hash::phc::Error),
     #[error("Failed to generate hash: {0:?}")]
-    Argon2Hash(argon2::password_hash::Error),
+    Argon2PasswordHash(argon2::password_hash::Error),
     #[error(transparent)]
     Totp(#[from] totp_rs::TotpUrlError),
     #[error("IncorrectEmail")]
@@ -34,11 +36,15 @@ pub enum ZZApiError {
     CodeAlreadyUsed,
     #[error("UserAlreadyConfirmed")]
     UserAlreadyConfirmed,
+    #[error(transparent)]
+    Tonic(#[from]tonic::transport::Error),
+    #[error(transparent)]
+    Env(#[from]std::env::VarError),
 }
 
 impl From<argon2::password_hash::Error> for ZZApiError {
     fn from(value: argon2::password_hash::Error) -> Self {
-        ZZApiError::Argon2Hash(value)
+        ZZApiError::Argon2PasswordHash(value)
     }
 }
 

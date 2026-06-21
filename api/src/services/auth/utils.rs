@@ -1,4 +1,4 @@
-use super::models::user::{RegistrationState, UserPermissionType};
+ use super::models::user::{RegistrationState, UserPermissionType};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -10,26 +10,26 @@ pub struct UserClaims {
     pub exp: i64,
 }
 
-#[derive(Debug, async_graphql::SimpleObject)]
+#[derive(Debug)]
 pub struct RegistrationResult {
-    pub user_id: async_graphql::ID,
+    pub user_id: String,
     pub email_hash: String,
     pub password_hash: String,
     pub token: String,
 }
 
-#[derive(Debug, async_graphql::SimpleObject)]
+#[derive(Debug)]
 pub struct AuthorizationResult {
-    pub user_id: async_graphql::ID,
+    pub user_id: String,
     pub registration_state: RegistrationState,
     pub permission: UserPermissionType,
     pub name: String,
     pub avatar: String
 }
 
-#[derive(Debug, async_graphql::SimpleObject)]
+#[derive(Debug)]
 pub struct TokenUpdateResult {
-    pub user_id: async_graphql::ID,
+    pub user_id: String,
     pub new_token: String,
     pub registration_state: RegistrationState,
     pub permission: UserPermissionType,
@@ -37,19 +37,19 @@ pub struct TokenUpdateResult {
     pub avatar: String
 }
 
-#[derive(Debug, async_graphql::SimpleObject)]
+#[derive(Debug)]
 pub struct SignInResult {
     pub new_token: String,
     pub email_hash: String,
     pub password_hash: String,
     pub registration_state: RegistrationState,
     pub permission: UserPermissionType,
-    pub user_id: async_graphql::ID,
+    pub user_id: String,
     pub name: String,
     pub avatar: String
 }
 
-#[derive(Debug, async_graphql::SimpleObject)]
+#[derive(Debug)]
 pub struct EmailConfirmationResult {
     pub new_token: String,
     pub registration_state: RegistrationState,

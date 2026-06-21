@@ -1,0 +1,90 @@
+syntax = "proto3";
+package book_models;
+option optimize_for = SPEED;
+
+import "google/protobuf/wrappers.proto";
+import "book/enums.proto";
+
+message WizformListModel {
+    string id = 1;
+    string name = 2;
+    string icon64 = 3;
+    int32 number = 4;
+    bool enabled = 5;
+    google.protobuf.StringValue in_collection_id = 6;
+}
+
+message MagicSlotModel {
+    book_enums.WizformElementType first_element = 1;
+    book_enums.WizformElementType second_element = 2;
+    book_enums.WizformElementType third_element = 3;
+}
+
+message MagicModel {
+    int32 level = 1;
+    MagicSlotModel first_active_slot = 2;
+    MagicSlotModel first_passive_slot = 3;
+    MagicSlotModel second_active_slot = 4;
+    MagicSlotModel second_passive_slot = 5;
+}
+
+message MagicsModel {
+    repeated MagicModel types = 1;
+}
+
+message WizformLocationModel {
+    string location_name = 1;
+    string section_name = 2;
+    google.protobuf.StringValue comment = 3;
+}
+
+message WizformItemEvolutionModel {
+    book_enums.ItemTransformType transform_type = 1;
+    string item_name = 2;
+    string item_icon = 3;
+    google.protobuf.StringValue wizform_name = 4;
+    google.protobuf.StringValue wizform_icon = 5;
+    google.protobuf.StringValue id = 6;
+    google.protobuf.BoolValue enabled = 7;
+    bool spoilerable = 8;
+}
+
+message CompleteWizformModel {
+    MagicsModel magics = 1;
+    int32 hitpoints = 2;
+    int32 agility = 3;
+    int32 jump_ability = 4;
+    int32 precision = 5;
+    google.protobuf.StringValue evolution_name = 6;
+    google.protobuf.StringValue previous_form_name = 7;
+    int32 evolution_level = 8;
+    int32 exp_modifier = 9;
+    string description = 10;
+    string icon64 = 11;
+    string name = 12;
+    google.protobuf.StringValue in_collection_id = 13;
+    google.protobuf.StringValue evolution_icon = 14;
+    google.protobuf.StringValue previous_icon = 15;
+    google.protobuf.StringValue evolution_id = 16;
+    google.protobuf.StringValue previous_id = 17;
+    google.protobuf.BoolValue evolution_enabled = 18;
+    google.protobuf.BoolValue previous_enabled = 19;
+    repeated WizformLocationModel habitats = 20;
+    repeated WizformItemEvolutionModel item_evolutions_data = 21;
+}
+
+message EvolutionItemModel {
+    int32 from = 1;
+    int32 to = 2;
+}
+
+message EvolutionsListModel {
+    repeated EvolutionItemModel items = 1;
+}
+
+message EvolutionItemInputModel {
+    string book_id = 1;
+    string name = 2;
+    string icon64 = 3;
+    EvolutionsListModel evolutions = 4;
+}

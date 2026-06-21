@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+import "book/models.proto";
+import "book/enums.proto";
+import "google/protobuf/wrappers.proto";
+
+package book_service;
+option optimize_for = SPEED;
+
+message CommonResponse {
+    string message = 1;
+}
+
+message GetAllWizformsRequest {
+    string book_id = 1;
+}
+
+message GetWizformsRequest {
+    string book_id = 1;
+    book_enums.WizformElementType element = 2;
+    google.protobuf.StringValue name = 3;
+    google.protobuf.StringValue collection = 4;
+}
+
+message GetWizformsResponse {
+    repeated book_models.WizformListModel wizforms = 1;
+}
+
+message GetCompleteWizformRequest {
+    string id = 1;
+    google.protobuf.StringValue collection_id = 2;
+}
+
+message GetCompleteWizformResponse {
+    book_models.CompleteWizformModel wizform = 1;
+}
+
+message InsertItemsBulkRequest {
+    repeated book_models.EvolutionItemInputModel items = 1;
+}
+
+service BookService {
+    rpc GetAllWizforms(GetAllWizformsRequest) returns (GetWizformsResponse);
+    rpc GetWizforms(GetWizformsRequest) returns (GetWizformsResponse);
+    rpc GetCompleteWizform(GetCompleteWizformRequest) returns (GetCompleteWizformResponse);
+
+    rpc InsertItemsBulk(InsertItemsBulkRequest) returns (CommonResponse);
+}

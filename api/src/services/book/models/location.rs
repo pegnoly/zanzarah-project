@@ -52,29 +52,6 @@ impl Related<location_wizform_entry::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
-#[async_graphql::Object]
-impl LocationModel {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn section_id(&self) -> async_graphql::ID {
-        self.section_id.into()
-    }
-
-    async fn name(&self) -> &String {
-        &self.name
-    }
-
-    async fn ordering(&self) -> i32 {
-        self.ordering
-    }
-
-    async fn game_number(&self) -> Option<String> {
-        self.game_number.clone()
-    }
-}
-
 #[derive(Debug, FromQueryResult, Serialize, Deserialize)]
 pub struct LocationWithEntriesCountModel {
     pub id: Uuid,
@@ -82,39 +59,9 @@ pub struct LocationWithEntriesCountModel {
     pub entries_count: i64,
 }
 
-#[async_graphql::Object]
-impl LocationWithEntriesCountModel {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn name(&self) -> &String {
-        &self.name
-    }
-
-    async fn entries_count(&self) -> i64 {
-        self.entries_count
-    }
-}
-
 #[derive(Debug, FromQueryResult, Serialize, Deserialize)]
 pub struct LocationNameModel {
     pub location_name: String,
     pub section_name: String,
     pub comment: Option<String>,
-}
-
-#[async_graphql::Object]
-impl LocationNameModel {
-    async fn location_name(&self) -> &String {
-        &self.location_name
-    }
-
-    async fn section_name(&self) -> &String {
-        &self.section_name
-    }
-
-    async fn comment(&self) -> Option<String> {
-        self.comment.clone()
-    }
 }

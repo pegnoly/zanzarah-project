@@ -35,7 +35,6 @@ pub enum ModType {
     Copy,
     DeriveActiveEnum,
     EnumIter,
-    async_graphql::Enum,
 )]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum UserPermissionType {
@@ -59,7 +58,6 @@ pub enum UserPermissionType {
     Copy,
     DeriveActiveEnum,
     EnumIter,
-    async_graphql::Enum,
 )]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum RegistrationState {
@@ -93,37 +91,6 @@ impl Related<crate::services::book::models::collection::Entity> for Entity {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-#[async_graphql::Object]
-impl UserModel {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn name(&self) -> &String {
-        &self.name
-    }
-
-    async fn email(&self) -> &String {
-        &self.email
-    }
-
-    async fn salt(&self) -> &String {
-        &self.salt
-    }
-
-    async fn hashed_password(&self) -> &String {
-        &self.hashed_password
-    }
-
-    async fn registration_state(&self) -> RegistrationState {
-        self.registration_state
-    }
-
-    async fn permission(&self) -> UserPermissionType {
-        self.permission
-    }
-}
 
 #[derive(Debug, FromQueryResult, Serialize, Deserialize, Clone)]
 pub struct UserFullModel {

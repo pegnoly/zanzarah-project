@@ -1,4 +1,4 @@
-cynic::use_schema!("D:/projects/zanzarah-project/desktop-client/src-tauri/src/graphql/schemas/zz-webapi.graphql");
+cynic::use_schema!("D:/projects/zanzarah-project/editor/src-tauri/src/graphql/schemas/zz-webapi.graphql");
 
 mod wizform;
 mod element;

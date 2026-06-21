@@ -1,0 +1,6 @@
+[workspace]
+members = ["shared", "shared-gen", "api", "editor/src-tauri"]
+resolver = "2"
+
+[patch.pegn0ly-zanzarah-project-private-crates]
+shared-gen = { path = "shared-gen"}

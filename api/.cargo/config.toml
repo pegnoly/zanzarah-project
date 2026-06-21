@@ -1,0 +1,4 @@
+[registries.pegn0ly-zanzarah-project-private-crates]
+index = "sparse+https://cargo.cloudsmith.io/pegn0ly/zanzarah-project-private-crates/"
+token = "Token csa_f457ba83208b2730a1a8fb51c222e5QCX8YQ"
+credential-provider = "cargo:token"

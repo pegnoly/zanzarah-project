@@ -51,43 +51,9 @@ impl Related<location::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
-#[async_graphql::Object]
-impl LocationSectionModel {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn book_id(&self) -> async_graphql::ID {
-        self.book_id.into()
-    }
-
-    async fn name(&self) -> &String {
-        &self.name
-    }
-
-    async fn ordering(&self) -> i32 {
-        self.ordering
-    }
-}
-
 #[derive(FromQueryResult, Serialize, Deserialize)]
 pub struct LocationSectionWithCount {
     pub id: Uuid,
     pub name: String,
     pub locations_count: i64,
-}
-
-#[async_graphql::Object]
-impl LocationSectionWithCount {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn name(&self) -> &String {
-        &self.name
-    }
-
-    async fn locations_count(&self) -> i64 {
-        self.locations_count
-    }
 }

@@ -4,27 +4,26 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-axum = "0.8.1"
-tokio = {version = "1.28.2", features = ["rt-multi-thread"]}
-sqlx = {version = "0.8.3", features = ["runtime-tokio-rustls", "postgres", "uuid", "json"]}
-serde = { version = "1.0.209", features = ["derive"] }
-uuid = { version = "1.10.0", features = ["v4"] }
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-strum = { version = "0.26.3", features = ["derive"] }
-async-graphql = {version = "7.0.13", features = ["uuid", "chrono"]}
-async-graphql-axum = "7.0.13"
-sea-orm = { version = "1.1.4", features = ["sqlx-postgres"] }
-serde_json = { version = "1.0.135", features = ["raw_value"] }
+axum = "0.8.9"
+tokio = {version = "1.52.3", features = ["rt-multi-thread"]}
+sqlx = {version = "0.9.0", features = ["_rt-tokio", "runtime-tokio", "postgres", "uuid", "json"]}
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+uuid = { version = "1.23.2", features = ["v4"] }
+tracing = "0.1.44"
+strum = { version = "0.28.0", features = ["derive"] }
+sea-orm = { version = "2.0.0-rc.40", features = ["sqlx-postgres"] }
+thiserror = "2.0.18"
+itertools = "0.15.0"
+reqwest = { version = "0.13.4", features = ["json"] }
+chrono = "0.4.44"
+totp-rs = "5.7.1"
+jsonwebtoken = "10.4.0"
+argon2 = "0.6.0-rc.8"
+rand = "0.10.1"
+lettre = "0.11.22"
 dotenv = "0.15.0"
-tower-http = { version = "0.6.2", features = ["cors"] }
-thiserror = "2.0.12"
-itertools = "0.14.0"
-reqwest = { version = "0.12.15", features = ["json"] }
-# mail-send = "0.5.0"
-chrono = "0.4.41"
-totp-rs = "5.7.0"
-jsonwebtoken = "9.3.1"
-argon2 = "0.5.3"
-rand = "0.9.1"
-lettre = "0.11.19"
+
+shared-gen = { version = "0.1.1", registry = "pegn0ly-zanzarah-project-private-crates" }
+#shared-gen = { path = "../shared-gen"}
+tonic = "0.14.6"

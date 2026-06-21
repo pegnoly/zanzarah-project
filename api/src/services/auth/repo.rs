@@ -1,7 +1,8 @@
 use argon2::{
     Argon2, PasswordHash, PasswordVerifier,
-    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
+    password_hash::PasswordHasher,
 };
+use argon2::password_hash::phc::SaltString;
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use lettre::{Message, SmtpTransport, Transport, message::header::ContentType, transport::smtp::authentication::Credentials};
 use rand::seq::IteratorRandom;
@@ -87,9 +88,9 @@ impl AuthRepository {
     ) -> Result<RegistrationResult, ZZApiError> {
         // generation of hashes
         let argon2 = Argon2::default();
-        let salt = SaltString::generate(&mut OsRng);
+        let salt = SaltString::generate();
         let email_hash = argon2
-            .hash_password(email.as_bytes(), &SaltString::from_b64(&self.email_salt)?)?
+            .hash_password(email.as_bytes())?
             .to_string();
 
         if let Some(_existing_user) = user::Entity::find()
@@ -103,7 +104,7 @@ impl AuthRepository {
         let users_count = user::Entity::find().count(db).await?;
 
         let password_hash = argon2
-            .hash_password(password.as_bytes(), &salt)?
+            .hash_password(password.as_bytes())?
             .to_string();
         // generation of confirmation code
         let totp = TOTP::new(
@@ -242,7 +243,7 @@ impl AuthRepository {
     ) -> Result<SignInResult, ZZApiError> {
         let argon2 = Argon2::default();
         let email_hash = argon2
-            .hash_password(email.as_bytes(), &SaltString::from_b64(&self.email_salt)?)?
+            .hash_password(email.as_bytes())?
             .to_string();
         if let Some(existing_user) = self.get_user_full_model(db, email_hash.clone()).await?
         {

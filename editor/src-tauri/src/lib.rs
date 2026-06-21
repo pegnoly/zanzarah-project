@@ -11,21 +11,34 @@ use app::prelude::{
     update_wizform_element, 
     AppConfig
 };
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use reqwest::Client;
 use services::prelude::ZanzarahApiService;
 
 use crate::app::prelude::{create_book, start_scripts_parsing};
+use crate::error::ZZParserError;
+use shared_gen::editor_service::*;
 
 mod app;
 pub mod services;
-mod error;
+pub mod error;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub async fn run() {
-    let exe_path = std::env::current_exe().unwrap();
+pub async fn run() -> Result<(), ZZParserError> {
+    let exe_path = std::env::current_exe()?;
     let exe_dir = exe_path.parent().unwrap();
-    let config_data = std::fs::read_to_string(exe_dir.join("cfg/zz_cfg.json")).unwrap();
-    let config = serde_json::from_str::<AppConfig>(&config_data).unwrap();
+
+    let mut editor_client = editor_service_client::EditorServiceClient::connect("http://[::1]:50051").await?;
+    let response = editor_client.healthcheck(tonic::Request::new(HealthcheckRequest {})).await.ok();
+    println!("Healthcheck: {:?}", response);
+
+    panic!("temp");
+
+    let cfg_path = exe_dir.join("cfg/zz_cfg.json");
+    println!("Cfg path: {}", cfg_path.display());
+    let config_data = std::fs::read_to_string(cfg_path)?;
+    let config = serde_json::from_str::<AppConfig>(&config_data)?;
+
     tauri::Builder::default()
         .manage(config)
         .manage(ZanzarahApiService::new(Client::new()))
@@ -70,4 +83,6 @@ pub async fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    Ok(())
 }

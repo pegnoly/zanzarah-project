@@ -33,7 +33,13 @@ pub enum ZZParserError {
     #[error("Unknown error")]
     Unknown,
     #[error(transparent)]
-    Uuid(#[from]uuid::Error)
+    Uuid(#[from]uuid::Error),
+    #[error(transparent)]
+    Json(#[from] serde_json::error::Error),
+    #[error(transparent)]
+    Tonic(#[from] tonic::transport::Error),
+    #[error(transparent)]
+    TonicStatus(tonic::Status),
 }
 
 impl serde::Serialize for ZZParserError {

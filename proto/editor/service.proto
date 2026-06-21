@@ -1,0 +1,53 @@
+syntax = "proto3";
+package editor_service;
+option optimize_for = SPEED;
+
+import "book/enums.proto";
+
+message HealthcheckRequest {}
+
+message HealthcheckResponse {
+    string message = 1;
+}
+
+message EditableWizformModel {
+    string id = 1;
+    string icon = 2;
+    string name = 3;
+    string desc = 4;
+    book_enums.WizformElementType element = 5;
+    bool enabled = 6;
+}
+
+message GetWizformsRequest {
+    string book_id = 1;
+    book_enums.WizformElementType element_filter = 2;
+    string name_filter = 3;
+}
+
+message GetWizformsResponse {
+    repeated EditableWizformModel wizforms = 1;
+}
+
+message UpdateWizformRequest {
+    string id = 1;
+    oneof target {
+        book_enums.WizformElementType new_element = 2;
+        bool new_enabled = 3;
+        string new_name = 4;
+    }
+}
+
+message UpdateWizformResponse {
+    oneof result {
+        string success = 1;
+        string error = 2;
+    }
+}
+
+service EditorService {
+    rpc Healthcheck(HealthcheckRequest) returns (HealthcheckResponse);
+    
+    rpc GetWizforms(GetWizformsRequest) returns (GetWizformsResponse);
+    rpc UpdateWizform(UpdateWizformRequest) returns (UpdateWizformResponse);
+}

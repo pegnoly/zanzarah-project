@@ -1,11 +1,8 @@
 use sea_orm::{FromQueryResult, prelude::*};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
-use super::{
-    location,
-    wizform::{self, WizformElementType},
-};
+use shared_gen::book_enums::WizformElementType;
+use super::{location, wizform};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, DeriveEntityModel)]
 #[sea_orm(table_name = "location_wizform_entries")]
@@ -54,39 +51,10 @@ impl Related<location::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
-#[async_graphql::Object]
-impl LocationWizformEntryModel {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn location_id(&self) -> async_graphql::ID {
-        self.location_id.into()
-    }
-
-    async fn wizform_id(&self) -> async_graphql::ID {
-        self.wizform_id.into()
-    }
-
-    async fn comment(&self) -> Option<String> {
-        self.comment.clone()
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, async_graphql::InputObject)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocationWizformInputModel {
-    pub location_id: async_graphql::ID,
-    pub wizform_id: async_graphql::ID
-}
-
-#[derive(async_graphql::SimpleObject)]
-pub struct LocationWizformsBulkInsertResponse {
-    pub message: String
-}
-
-#[derive(async_graphql::SimpleObject)]
-pub struct DeleteLocationWizformsResponse {
-    pub message: String
+    pub location_id: String,
+    pub wizform_id: String
 }
 
 #[derive(Debug, FromQueryResult, Serialize, Deserialize)]
@@ -96,32 +64,5 @@ pub struct LocationWizformFullEntry {
     pub wizform_number: i16,
     pub wizform_element: WizformElementType,
     pub icon: String,
-    pub comment: Option<String>,
-}
-
-#[async_graphql::Object]
-impl LocationWizformFullEntry {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn wizform_name(&self) -> &String {
-        &self.wizform_name
-    }
-
-    async fn wizform_number(&self) -> i16 {
-        self.wizform_number
-    }
-
-    async fn wizform_element(&self) -> WizformElementType {
-        self.wizform_element
-    }
-
-    async fn comment(&self) -> Option<String> {
-        self.comment.clone()
-    }
-
-    async fn icon(&self) -> &String {
-        &self.icon
-    }
+    pub comment: Option<String>
 }

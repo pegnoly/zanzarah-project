@@ -23,7 +23,6 @@ pub struct Model {
     PartialEq,
     Eq,
     FromJsonQueryResult,
-    async_graphql::SimpleObject,
     sqlx::Type
 )]
 pub struct CompatibleVersions {
@@ -31,37 +30,6 @@ pub struct CompatibleVersions {
 }
 
 pub type BookModel = Model;
-
-#[async_graphql::Object]
-impl BookModel {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn name(&self) -> String {
-        self.name.clone()
-    }
-
-    async fn directory(&self) -> String {
-        self.directory.clone()
-    }
-
-    async fn initialized(&self) -> bool {
-        self.initialized
-    }
-
-    async fn available(&self) -> bool {
-        self.available
-    }
-
-    async fn version(&self) -> &String {
-        &self.version
-    }
-
-    async fn compatible_with(&self) -> &CompatibleVersions {
-        &self.compatible_with
-    }
-}
 
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
@@ -100,31 +68,4 @@ pub struct BookFullModel {
     pub compatible_with: CompatibleVersions,
     pub wizforms_count: i32,
     pub active_wizforms_count: i32,
-}
-
-#[async_graphql::Object]
-impl BookFullModel {
-    async fn id(&self) -> async_graphql::ID {
-        self.id.into()
-    }
-
-    async fn name(&self) -> &String {
-        &self.name
-    }
-
-    async fn version(&self) -> &String {
-        &self.version
-    }
-
-    async fn compatible_with(&self) -> &CompatibleVersions {
-        &self.compatible_with
-    }
-
-    async fn wizforms_count(&self) -> i32 {
-        self.wizforms_count
-    }
-
-    async fn active_wizforms_count(&self) -> i32 {
-        self.active_wizforms_count
-    }
 }
